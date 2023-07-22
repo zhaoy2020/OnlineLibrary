@@ -1,5 +1,0 @@
-python
-keras
-tensorflow
-seaborn
-ipykernel
