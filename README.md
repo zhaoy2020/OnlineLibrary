@@ -43,7 +43,10 @@
 ### Python-SymPy高数计算
 ### Python-NumPy线代计算
 ### Python-scikit-learn机器学习框架
+### Python-sciPy线性代数
 ### Python-keras深度学习框架
+### Python-matplotlib可视化
+### Python-seaborn可视化
 ### Python-pyqt5界面GUI开发
 ### Python-Biopython生物信息学工具包
 ### Python-openCV计算机视觉
