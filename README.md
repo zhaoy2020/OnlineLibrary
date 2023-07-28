@@ -46,3 +46,4 @@
 ### Python-keras深度学习框架
 ### Python-pyqt5界面GUI开发
 ### Python-Biopython生物信息学工具包
+### Python-openCV计算机视觉
