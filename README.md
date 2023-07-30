@@ -60,6 +60,8 @@
 #### 优化模块（scipy.optimize)
 #### 统计学模块（scipy.stats)
 
+### Python-Statsmodels SciPy统计函数的补充库
+
 - 高数问题：
   - sympy.intergrals/solvers 首选
   - scipy.integrate
@@ -84,8 +86,6 @@
   - scipy.stats: 概论问题
 - statsmodels：
   - statsmodels: 概论问题
-
-### Python-Statsmodels SciPy统计函数的补充库
 
 ### Python-Pandas多类型数据清理
 ### Python-scikit-learn机器学习框架
