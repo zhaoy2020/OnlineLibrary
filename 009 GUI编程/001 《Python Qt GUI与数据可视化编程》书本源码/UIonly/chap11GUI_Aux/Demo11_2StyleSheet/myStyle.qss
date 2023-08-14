@@ -1,0 +1,12 @@
+QLineEdit{
+	     border-width: 2px;
+	     border-style: solid;
+	     border-color: gray;
+	     border-radius: 10px;
+	     padding: 0px 10px; 
+}
+
+QLineEdit:hover{
+	     background-color: lime;
+	     color: blue;
+}

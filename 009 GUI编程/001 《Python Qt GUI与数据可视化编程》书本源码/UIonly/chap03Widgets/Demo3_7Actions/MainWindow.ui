@@ -1,0 +1,691 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>743</width>
+    <height>379</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Demo3_7 QAction，QMainWindow，QPlainTextEdit</string>
+  </property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonTextUnderIcon</enum>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <widget class="QPlainTextEdit" name="textEdit">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
+      <y>25</y>
+      <width>476</width>
+      <height>221</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="plainText">
+     <string>import sys
+
+from PyQt5.QtWidgets import  QApplication, QMainWindow
+
+from PyQt5.QtWidgets import   QLabel, QProgressBar, QSpinBox, QFontComboBox
+
+from PyQt5.QtCore import  Qt, pyqtSlot
+
+from PyQt5.QtGui import  QTextCharFormat, QFont
+
+from ui_MainWindow import Ui_MainWindow
+
+
+class QmyMainWindow(QMainWindow): 
+
+    def __init__(self, parent=None):
+        super().__init__(parent) # 调用父类构造函数，创建窗体
+        self.ui=Ui_MainWindow()     #创建UI对象
+        self.ui.setupUi(self)       #构造UI界面
+
+        self.__buildUI()
+        self.__spinFontSize.valueChanged[int].connect(self.do_fontSize_Changed)
+        self.__comboFontName.currentIndexChanged[str].connect(self.do_fontName_Changed)
+
+        self.setCentralWidget(self.ui.textEdit)
+
+##  ============自定义功能函数================================        
+
+    def __buildUI(self):  #窗体上动态添加组件
+        # 创建状态栏上的组件
+        self.__LabFile=QLabel(self)     # QLabel组件显示信息
+        self.__LabFile.setMinimumWidth(150)
+        self.__LabFile.setText(&quot;文件名： &quot;)
+        self.ui.statusBar.addWidget(self.__LabFile)
+
+        self.__progressBar1=QProgressBar(self)      # progressBar1
+        self.__progressBar1.setMaximumWidth(200)
+        self.__progressBar1.setMinimum(5)
+        self.__progressBar1.setMaximum(50)
+        self.__progressBar1.setValue(self.ui.textEdit.font().pointSize())
+        self.ui.statusBar.addWidget(self.__progressBar1)
+        
+        self.__LabInfo=QLabel(self)     # QLabel组件显示字体名称
+        self.__LabInfo.setText(&quot;选择字体名称： &quot;)
+        self.ui.statusBar.addPermanentWidget(self.__LabInfo)
+        
+        #创建工具栏上的组件
+        self.__spinFontSize=QSpinBox(self)  #字体大小spinbox
+        self.__spinFontSize.setMinimum(5)
+        self.__spinFontSize.setMaximum(50)
+        self.__spinFontSize.setValue(self.ui.textEdit.font().pointSize())
+        self.__spinFontSize.setMinimumWidth(50)
+        self.ui.mainToolBar.addWidget(self.__spinFontSize) #SpinBox添加到工具栏
+        
+        self.__comboFontName=QFontComboBox(self)  #字体 combobox
+        self.__comboFontName.setMinimumWidth(150)
+        self.ui.mainToolBar.addWidget(self.__comboFontName) 
+
+        self.ui.mainToolBar.addSeparator()  #添加一个分隔条
+        
+        self.ui.mainToolBar.addAction(self.ui.actClose)  #添加 actClose作为“关闭”按钮
+        
+        
+##  ===========由connectSlotsByName() 自动连接的槽函数=====================      
+
+    @pyqtSlot(bool)
+    def on_actFont_Bold_triggered(self, checked):     #设置粗体 
+        fmt=self.ui.textEdit.currentCharFormat()
+        if (checked == True):
+            fmt.setFontWeight(QFont.Bold)
+        else:
+            fmt.setFontWeight(QFont.Normal)
+        self.ui.textEdit.mergeCurrentCharFormat(fmt)
+
+    @pyqtSlot(bool)
+    def on_actFont_Italic_triggered(self,checked):      #设置斜体 
+        fmt=self.ui.textEdit.currentCharFormat()
+        fmt.setFontItalic(checked)
+        self.ui.textEdit.mergeCurrentCharFormat(fmt)
+        
+    @pyqtSlot(bool)
+    def on_actFont_UnderLine_triggered(self,checked):      #设置下划线 
+        fmt=self.ui.textEdit.currentCharFormat()
+        fmt.setFontUnderline(checked)
+        self.ui.textEdit.mergeCurrentCharFormat(fmt)
+
+    @pyqtSlot(bool)
+    def on_actSys_ToggleText_triggered(self,checked):   #设置工具栏按钮样式 
+        if(checked):
+            self.ui.mainToolBar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        else:
+            self.ui.mainToolBar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+
+    def on_textEdit_copyAvailable(self, avi):       #文本框内容可copy
+        self.ui.actEdit_Cut.setEnabled(avi)
+        self.ui.actEdit_Copy.setEnabled(avi)
+        self.ui.actEdit_Paste.setEnabled(self.ui.textEdit.canPaste())
+                                         
+    def on_textEdit_selectionChanged(self):     #文本选择内容发生变化
+        fmt=self.ui.textEdit.currentCharFormat()
+        self.ui.actFont_Bold.setChecked(fmt.font().bold())
+        self.ui.actFont_Italic.setChecked(fmt.fontItalic())
+        self.ui.actFont_UnderLine.setChecked(fmt.fontUnderline())
+
+    def on_actFile_New_triggered(self):     #新建文件，不实现具体功能
+        self.__LabFile.setText(&quot; 新建文件 &quot;)
+
+    def on_actFile_Open_triggered(self):    #打开文件，不实现具体功能
+        self.__LabFile.setText(&quot; 打开的文件 &quot;)
+        
+    def on_actFile_Save_triggered(self):    #保存文件，不实现具体功能
+        self.__LabFile.setText(&quot; 文件已保存 &quot;)
+        
+        
+##  =============自定义槽函数===============================        
+
+    @pyqtSlot(int)
+    def do_fontSize_Changed(self, fontSize):      #设置字体大小 __spinFontSize
+        fmt=self.ui.textEdit.currentCharFormat()
+        fmt.setFontPointSize(fontSize)
+        self.ui.textEdit.mergeCurrentCharFormat(fmt)
+        self.__progressBar1.setValue(fontSize)    #注意它属于self, 而不是self.ui
+
+
+    @pyqtSlot(str)
+    def do_fontName_Changed(self, fontName):    # 选择字体 __comboFontName
+        fmt=self.ui.textEdit.currentCharFormat()
+        fmt.setFontFamily(fontName)
+        self.ui.textEdit.mergeCurrentCharFormat(fmt)
+        self.__LabInfo.setText(&quot;字体名称：%s   &quot;%fontName)
+        
+   
+##  ===========窗体测试程序=================================        
+if  __name__ == &quot;__main__&quot;:         #用于当前窗体测试
+    app = QApplication(sys.argv)    #创建GUI应用程序
+    form=QmyMainWindow()            #创建窗体
+    form.show()
+    sys.exit(app.exec_())
+</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>743</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_E">
+    <property name="title">
+     <string>编辑(&amp;E)</string>
+    </property>
+    <addaction name="actEdit_Cut"/>
+    <addaction name="actEdit_Copy"/>
+    <addaction name="actEdit_Paste"/>
+    <addaction name="separator"/>
+    <addaction name="actEdit_Undo"/>
+    <addaction name="actEdit_Redo"/>
+    <addaction name="separator"/>
+    <addaction name="actEdit_SelectAll"/>
+    <addaction name="actEdit_Clear"/>
+   </widget>
+   <widget class="QMenu" name="menu_F">
+    <property name="title">
+     <string>格式(&amp;M)</string>
+    </property>
+    <widget class="QMenu" name="menu">
+     <property name="title">
+      <string>界面语言</string>
+     </property>
+     <addaction name="actLang_CN"/>
+     <addaction name="actLang_EN"/>
+    </widget>
+    <addaction name="actFont_Bold"/>
+    <addaction name="actFont_Italic"/>
+    <addaction name="actFont_UnderLine"/>
+    <addaction name="separator"/>
+    <addaction name="actSys_ToggleText"/>
+    <addaction name="menu"/>
+   </widget>
+   <widget class="QMenu" name="menu_F_2">
+    <property name="title">
+     <string>文件(&amp;F)</string>
+    </property>
+    <addaction name="actFile_New"/>
+    <addaction name="actFile_Open"/>
+    <addaction name="actFile_Save"/>
+    <addaction name="separator"/>
+    <addaction name="actClose"/>
+   </widget>
+   <addaction name="menu_F_2"/>
+   <addaction name="menu_E"/>
+   <addaction name="menu_F"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actFile_New"/>
+   <addaction name="actFile_Open"/>
+   <addaction name="actFile_Save"/>
+   <addaction name="separator"/>
+   <addaction name="actEdit_Cut"/>
+   <addaction name="actEdit_Copy"/>
+   <addaction name="actEdit_Paste"/>
+   <addaction name="separator"/>
+   <addaction name="actEdit_Undo"/>
+   <addaction name="actEdit_Redo"/>
+   <addaction name="separator"/>
+   <addaction name="actFont_Bold"/>
+   <addaction name="actFont_Italic"/>
+   <addaction name="actFont_UnderLine"/>
+   <addaction name="separator"/>
+   <addaction name="actLang_CN"/>
+   <addaction name="actLang_EN"/>
+   <addaction name="separator"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actEdit_Cut">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/200.bmp</normaloff>:/icons/images/200.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>剪切</string>
+   </property>
+   <property name="toolTip">
+    <string>剪切到粘贴板</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actEdit_Copy">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/202.bmp</normaloff>:/icons/images/202.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>复制</string>
+   </property>
+   <property name="toolTip">
+    <string>复制到粘贴板</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actEdit_Paste">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/204.bmp</normaloff>:/icons/images/204.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>粘贴</string>
+   </property>
+   <property name="toolTip">
+    <string>从粘贴板粘贴</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
+   </property>
+  </action>
+  <action name="actFont_Bold">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/500.bmp</normaloff>:/icons/images/500.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>粗体</string>
+   </property>
+   <property name="toolTip">
+    <string>粗体</string>
+   </property>
+  </action>
+  <action name="actFont_Italic">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/502.bmp</normaloff>:/icons/images/502.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>斜体</string>
+   </property>
+   <property name="toolTip">
+    <string>斜体</string>
+   </property>
+  </action>
+  <action name="actFont_UnderLine">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/504.bmp</normaloff>:/icons/images/504.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>下划线</string>
+   </property>
+   <property name="toolTip">
+    <string>下划线</string>
+   </property>
+  </action>
+  <action name="actClose">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/132.bmp</normaloff>:/icons/images/132.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>关闭</string>
+   </property>
+   <property name="toolTip">
+    <string>关闭本窗口</string>
+   </property>
+  </action>
+  <action name="actSys_ToggleText">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>显示工具栏文字</string>
+   </property>
+   <property name="toolTip">
+    <string>显示工具栏文字</string>
+   </property>
+  </action>
+  <action name="actEdit_Clear">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/212.bmp</normaloff>:/icons/images/212.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>清空</string>
+   </property>
+   <property name="toolTip">
+    <string>清空</string>
+   </property>
+  </action>
+  <action name="actEdit_Undo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/206.bmp</normaloff>:/icons/images/206.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>撤销</string>
+   </property>
+   <property name="toolTip">
+    <string>撤销上次编辑操作</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
+  </action>
+  <action name="actEdit_Redo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/208.bmp</normaloff>:/icons/images/208.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>重做</string>
+   </property>
+   <property name="toolTip">
+    <string>重做上次操作</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
+   </property>
+  </action>
+  <action name="actEdit_SelectAll">
+   <property name="text">
+    <string>全选</string>
+   </property>
+   <property name="toolTip">
+    <string>全选</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actFile_New">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/100.bmp</normaloff>:/icons/images/100.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>新建</string>
+   </property>
+   <property name="toolTip">
+    <string>新建文件</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actFile_Open">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/122.bmp</normaloff>:/icons/images/122.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>打开...</string>
+   </property>
+   <property name="toolTip">
+    <string>打开文件</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actFile_Save">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/104.bmp</normaloff>:/icons/images/104.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>保存</string>
+   </property>
+   <property name="toolTip">
+    <string>保存修改</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actLang_CN">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/CN.jpg</normaloff>:/icons/images/CN.jpg</iconset>
+   </property>
+   <property name="text">
+    <string>汉语</string>
+   </property>
+   <property name="toolTip">
+    <string>汉语界面</string>
+   </property>
+  </action>
+  <action name="actLang_EN">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/timg2.jpg</normaloff>:/icons/images/timg2.jpg</iconset>
+   </property>
+   <property name="text">
+    <string>英语</string>
+   </property>
+   <property name="toolTip">
+    <string>英语</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actEdit_Cut</sender>
+   <signal>triggered()</signal>
+   <receiver>textEdit</receiver>
+   <slot>cut()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>308</x>
+     <y>228</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actEdit_Copy</sender>
+   <signal>triggered()</signal>
+   <receiver>textEdit</receiver>
+   <slot>copy()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>308</x>
+     <y>228</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actEdit_Paste</sender>
+   <signal>triggered()</signal>
+   <receiver>textEdit</receiver>
+   <slot>paste()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>308</x>
+     <y>228</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actEdit_Clear</sender>
+   <signal>triggered()</signal>
+   <receiver>textEdit</receiver>
+   <slot>clear()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>308</x>
+     <y>228</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actEdit_Undo</sender>
+   <signal>triggered()</signal>
+   <receiver>textEdit</receiver>
+   <slot>undo()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>347</x>
+     <y>248</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actEdit_Redo</sender>
+   <signal>triggered()</signal>
+   <receiver>textEdit</receiver>
+   <slot>redo()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>347</x>
+     <y>248</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>textEdit</sender>
+   <signal>undoAvailable(bool)</signal>
+   <receiver>actEdit_Undo</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>347</x>
+     <y>248</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>textEdit</sender>
+   <signal>redoAvailable(bool)</signal>
+   <receiver>actEdit_Redo</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>347</x>
+     <y>248</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actEdit_SelectAll</sender>
+   <signal>triggered()</signal>
+   <receiver>textEdit</receiver>
+   <slot>selectAll()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>319</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actClose</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>335</x>
+     <y>224</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

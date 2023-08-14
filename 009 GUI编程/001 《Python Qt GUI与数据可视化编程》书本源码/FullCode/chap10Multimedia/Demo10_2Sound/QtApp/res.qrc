@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/Wave">
+        <file>sound/Ak47.wav</file>
+        <file>sound/blast.wav</file>
+        <file>sound/fire2.wav</file>
+        <file>sound/machinegun.wav</file>
+    </qresource>
+</RCC>

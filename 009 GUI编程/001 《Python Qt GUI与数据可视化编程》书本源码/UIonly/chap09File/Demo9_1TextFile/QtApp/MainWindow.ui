@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>685</width>
+    <height>445</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>10</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>Demo9_1，文本文件读写</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <widget class="QPlainTextEdit" name="textEdit">
+    <property name="geometry">
+     <rect>
+      <x>125</x>
+      <y>55</y>
+      <width>391</width>
+      <height>241</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>685</width>
+     <height>23</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actQFile_Open"/>
+   <addaction name="actQFile_Save"/>
+   <addaction name="separator"/>
+   <addaction name="actStream_Open"/>
+   <addaction name="actStream_Save"/>
+   <addaction name="separator"/>
+   <addaction name="actPY_Open"/>
+   <addaction name="actPY_Save"/>
+   <addaction name="separator"/>
+   <addaction name="actQuit"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actQFile_Open">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/122.bmp</normaloff>:/icons/images/122.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>QFile打开</string>
+   </property>
+   <property name="toolTip">
+    <string>用QFile打开文本文件</string>
+   </property>
+  </action>
+  <action name="actStream_Open">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/122.bmp</normaloff>:/icons/images/122.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>Stream打开</string>
+   </property>
+   <property name="toolTip">
+    <string>用QtextStream打开文本文件</string>
+   </property>
+  </action>
+  <action name="actQuit">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/132.bmp</normaloff>:/icons/images/132.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>退出</string>
+   </property>
+   <property name="toolTip">
+    <string>退出</string>
+   </property>
+  </action>
+  <action name="actQFile_Save">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/104.bmp</normaloff>:/icons/images/104.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>QFile另存</string>
+   </property>
+   <property name="toolTip">
+    <string>用QFile直接另存文件</string>
+   </property>
+  </action>
+  <action name="actStream_Save">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/104.bmp</normaloff>:/icons/images/104.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>Stream另存</string>
+   </property>
+   <property name="toolTip">
+    <string>用QTextStream另存文件</string>
+   </property>
+  </action>
+  <action name="actPY_Open">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/122.bmp</normaloff>:/icons/images/122.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>Python打开</string>
+   </property>
+   <property name="toolTip">
+    <string>使用Python内置功能打开</string>
+   </property>
+  </action>
+  <action name="actPY_Save">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/104.bmp</normaloff>:/icons/images/104.bmp</iconset>
+   </property>
+   <property name="text">
+    <string>Python另存</string>
+   </property>
+   <property name="toolTip">
+    <string>采用Python内置功能另存</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actQuit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>364</x>
+     <y>265</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

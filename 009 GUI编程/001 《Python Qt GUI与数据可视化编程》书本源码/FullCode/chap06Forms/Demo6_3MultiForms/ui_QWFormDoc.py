@@ -1,0 +1,96 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'QWFormDoc.ui'
+#
+# Created by: PyQt5 UI code generator 5.10.1
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+class Ui_QWFormDoc(object):
+    def setupUi(self, QWFormDoc):
+        QWFormDoc.setObjectName("QWFormDoc")
+        QWFormDoc.resize(628, 389)
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        QWFormDoc.setFont(font)
+        QWFormDoc.setAutoFillBackground(True)
+        self.plainTextEdit = QtWidgets.QPlainTextEdit(QWFormDoc)
+        self.plainTextEdit.setGeometry(QtCore.QRect(75, 45, 256, 192))
+        self.plainTextEdit.setObjectName("plainTextEdit")
+        self.actOpen = QtWidgets.QAction(QWFormDoc)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/icons/images/122.bmp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actOpen.setIcon(icon)
+        self.actOpen.setObjectName("actOpen")
+        self.actCut = QtWidgets.QAction(QWFormDoc)
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/icons/images/200.bmp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actCut.setIcon(icon1)
+        self.actCut.setObjectName("actCut")
+        self.actCopy = QtWidgets.QAction(QWFormDoc)
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/icons/images/202.bmp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actCopy.setIcon(icon2)
+        self.actCopy.setObjectName("actCopy")
+        self.actPaste = QtWidgets.QAction(QWFormDoc)
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/icons/images/204.bmp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actPaste.setIcon(icon3)
+        self.actPaste.setObjectName("actPaste")
+        self.actFont = QtWidgets.QAction(QWFormDoc)
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/icons/images/506.bmp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actFont.setIcon(icon4)
+        self.actFont.setObjectName("actFont")
+        self.actClose = QtWidgets.QAction(QWFormDoc)
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/icons/images/132.bmp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actClose.setIcon(icon5)
+        self.actClose.setObjectName("actClose")
+        self.actUndo = QtWidgets.QAction(QWFormDoc)
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(":/icons/images/206.bmp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actUndo.setIcon(icon6)
+        self.actUndo.setObjectName("actUndo")
+        self.actRedo = QtWidgets.QAction(QWFormDoc)
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(":/icons/images/208.bmp"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actRedo.setIcon(icon7)
+        self.actRedo.setObjectName("actRedo")
+
+        self.retranslateUi(QWFormDoc)
+        self.actClose.triggered.connect(QWFormDoc.close)
+        self.actCut.triggered.connect(self.plainTextEdit.cut)
+        self.actCopy.triggered.connect(self.plainTextEdit.copy)
+        self.actPaste.triggered.connect(self.plainTextEdit.paste)
+        self.actUndo.triggered.connect(self.plainTextEdit.undo)
+        self.actRedo.triggered.connect(self.plainTextEdit.redo)
+        QtCore.QMetaObject.connectSlotsByName(QWFormDoc)
+
+    def retranslateUi(self, QWFormDoc):
+        _translate = QtCore.QCoreApplication.translate
+        QWFormDoc.setWindowTitle(_translate("QWFormDoc", "new document"))
+        self.actOpen.setText(_translate("QWFormDoc", "打开"))
+        self.actOpen.setToolTip(_translate("QWFormDoc", "打开文件"))
+        self.actCut.setText(_translate("QWFormDoc", "剪切"))
+        self.actCut.setToolTip(_translate("QWFormDoc", "剪切"))
+        self.actCut.setShortcut(_translate("QWFormDoc", "Ctrl+X"))
+        self.actCopy.setText(_translate("QWFormDoc", "复制"))
+        self.actCopy.setToolTip(_translate("QWFormDoc", "复制"))
+        self.actCopy.setShortcut(_translate("QWFormDoc", "Ctrl+C"))
+        self.actPaste.setText(_translate("QWFormDoc", "粘贴"))
+        self.actPaste.setToolTip(_translate("QWFormDoc", "粘贴"))
+        self.actPaste.setShortcut(_translate("QWFormDoc", "Ctrl+V"))
+        self.actFont.setText(_translate("QWFormDoc", "字体"))
+        self.actFont.setToolTip(_translate("QWFormDoc", "设置字体"))
+        self.actClose.setText(_translate("QWFormDoc", "关闭"))
+        self.actClose.setToolTip(_translate("QWFormDoc", "关闭本窗口"))
+        self.actUndo.setText(_translate("QWFormDoc", "撤销"))
+        self.actUndo.setToolTip(_translate("QWFormDoc", "撤销编辑操作"))
+        self.actUndo.setShortcut(_translate("QWFormDoc", "Ctrl+Z"))
+        self.actRedo.setText(_translate("QWFormDoc", "重复"))
+        self.actRedo.setToolTip(_translate("QWFormDoc", "重复编辑操作"))
+
+import res_rc

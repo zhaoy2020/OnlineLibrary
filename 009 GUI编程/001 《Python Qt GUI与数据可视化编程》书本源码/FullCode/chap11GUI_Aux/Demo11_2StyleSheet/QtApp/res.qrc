@@ -1,0 +1,20 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>images/132.bmp</file>
+        <file>images/322.bmp</file>
+        <file>images/324.bmp</file>
+        <file>images/500.bmp</file>
+        <file>images/app.ico</file>
+        <file>images/files.ico</file>
+        <file>images/files_find.ico</file>
+        <file>images/files_music.ico</file>
+        <file>images/find.ico</file>
+        <file>images/folder.ico</file>
+        <file>images/folder_apps.ico</file>
+        <file>images/upload.ico</file>
+        <file>images/user.ico</file>
+        <file>images/user_group.ico</file>
+        <file>images/video_chat.ico</file>
+        <file>images/voice_chat.ico</file>
+    </qresource>
+</RCC>

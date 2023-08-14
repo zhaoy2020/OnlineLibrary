@@ -1,0 +1,95 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'Widget.ui'
+#
+# Created by: PyQt5 UI code generator 5.10.1
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+class Ui_Widget(object):
+    def setupUi(self, Widget):
+        Widget.setObjectName("Widget")
+        Widget.resize(469, 163)
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        Widget.setFont(font)
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout(Widget)
+        self.verticalLayout_3.setContentsMargins(5, 5, 5, 5)
+        self.verticalLayout_3.setSpacing(6)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.groupBox_2 = QtWidgets.QGroupBox(Widget)
+        self.groupBox_2.setObjectName("groupBox_2")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.groupBox_2)
+        self.verticalLayout.setContentsMargins(9, 9, 9, 9)
+        self.verticalLayout.setSpacing(6)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.lineEdit = QtWidgets.QLineEdit(self.groupBox_2)
+        self.lineEdit.setClearButtonEnabled(True)
+        self.lineEdit.setObjectName("lineEdit")
+        self.verticalLayout.addWidget(self.lineEdit)
+        self.verticalLayout_3.addWidget(self.groupBox_2)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setSpacing(4)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.groupBox = QtWidgets.QGroupBox(Widget)
+        self.groupBox.setObjectName("groupBox")
+        self.gridLayout = QtWidgets.QGridLayout(self.groupBox)
+        self.gridLayout.setContentsMargins(11, 11, 11, 11)
+        self.gridLayout.setSpacing(6)
+        self.gridLayout.setObjectName("gridLayout")
+        self.btnIniItems = QtWidgets.QPushButton(self.groupBox)
+        self.btnIniItems.setObjectName("btnIniItems")
+        self.gridLayout.addWidget(self.btnIniItems, 0, 0, 1, 1)
+        self.btnClearItems = QtWidgets.QPushButton(self.groupBox)
+        self.btnClearItems.setObjectName("btnClearItems")
+        self.gridLayout.addWidget(self.btnClearItems, 0, 1, 1, 1)
+        self.chkBoxEditable = QtWidgets.QCheckBox(self.groupBox)
+        self.chkBoxEditable.setMaximumSize(QtCore.QSize(200, 16777215))
+        self.chkBoxEditable.setObjectName("chkBoxEditable")
+        self.gridLayout.addWidget(self.chkBoxEditable, 0, 2, 1, 1)
+        self.comboBox = QtWidgets.QComboBox(self.groupBox)
+        self.comboBox.setEditable(False)
+        self.comboBox.setObjectName("comboBox")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/icons/images/aim.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.comboBox.addItem(icon, "")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/icons/UNIT.ICO"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.comboBox.addItem(icon1, "")
+        self.gridLayout.addWidget(self.comboBox, 1, 0, 1, 3)
+        self.horizontalLayout.addWidget(self.groupBox)
+        self.groupBox_3 = QtWidgets.QGroupBox(Widget)
+        self.groupBox_3.setObjectName("groupBox_3")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.groupBox_3)
+        self.verticalLayout_2.setContentsMargins(9, 9, 9, 9)
+        self.verticalLayout_2.setSpacing(6)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.btnIni2 = QtWidgets.QPushButton(self.groupBox_3)
+        self.btnIni2.setObjectName("btnIni2")
+        self.verticalLayout_2.addWidget(self.btnIni2)
+        self.comboBox2 = QtWidgets.QComboBox(self.groupBox_3)
+        self.comboBox2.setObjectName("comboBox2")
+        self.verticalLayout_2.addWidget(self.comboBox2)
+        self.horizontalLayout.addWidget(self.groupBox_3)
+        self.verticalLayout_3.addLayout(self.horizontalLayout)
+
+        self.retranslateUi(Widget)
+        self.comboBox.setCurrentIndex(0)
+        QtCore.QMetaObject.connectSlotsByName(Widget)
+
+    def retranslateUi(self, Widget):
+        _translate = QtCore.QCoreApplication.translate
+        Widget.setWindowTitle(_translate("Widget", "Demo3_6 ComboBox"))
+        self.groupBox_2.setTitle(_translate("Widget", "选择的内容"))
+        self.groupBox.setTitle(_translate("Widget", "简单的ComboBox"))
+        self.btnIniItems.setText(_translate("Widget", "初始化列表"))
+        self.btnClearItems.setText(_translate("Widget", "清除列表"))
+        self.chkBoxEditable.setText(_translate("Widget", "可编辑"))
+        self.comboBox.setItemText(0, _translate("Widget", "北京市"))
+        self.comboBox.setItemText(1, _translate("Widget", "上海市"))
+        self.groupBox_3.setTitle(_translate("Widget", "有用户数据的ComboBox"))
+        self.btnIni2.setText(_translate("Widget", "初始化城市+区号"))
+
+import res_rc

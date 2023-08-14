@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>824</width>
+    <height>502</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>宋体</family>
+    <pointsize>10</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>QChart绘图详细功能</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <widget class="QWidget" name="centralWidget"/>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actQuit">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/exit_24.ico</normaloff>:/icons/images/exit_24.ico</iconset>
+   </property>
+   <property name="text">
+    <string>退出</string>
+   </property>
+   <property name="toolTip">
+    <string>退出</string>
+   </property>
+  </action>
+  <action name="actTightLayout">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/39.ico</normaloff>:/icons/images/39.ico</iconset>
+   </property>
+   <property name="text">
+    <string>紧凑布局</string>
+   </property>
+   <property name="toolTip">
+    <string>重新紧凑布局</string>
+   </property>
+  </action>
+  <action name="actScatterAgain">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/017.GIF</normaloff>:/icons/images/017.GIF</iconset>
+   </property>
+   <property name="text">
+    <string>重绘散点</string>
+   </property>
+   <property name="toolTip">
+    <string>重新生成散点数据</string>
+   </property>
+  </action>
+  <action name="actSetCursor">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/images/range.ico</normaloff>:/icons/images/range.ico</iconset>
+   </property>
+   <property name="text">
+    <string>十字光标</string>
+   </property>
+   <property name="toolTip">
+    <string>设置为十字光标</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actQuit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>389</x>
+     <y>242</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

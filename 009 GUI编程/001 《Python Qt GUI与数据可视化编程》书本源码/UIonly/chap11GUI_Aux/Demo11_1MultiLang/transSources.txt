@@ -1,0 +1,13 @@
+﻿# transSources.txt 用于生成翻译文件(.ts)文件的配置文件
+
+# .ts是需要生成的翻译资源文件
+TRANSLATIONS  =appLang_CN.ts\
+              appLang_EN.ts
+
+
+# SOURCES指定需要翻译的 .py, .pyw文件
+SOURCES +=  myMainWindow.py
+
+
+# FORMS指定需要翻译的 .ui文件
+FORMS +=MainWindow.ui

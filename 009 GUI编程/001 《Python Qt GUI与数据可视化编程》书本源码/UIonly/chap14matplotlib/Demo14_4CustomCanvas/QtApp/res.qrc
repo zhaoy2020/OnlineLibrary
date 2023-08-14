@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>images/132.bmp</file>
+        <file>images/39.ico</file>
+        <file>images/exit_24.ico</file>
+        <file>images/017.GIF</file>
+        <file>images/range.ico</file>
+        <file>images/828.bmp</file>
+        <file>images/exec.ico</file>
+        <file>images/726.bmp</file>
+    </qresource>
+</RCC>
