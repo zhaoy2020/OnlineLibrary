@@ -1,6 +1,11 @@
+
+Below is a Chinese paragraph from an academic paper. Please translate to English and then Polish the writing to meet the academic style, improve the spelling, grammar, clarity, concision and overall readability. When necessary, rewrite the whole sentence. Furthermore, list all modification and explain the reasons to do so in markdown table :
+c-di-GMP是一种广泛分布于微生物中的核酸类第二信使分子。
+
+
 1. 润色：
 Below is a paragraph from an academic paper. Polish the writing to meet the academic style, improve the spelling, grammar, clarity, concision and overall readability. When necessary, rewrite the whole sentence. Furthermore, list all modification and explain the reasons to do so in markdown table :
-The gene VP1881 encodes a trigger phosphodiesterase capable of promoting its own expression.
+The authors declare no conflict of interest.
 
 
 
