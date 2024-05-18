@@ -7,8 +7,8 @@ import sys
 
 def mul(cmd:str):
     '''运行'''
-    print("-"*100)
     print(cmd)
+    print("-"*100)
     results = subprocess.run(cmd,shell=True)
     return (results.args, results.returncode)
 
@@ -28,14 +28,13 @@ def arvs():
             cmds.append(rec)
         print("Total commands: ", len(cmds))
         print(f"Submit {pre_dispatch} tasks at a time")
-        print(">"*50)
         assignment(n_jobs=n_jobs, pre_dispatch=pre_dispatch, args=cmds)
 
 if __name__ == "__main__":
     print("="*100)
     print("python parallel.py [threads] [pre_dispatch] [batch.txt]")
-    print("threads: thread numbers [Default: all threads in your machine].")
-    print("pre_dispatch: Submit numbers of task at a time.")
+    print("threads: Default: all threads in your machine.")
+    print("pre_dispatch: Submit number of tasks at a time.")
     print("batch.txt: Contains all the commands that need to be executed (line by line).")
     print("="*100)
     arvs()
