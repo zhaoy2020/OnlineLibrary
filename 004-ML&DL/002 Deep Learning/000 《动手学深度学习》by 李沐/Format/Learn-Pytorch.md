@@ -68,7 +68,7 @@
   - 7.3. [Tensors操作](#toc7_3_)    
     - 7.3.1. [索引和切片](#toc7_3_1_)    
     - 7.3.2. [修改维度](#toc7_3_2_)    
-      - 7.3.2.1. [[: None], [None, :]](#toc7_3_2_1_)    
+      - 7.3.2.1. [[: None], [None, :]  ](#toc7_3_2_1_)    
       - 7.3.2.2. [reshape函数](#toc7_3_2_2_)    
       - 7.3.2.3. [view函数](#toc7_3_2_3_)    
       - 7.3.2.4. [transpose函数](#toc7_3_2_4_)    
@@ -206,6 +206,7 @@
 - 10. [模型和参数的保存与加载](#toc10_)    
   - 10.1. [加载和保存-张量](#toc10_1_)    
   - 10.2. [加载和保存-模型参数](#toc10_2_)    
+  - 10.3. [safetensor](#toc10_3_)    
 - 11. [神经网络类型](#toc11_)    
   - 11.1. [CNN](#toc11_1_)    
     - 11.1.1. [概述](#toc11_1_1_)    
@@ -345,6 +346,16 @@
       - 13.7.4.1. [简单演示](#toc13_7_4_1_)    
       - 13.7.4.2. [重要演示](#toc13_7_4_2_)    
   - 13.8. [模型参数量](#toc13_8_)    
+  - 13.9. [大模型微调](#toc13_9_)    
+  - 13.10. [加速器](#toc13_10_)    
+    - 13.10.1. [deepspeed](#toc13_10_1_)    
+      - 13.10.1.1. [数据并行](#toc13_10_1_1_)    
+      - 13.10.1.2. [模型并行](#toc13_10_1_2_)    
+      - 13.10.1.3. [混合并行](#toc13_10_1_3_)    
+    - 13.10.2. [huggingface trainer](#toc13_10_2_)    
+      - 13.10.2.1. [数据并行](#toc13_10_2_1_)    
+      - 13.10.2.2. [模型并行](#toc13_10_2_2_)    
+      - 13.10.2.3. [混合并行](#toc13_10_2_3_)    
 - 14. [PyTorch做迁移学习](#toc14_)    
   - 14.1. [Fine-tuning](#toc14_1_)    
     - 14.1.1. [小的lr](#toc14_1_1_)    
@@ -457,22 +468,53 @@
 
 
 ```python
+# set environmental name 
+name="pytorch1"
+
 # Create environment 
 # and entry the environment
-conda create -n pytorch -y && conda activate pytorch
+conda create -n $name -y && conda activate $name
 
 # Install ipykernel and related packages via conda
 conda install ipykernel matplotlib pandas seaborn -y
 
 # Download and install CUDATOOLkit containing CUDA and nvcc and etc. via conda on NVIDIA channel
-conda install nvidia::cuda-toolkit
-conda install nvidia/label/cuda-11.3.0::cuda-toolkit
+## 方法一：
+# conda install nvidia::cuda-toolkit -y
+## 方法二（推荐）, with ncvv and etc.
+conda install nvidia/label/cuda-12.4.0::cuda -y
 
 # Install PyTorch
 conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia -y
 
-# Instll PyTorch lightning
-conda install lightning -c conda-forge -y
+# Instll packages 
+conda install esri::torch-geometric lightning deepspeed torchmetrics huggingface_hub -c conda-forge -y 
+ 
+```
+
+
+```python
+name="pytorch1"
+
+conda create -n $name -y && conda activate $name 
+
+conda install \
+    nvidia/label/cuda-12.4.0::cuda \
+    pytorch::pytorch \
+    pytorch::torchvision \
+    pytorch::torchaudio \
+    conda-forge::torchmetrics \
+    conda-forge::deepspeed \
+    conda-forge::mpi4py \
+    conda-forge::pytorch-lightning \
+    esri::torch-geometric \
+    conda-forge::huggingface_hub \
+    anaconda::ipykernel \
+    conda-forge::matplotlib \
+    anaconda::pandas \
+    anaconda::seaborn \
+    -y
+
 ```
 
 # 3. <a id='toc3_'></a>[utils](#toc0_)
@@ -2994,7 +3036,7 @@ x[0:3, 0] # 1-3行，1列
         ```
     
 
-#### 7.3.2.1. <a id='toc7_3_2_1_'></a>[[: None], [None, :]](#toc0_)
+#### 7.3.2.1. <a id='toc7_3_2_1_'></a>[[: None], [None, :]](#toc0_)   [&#8593;](#toc0_)
 含义：[None, :] 是利用 Python 的切片语法为张量增加一个新维度。
 - None：相当于在第 0 维增加一个新维度。
 - :：表示保留张量原本的所有元素。
@@ -5371,7 +5413,7 @@ plt.plot(data)
 
 
     
-![png](Learn-Pytorch_files/Learn-Pytorch_338_2.png)
+![png](Learn-Pytorch_files/Learn-Pytorch_339_2.png)
     
 
 
@@ -5424,7 +5466,7 @@ d2l.plt.scatter(features[:, (1)].detach().numpy(),
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_343_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_344_0.svg)
     
 
 
@@ -5438,7 +5480,7 @@ d2l.plt.scatter(features[:, (0)].detach().numpy(),
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_344_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_345_0.svg)
     
 
 
@@ -6969,7 +7011,7 @@ plt.title('Function')
 
 
     
-![png](Learn-Pytorch_files/Learn-Pytorch_458_1.png)
+![png](Learn-Pytorch_files/Learn-Pytorch_459_1.png)
     
 
 
@@ -7001,7 +7043,7 @@ plt.title('grad')
 
 
     
-![png](Learn-Pytorch_files/Learn-Pytorch_460_1.png)
+![png](Learn-Pytorch_files/Learn-Pytorch_461_1.png)
     
 
 
@@ -7057,7 +7099,7 @@ plt.plot(x, y, c=c)
 
 
     
-![png](Learn-Pytorch_files/Learn-Pytorch_462_1.png)
+![png](Learn-Pytorch_files/Learn-Pytorch_463_1.png)
     
 
 
@@ -7086,7 +7128,7 @@ plt.plot(x, y, c=c)
 
 
     
-![png](Learn-Pytorch_files/Learn-Pytorch_463_1.png)
+![png](Learn-Pytorch_files/Learn-Pytorch_464_1.png)
     
 
 
@@ -7115,7 +7157,7 @@ plt.plot(x, y, c=c)
 
 
     
-![png](Learn-Pytorch_files/Learn-Pytorch_464_1.png)
+![png](Learn-Pytorch_files/Learn-Pytorch_465_1.png)
     
 
 
@@ -7144,7 +7186,7 @@ plt.plot(x, y, c=c)
 
 
     
-![png](Learn-Pytorch_files/Learn-Pytorch_465_1.png)
+![png](Learn-Pytorch_files/Learn-Pytorch_466_1.png)
     
 
 
@@ -7971,7 +8013,7 @@ train_steps(
 
 
     
-![png](Learn-Pytorch_files/Learn-Pytorch_494_3.png)
+![png](Learn-Pytorch_files/Learn-Pytorch_495_3.png)
     
 
 
@@ -8102,7 +8144,7 @@ train_steps(epochs=10,
 
 
     
-![png](Learn-Pytorch_files/Learn-Pytorch_496_2.png)
+![png](Learn-Pytorch_files/Learn-Pytorch_497_2.png)
     
 
 
@@ -8145,7 +8187,7 @@ train_steps(
 
 
     
-![png](Learn-Pytorch_files/Learn-Pytorch_498_2.png)
+![png](Learn-Pytorch_files/Learn-Pytorch_499_2.png)
     
 
 
@@ -8201,7 +8243,7 @@ train_steps(
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_500_2.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_501_2.svg)
     
 
 
@@ -8275,7 +8317,7 @@ train_steps(
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_501_2.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_502_2.svg)
     
 
 
@@ -8400,7 +8442,7 @@ print(f"打印图片耗时： {stop - start} seconds")
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_507_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_508_1.svg)
     
 
 
@@ -9114,6 +9156,49 @@ check_point['epoch']
 
 
     '10'
+
+
+
+## 10.3. <a id='toc10_3_'></a>[safetensor](#toc0_)
+是有huggingface推出的格式。
+
+
+```python
+import safetensors
+import torch 
+from torch import nn 
+
+
+class DemoModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        net = nn.Sequential(nn.Linear(12, 128), nn.ReLU(), nn.Linear(128, 2))
+
+    def forward(self, X):
+        return net(X)
+    
+
+net = DemoModel()
+
+state_dicts1 = net.state_dict()
+
+safetensors.torch.save_file(state_dicts1, './Pytorch_params/demo.safetensors')
+```
+
+
+```python
+import safetensors 
+
+
+state_dicts2 = safetensors.torch.load_file('./Pytorch_params/demo.safetensors')
+
+state_dicts2
+```
+
+
+
+
+    {}
 
 
 
@@ -10894,7 +10979,7 @@ train_ch8(net, train_iter, vocab, lr, num_epochs, d2l.try_gpu())
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_626_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_630_1.svg)
     
 
 
@@ -13936,7 +14021,7 @@ train_seq2seq(net, train_iter, lr, num_epochs, tgt_vocab, device)
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_683_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_687_1.svg)
     
 
 
@@ -14069,7 +14154,7 @@ plt.legend()
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_690_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_694_1.svg)
     
 
 
@@ -14113,7 +14198,7 @@ plt.legend()
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_692_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_696_1.svg)
     
 
 
@@ -14188,7 +14273,7 @@ print(f'NW_PY: {t2 - t1} s, NW_PYT: {t3 - t2} s, NW_PYT_B: {t4 - t3} s')
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_694_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_698_1.svg)
     
 
 
@@ -14246,7 +14331,7 @@ plt.legend()
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_696_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_700_1.svg)
     
 
 
@@ -14265,7 +14350,7 @@ with torch.no_grad():
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_697_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_701_0.svg)
     
 
 
@@ -14558,13 +14643,13 @@ for batch in range(attention.attention_weights.shape[0]):
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_704_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_708_0.svg)
     
 
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_704_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_708_1.svg)
     
 
 
@@ -14736,13 +14821,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_709_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_713_0.svg)
     
 
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_709_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_713_1.svg)
     
 
 
@@ -14854,13 +14939,13 @@ for batch in range(weights.shape[0]):
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_714_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_718_0.svg)
     
 
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_714_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_718_1.svg)
     
 
 
@@ -14971,13 +15056,13 @@ for batch in range(attention.attention_weights.shape[0]):
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_718_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_722_0.svg)
     
 
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_718_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_722_1.svg)
     
 
 
@@ -15084,13 +15169,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_722_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_726_0.svg)
     
 
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_722_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_726_1.svg)
     
 
 
@@ -15473,13 +15558,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_733_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_737_0.svg)
     
 
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_733_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_737_1.svg)
     
 
 
@@ -15720,13 +15805,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_737_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_741_0.svg)
     
 
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_737_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_741_1.svg)
     
 
 
@@ -16003,7 +16088,7 @@ model_graph.visual_graph
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_742_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_746_0.svg)
     
 
 
@@ -16124,7 +16209,7 @@ d2l.train_seq2seq(net, train_iter, lr, num_epochs, tgt_vocab, device)
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_746_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_750_1.svg)
     
 
 
@@ -16160,7 +16245,7 @@ d2l.show_heatmaps(attention_weights[:, :, :, :len(engs[-1].split()) + 1].cpu(), 
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_749_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_753_0.svg)
     
 
 
@@ -16176,6 +16261,7 @@ Transformer是一种神经网络架构，最初由Vaswani等人在2017年的论�
 ![Transformer](./Pytorch_Pictures/Transformer/Transformer.jpg)
 
 ### 11.6.1. <a id='toc11_6_1_'></a>[简洁实现](#toc0_)
+PyTorch中提供了nn.Transformer类，可以方便地实现Transformer模型。同时，nn.TransformerEncoder和nn.TransformerDecoder类分别用于实现编码器和解码器。以及nn.TransformerEncoderLayer和nn.TransformerDecoderLayer类分别用于实现编码器和解码器的每一层。
 
 
 ```python
@@ -16184,13 +16270,13 @@ from torch import nn
 
 
 trans = nn.Transformer(
-    d_model=512, 
-    nhead=8, 
-    num_encoder_layers=6, 
-    num_decoder_layers=6, 
-    dim_feedforward=2048, 
-    dropout=0.1, 
-    batch_first=True
+    d_model = 512, 
+    nhead = 8, 
+    num_encoder_layers = 6, 
+    num_decoder_layers = 6, 
+    dim_feedforward = 2048, 
+    dropout = 0.1, 
+    batch_first = True
 )
 
 
@@ -16209,125 +16295,62 @@ print("输出形状:", output.shape)  # 输出形状: (batch_size, seq_len, embe
 
 
 ```python
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torchvision import datasets, transforms
-from torch.utils.data import DataLoader, random_split
+import torch 
+from torch import nn 
 
 
-# 检查是否有可用的 GPU
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# 定义超参数
-d_model = 128  # 嵌入维度
-nhead = 2      # 注意力头的数量
-num_encoder_layers = 4  # 编码器层数
-dim_feedforward = 128  # 前馈网络的维度
-dropout = 0.1          # Dropout 概率
-batch_size = 64
-learning_rate = 0.001
-num_epochs = 10
-
-# 定义位置编码
-class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, dropout=0.1, max_len=5000):
-        super(PositionalEncoding, self).__init__()
-        self.dropout = nn.Dropout(p=dropout)
-
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-torch.log(torch.tensor(10000.0)) / d_model))
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        pe = pe.unsqueeze(0).transpose(0, 1)
-        self.register_buffer('pe', pe)
-
-    def forward(self, x):
-        x = x + self.pe[:x.size(0), :]
-        return self.dropout(x)
-
-# 定义 Transformer 模型
-class TransformerModel(nn.Module):
-    def __init__(self, d_model, nhead, num_encoder_layers, dim_feedforward, dropout, num_classes=10):
-        super(TransformerModel, self).__init__()
-        self.model_type = 'Transformer'
-        self.embedding = nn.Linear(28, d_model)  # 将每行像素映射到 d_model 维度
-        self.pos_encoder = PositionalEncoding(d_model, dropout)
-        self.transformer_encoder = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d_model, nhead, dim_feedforward, dropout, batch_first=True),
-            num_encoder_layers
-        )
-        self.fc_out = nn.Linear(d_model, num_classes)
-
-    def forward(self, x):
-        # x: (batch_size, 1, 28, 28)
-        x = x.squeeze(1)  # 去掉 channels 维度，变为 (batch_size, 28, 28)
-        x = x.permute(1, 0, 2)  # 变为 (28, batch_size, 28)
-        x = self.embedding(x) * torch.sqrt(torch.tensor(d_model, dtype=torch.float32))
-        x = self.pos_encoder(x)
-        x = self.transformer_encoder(x)
-        x = x.mean(dim=0)  # 平均池化
-        x = self.fc_out(x)
-        return x
+# ----------------
+# parameters
+# ----------------
+d_model = 512 
+nhead = 8
+dim_feedforward = 2048 
+dropout = 0.1
+batch_first = True 
+num_layers = 6
 
 
+# ----------------
+# model
+# ----------------
+encoder = nn.TransformerEncoder(
+    nn.TransformerEncoderLayer(
+        d_model = d_model, 
+        nhead = nhead, 
+        dim_feedforward = dim_feedforward, 
+        dropout = dropout, 
+        batch_first = batch_first
+    ), 
+    num_layers = num_layers
+)
 
-# 加载 MNIST 数据集
-transform = transforms.Compose([transforms.ToTensor()])
-dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+decoder = nn.TransformerDecoder(
+    nn.TransformerDecoderLayer(
+        d_model = d_model, 
+        nhead = nhead, 
+        dim_feedforward = dim_feedforward, 
+        dropout = dropout, 
+        batch_first = batch_first
+    ), 
+    num_layers = num_layers
+)
 
-# 划分训练集和验证集
-train_size = int(0.8 * len(dataset))
-val_size = len(dataset) - train_size
-train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+class Seq2SeqModel(nn.Module):
+    def __init__(self, encoder, decoder):
+        super().__init__()
+        self.encoder = encoder 
+        self.decoder = decoder 
 
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-
-# 创建模型实例并移动到 GPU
-model = TransformerModel(d_model, nhead, num_encoder_layers, dim_feedforward, dropout).to(device)
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
-# 训练和验证模型
-for epoch in range(num_epochs):
-    model.train()
-    for images, labels in train_loader:
-        images, labels = images.to(device), labels.to(device)  # 将数据移动到 GPU
-        optimizer.zero_grad()
-        outputs = model(images)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-
-    # 验证模型
-    model.eval()
-    correct = 0
-    total = 0
-    with torch.no_grad():
-        for images, labels in val_loader:
-            images, labels = images.to(device), labels.to(device)  # 将数据移动到 GPU
-            outputs = model(images)
-            _, predicted = torch.max(outputs, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-
-    accuracy = 100 * correct / total
-    print(f"Epoch {epoch+1}, Loss: {loss.item()}, Validation Accuracy: {accuracy:.2f}%")
+    def forward(self, src, tgt):
+        enc_outputs = self.encoder(src)
+        dec_state = self.init_state(enc_outputs)
+        dec_outputs, dec_state = self.decoder(tgt, dec_state)
+        return dec_outputs, dec_state 
+    
+    def init_state(self, enc_outputs):
+        '''直接在Seq2SeqModel中实现对Decoder的初始化'''
+        return enc_outputs, [[None] * self.decoder.num_layers]
 ```
-
-    Epoch 1, Loss: 0.2575279772281647, Validation Accuracy: 92.86%
-    Epoch 2, Loss: 0.1750582903623581, Validation Accuracy: 92.53%
-    Epoch 3, Loss: 0.19114649295806885, Validation Accuracy: 94.43%
-    Epoch 4, Loss: 0.29256516695022583, Validation Accuracy: 94.12%
-    Epoch 5, Loss: 0.2216140329837799, Validation Accuracy: 94.68%
-    Epoch 6, Loss: 0.22301548719406128, Validation Accuracy: 95.12%
-    Epoch 7, Loss: 0.21033094823360443, Validation Accuracy: 95.66%
-    Epoch 8, Loss: 0.1467181295156479, Validation Accuracy: 95.30%
-    Epoch 9, Loss: 0.17597246170043945, Validation Accuracy: 95.67%
-    Epoch 10, Loss: 0.13991139829158783, Validation Accuracy: 95.53%
-
 
 ### 11.6.2. <a id='toc11_6_2_'></a>[位置编码](#toc0_)
 为什么需要位置编码？  
@@ -16435,13 +16458,15 @@ class PositionalEncoding(nn.Module):
 
 # 测试
 batch_size, num_steps, encoding_dim = 32, 60, 32
-pos_encoding = PositionalEncoding(num_hiddens=encoding_dim, max_len=10000, dropout=0)
+pos_encoding = PositionalEncoding(num_hiddens=encoding_dim, max_len=10000, dropout=0.1)
 pos_encoding.eval()
 
 # 创建一个随机输入张量
 X = torch.rand(size=(batch_size, num_steps, encoding_dim))
+
 # 对输入张量进行位置编码
 X = pos_encoding(X=X)
+
 # 获取位置编码矩阵
 batch_size, num_steps, encoding_dim = X.shape
 P = pos_encoding.P[:, :num_steps, :encoding_dim]
@@ -16461,13 +16486,13 @@ plt.legend()
 
 
 
-    <matplotlib.legend.Legend at 0x7f99dafa5d30>
+    <matplotlib.legend.Legend at 0x7f99dceeaae0>
 
 
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_757_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_761_1.svg)
     
 
 
@@ -16570,7 +16595,8 @@ from torch import nn
 #@save
 class PositionWiseFFN(nn.Module):
     """基于位置的前馈网络"""
-    def __init__(self, ffn_num_input, ffn_num_hiddens, ffn_num_outputs,**kwargs):
+
+    def __init__(self, ffn_num_input, ffn_num_hiddens, ffn_num_outputs, **kwargs):
         super().__init__(**kwargs)
         self.dense1 = nn.Linear(ffn_num_input, ffn_num_hiddens)
         self.relu = nn.ReLU()
@@ -16581,16 +16607,25 @@ class PositionWiseFFN(nn.Module):
 
 
 # 测试
-ffn = PositionWiseFFN(ffn_num_input=4, ffn_num_hiddens=4, ffn_num_outputs=8)
+batch_size, seq_len, embed_size = 2, 3, 4
+
+# 实例化对象
+ffn = PositionWiseFFN(ffn_num_input=embed_size, ffn_num_hiddens=4, ffn_num_outputs=embed_size)
 ffn.eval()
 
-ffn(torch.ones((2, 3, 4)))[0].shape
+# (batch_size, seq_len, embed_size)
+x = torch.ones(size=(batch_size, seq_len, embed_size))
+
+# (batch_size, seq_len, ffn_num_outputs)
+y = ffn(x)
+
+x.shape, y.shape
 ```
 
 
 
 
-    torch.Size([3, 8])
+    (torch.Size([2, 3, 4]), torch.Size([2, 3, 4]))
 
 
 
@@ -16603,7 +16638,8 @@ bn = nn.BatchNorm1d(2)
 
 
 # 测试
-X = torch.tensor([[1, 2], [2, 3]], dtype=torch.float32)
+X = torch.tensor([[1, 2], 
+                  [2, 3]], dtype=torch.float32)
 
 # 在训练模式下计算X的均值和方差
 print('layer norm:', ln(X), '\nbatch norm:', bn(X))
@@ -16630,10 +16666,16 @@ class AddNorm(nn.Module):
 
 
 # 测试
-add_norm = AddNorm([3, 4], 0.5)
+batch_size, seq_len, embed_size = 2, 3, 4
+
+# 实例化对象
+add_norm = AddNorm(normalized_shape=embed_size, dropout=0.5)
 add_norm.eval()
 
-add_norm(torch.ones((2, 3, 4)), torch.ones((2, 3, 4))).shape
+# 测试
+X = torch.ones(size=(batch_size, seq_len, embed_size))
+
+add_norm(X=X, Y=X).shape
 ```
 
 
@@ -16676,15 +16718,20 @@ class EncoderBlock(nn.Module):
         self.addnorm2 = AddNorm(norm_shape, dropout)
 
     def forward(self, X, valid_lens=None):
-        Y = self.addnorm1(X, self.attention(X, X, X, valid_lens))
-        return self.addnorm2(Y, self.ffn(Y))
+        Y = self.addnorm1(X=X, Y=self.attention(queries=X, keys=X, values=X, valid_lens=valid_lens))
+        return self.addnorm2(X=Y, Y=self.ffn(Y))
 
 
 # 测试
-encoder_blk = EncoderBlock(key_size=24, query_size=24, value_size=24, num_hiddens=24, norm_shape=[100, 24], ffn_num_input=24, ffn_num_hiddens=48, num_heads=8, dropout=0.5)
+batch_size, seq_len, embed_size = 2, 100, 24
+key_size, query_size, value_size, num_heads, num_hiddens, dropout = 24, 24, 24, 8, 24, 0.5 
+norm_shape = [100, 24]
+ffn_num_input, ffn_num_hiddens = 24, 48
+ 
+encoder_blk = EncoderBlock(key_size=key_size, query_size=query_size, value_size=value_size, num_hiddens=num_hiddens, norm_shape=norm_shape, ffn_num_input=ffn_num_input, ffn_num_hiddens=ffn_num_hiddens, num_heads=num_heads, dropout=dropout)
 encoder_blk.eval()
 
-X = torch.ones((2, 100, 24))
+X = torch.ones(size=(batch_size, seq_len, embed_size))
 
 encoder_blk(X).shape
 ```
@@ -16790,12 +16837,14 @@ class DecoderBlock(nn.Module):
         # When decoding any output sequence token by token during prediction,
         # `state[2][self.i]` contains representations of the decoded output at
         # the `i`-th block up to the current time step
+        # X: (batch_size, seq_len, embed_size)
         if state[2][self.i] is None:
             key_values = X
         else:
             key_values = torch.cat((state[2][self.i], X), axis=1)
         state[2][self.i] = key_values
-        if self.training:
+        
+        if self.training:  
             batch_size, num_steps, _ = X.shape
             # Shape of `dec_valid_lens`: (`batch_size`, `num_steps`), where
             # every row is [1, 2, ..., `num_steps`]
@@ -16814,7 +16863,18 @@ class DecoderBlock(nn.Module):
     
 
 # 测试
-decoder_blk = DecoderBlock(key_size=24, query_size=24, value_size=24, num_hiddens=24, norm_shape=[100, 24], ffn_num_input=24, ffn_num_hiddens=48, num_heads=8, dropout=0.5, i=0)
+decoder_blk = DecoderBlock(
+    key_size=key_size, 
+    query_size=query_size, 
+    value_size=value_size, 
+    num_hiddens=num_hiddens, 
+    norm_shape=norm_shape, 
+    ffn_num_input=ffn_num_input, 
+    ffn_num_hiddens=ffn_num_hiddens, 
+    num_heads=num_heads, 
+    dropout=dropout, 
+    i=0
+)
 decoder_blk.eval()
 
 X = d2l.ones((2, 100, 24))
@@ -16879,6 +16939,7 @@ decoder = TransformerDecoder(
     num_layers=2, 
     dropout=0.5
 )
+
 decoder.eval()
 ```
 
@@ -17022,7 +17083,7 @@ d2l.train_seq2seq(net, train_iter, lr, num_epochs, tgt_vocab, device)
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_774_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_778_1.svg)
     
 
 
@@ -17188,6 +17249,7 @@ import torch
 #@save
 class MaskLM(nn.Module):
     """The masked language model task of BERT."""
+    
     def __init__(self, vocab_size, num_hiddens, num_inputs=768, **kwargs):
         super(MaskLM, self).__init__(**kwargs)
         self.mlp = nn.Sequential(nn.Linear(num_inputs, num_hiddens),
@@ -17269,6 +17331,7 @@ NextSentencePred 类通常与 BERT 模型的编码器部分结合使用。在预
 #@save
 class NextSentencePred(nn.Module):
     """The next sentence prediction task of BERT."""
+    
     def __init__(self, num_inputs, **kwargs):
         super(NextSentencePred, self).__init__(**kwargs)
         self.output = nn.Linear(num_inputs, 2)
@@ -17327,6 +17390,7 @@ nsp_l.shape
 #@save
 class BERTModel(nn.Module):
     """The BERT model."""
+    
     def __init__(self, vocab_size, num_hiddens, norm_shape, ffn_num_input, ffn_num_hiddens, num_heads, num_layers, dropout, max_len=1000, key_size=768, query_size=768, value_size=768, hid_in_features=768, mlm_in_features=768, nsp_in_features=768):
         super(BERTModel, self).__init__()
         self.encoder = BERTEncoder(vocab_size, num_hiddens, norm_shape, ffn_num_input, ffn_num_hiddens, num_heads, num_layers, dropout, max_len=max_len, key_size=key_size, query_size=query_size, value_size=value_size)
@@ -17875,7 +17939,7 @@ train_bert(train_iter, net, loss, len(vocab), devices, 100)
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_808_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_812_1.svg)
     
 
 
@@ -18019,7 +18083,7 @@ d2l.plt.hist([len(line) for line in train_tokens], bins=range(0, 1000, 50));
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_819_0.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_823_0.svg)
     
 
 
@@ -18302,7 +18366,7 @@ d2l.train_ch13(net, train_iter, test_iter, loss, trainer, num_epochs, devices)
 
 
     
-![svg](Learn-Pytorch_files/Learn-Pytorch_838_1.svg)
+![svg](Learn-Pytorch_files/Learn-Pytorch_842_1.svg)
     
 
 
@@ -18325,6 +18389,108 @@ GPT（Generative Pre-trained Transformer）是OpenAI提出的基于Transformer�
 ```python
 
 ```
+
+## MoE
+专家混合模型（Mixture of Experts, MoE）是一种用于处理大规模数据和模型的深度学习架构。MoE模型由多个专家网络和一个门控网络组成，专家网络负责处理不同的输入数据子集，门控网络负责动态地选择合适的专家网络。MoE模型能够有效地处理大规模数据和模型，提高模型的泛化能力和性能。
+
+
+```python
+import torch
+"""
+This module implements a Mixture of Experts (MoE) model using PyTorch.
+
+Classes:
+    MoE: A PyTorch module implementing the Mixture of Experts model.
+
+MoE class:
+    __init__(self, input_dim, output_dim, num_experts, k=1):
+        Initializes the MoE model.
+        
+        Args:
+            input_dim (int): The dimension of the input features.
+            output_dim (int): The dimension of the output features.
+            num_experts (int): The number of expert networks.
+            k (int): The number of experts to use for each input. Default is 1.
+
+    forward(self, x):
+        Forward pass of the MoE model.
+        
+        Args:
+            x (torch.Tensor): The input tensor of shape (batch_size, input_dim).
+        
+        Returns:
+            torch.Tensor: The output tensor of shape (batch_size, output_dim).
+
+Example usage:
+
+
+"""
+from torch import nn
+
+import torch.nn.functional as F
+
+class MoE(nn.Module):
+    def __init__(self, input_dim, output_dim, num_experts, k=1):
+        super(MoE, self).__init__()
+        self.num_experts = num_experts
+        self.k = k  # Number of experts to use
+        self.experts = nn.ModuleList([nn.Linear(input_dim, output_dim) for _ in range(num_experts)])
+        self.gate = nn.Linear(input_dim, num_experts)
+
+    def forward(self, x):
+        # Compute the gating values
+        gate_values = self.gate(x)
+        gate_values = F.softmax(gate_values, dim=1)
+
+        # Select top-k experts
+        topk_gate_values, topk_indices = torch.topk(gate_values, self.k, dim=1)
+
+        # Compute the output of the selected experts
+        expert_outputs = torch.stack([self.experts[i](x) for i in range(self.num_experts)], dim=1)
+        topk_expert_outputs = torch.stack([expert_outputs[:, i, :] for i in topk_indices], dim=1)
+
+        # Compute the final output
+        output = torch.sum(topk_gate_values.unsqueeze(2) * topk_expert_outputs, dim=1)
+        return output
+
+
+# Example usage
+input_dim = 10
+output_dim = 5
+num_experts = 3
+k = 2
+batch_size = 4
+
+moe = MoE(input_dim, output_dim, num_experts, k)
+x = torch.randn(batch_size, input_dim)
+output = moe(x)
+
+
+print("Input:", x)
+print("Output:", output)
+```
+
+    Input: tensor([[-0.0175,  0.4796, -0.3629,  0.3384, -1.2579, -0.1807, -0.7914, -0.1752,
+             -3.3145, -2.1341],
+            [ 0.6781,  1.5992,  0.0348,  0.2335,  0.0074,  0.0514,  0.8723,  0.3556,
+             -0.5605,  2.6458],
+            [ 1.7146, -0.7278, -2.3194,  0.2181, -0.2695,  0.9692, -0.0338,  1.4140,
+              0.2758, -0.4186],
+            [ 1.0461, -1.0277,  0.4058,  0.2847, -0.4015, -0.0565, -1.6594, -0.6853,
+             -0.1258, -0.1962]])
+    Output: tensor([[[-1.5784,  2.4017,  1.1923, -0.4639,  0.3437],
+             [-1.2390,  1.8958,  0.9395, -0.3653,  0.2784]],
+    
+            [[ 0.6973, -0.4446, -0.9515,  1.1556,  0.0600],
+             [ 0.5507, -0.3590, -0.7446,  0.9127,  0.0317]],
+    
+            [[ 0.2116,  0.2233, -0.5717,  0.1656, -0.5791],
+             [ 0.1630,  0.1762, -0.4485,  0.1383, -0.4475]],
+    
+            [[-0.0688,  0.4920,  0.2282,  0.6065,  0.0124],
+             [-0.0523,  0.3917,  0.1894,  0.4814,  0.0165]]],
+           grad_fn=<SumBackward1>)
+
 
 ## 11.10. <a id='toc11_10_'></a>[Mamba](#toc0_)
 
@@ -18420,73 +18586,6 @@ print(output.shape)  # 输出形状: [batch_size, output_size]
 ```
 
 
-    ---------------------------------------------------------------------------
-
-    RuntimeError                              Traceback (most recent call last)
-
-    Cell In[94], line 84
-         82 # 输入示例 (假设序列长度为 30，batch size 为 16)
-         83 input_data = torch.rand(30, 16, input_size)
-    ---> 84 output = model(input_data)
-         86 print(output.shape)  # 输出形状: [batch_size, output_size]
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/torch/nn/modules/module.py:1553, in Module._wrapped_call_impl(self, *args, **kwargs)
-       1551     return self._compiled_call_impl(*args, **kwargs)  # type: ignore[misc]
-       1552 else:
-    -> 1553     return self._call_impl(*args, **kwargs)
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/torch/nn/modules/module.py:1562, in Module._call_impl(self, *args, **kwargs)
-       1557 # If we don't have any hooks, we want to skip the rest of the logic in
-       1558 # this function, and just call forward.
-       1559 if not (self._backward_hooks or self._backward_pre_hooks or self._forward_hooks or self._forward_pre_hooks
-       1560         or _global_backward_pre_hooks or _global_backward_hooks
-       1561         or _global_forward_hooks or _global_forward_pre_hooks):
-    -> 1562     return forward_call(*args, **kwargs)
-       1564 try:
-       1565     result = None
-
-
-    Cell In[94], line 57, in MambaModel.forward(self, x)
-         54 for t in range(seq_len):
-         55     if select_mask[t]:
-         56         # 使用状态空间模型
-    ---> 57         y, h = self.ssm(x[t], h)
-         58     else:
-         59         # 使用自注意力机制
-         60         y = self.attention_module(x[t].unsqueeze(0)).squeeze(0)
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/torch/nn/modules/module.py:1553, in Module._wrapped_call_impl(self, *args, **kwargs)
-       1551     return self._compiled_call_impl(*args, **kwargs)  # type: ignore[misc]
-       1552 else:
-    -> 1553     return self._call_impl(*args, **kwargs)
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/torch/nn/modules/module.py:1562, in Module._call_impl(self, *args, **kwargs)
-       1557 # If we don't have any hooks, we want to skip the rest of the logic in
-       1558 # this function, and just call forward.
-       1559 if not (self._backward_hooks or self._backward_pre_hooks or self._forward_hooks or self._forward_pre_hooks
-       1560         or _global_backward_pre_hooks or _global_backward_hooks
-       1561         or _global_forward_hooks or _global_forward_pre_hooks):
-    -> 1562     return forward_call(*args, **kwargs)
-       1564 try:
-       1565     result = None
-
-
-    Cell In[94], line 18, in SSM.forward(self, x, h_prev)
-         16 def forward(self, x, h_prev):
-         17     # 状态更新: h_t = A * h_{t-1} + B * x_t
-    ---> 18     h_next = torch.tanh(self.A @ h_prev + self.B @ x)
-         19     # 输出: y_t = C * h_t + D * x_t
-         20     y = self.C @ h_next + self.D @ x
-
-
-    RuntimeError: mat1 and mat2 shapes cannot be multiplied (256x256 and 16x512)
-
-
-
 ```python
 from transformers import AutoModel, AutoModelForMaskedLM, AutoTokenizer
 import torch
@@ -18511,379 +18610,6 @@ with torch.inference_mode():
 
 ```
 
-
-    ---------------------------------------------------------------------------
-
-    OSError                                   Traceback (most recent call last)
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/urllib3/connection.py:196, in HTTPConnection._new_conn(self)
-        195 try:
-    --> 196     sock = connection.create_connection(
-        197         (self._dns_host, self.port),
-        198         self.timeout,
-        199         source_address=self.source_address,
-        200         socket_options=self.socket_options,
-        201     )
-        202 except socket.gaierror as e:
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/urllib3/util/connection.py:85, in create_connection(address, timeout, source_address, socket_options)
-         84 try:
-    ---> 85     raise err
-         86 finally:
-         87     # Break explicitly a reference cycle
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/urllib3/util/connection.py:73, in create_connection(address, timeout, source_address, socket_options)
-         72     sock.bind(source_address)
-    ---> 73 sock.connect(sa)
-         74 # Break explicitly a reference cycle
-
-
-    OSError: [Errno 101] Network is unreachable
-
-    
-    The above exception was the direct cause of the following exception:
-
-
-    NewConnectionError                        Traceback (most recent call last)
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/urllib3/connectionpool.py:789, in HTTPConnectionPool.urlopen(self, method, url, body, headers, retries, redirect, assert_same_host, timeout, pool_timeout, release_conn, chunked, body_pos, preload_content, decode_content, **response_kw)
-        788 # Make the request on the HTTPConnection object
-    --> 789 response = self._make_request(
-        790     conn,
-        791     method,
-        792     url,
-        793     timeout=timeout_obj,
-        794     body=body,
-        795     headers=headers,
-        796     chunked=chunked,
-        797     retries=retries,
-        798     response_conn=response_conn,
-        799     preload_content=preload_content,
-        800     decode_content=decode_content,
-        801     **response_kw,
-        802 )
-        804 # Everything went great!
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/urllib3/connectionpool.py:490, in HTTPConnectionPool._make_request(self, conn, method, url, body, headers, retries, timeout, chunked, response_conn, preload_content, decode_content, enforce_content_length)
-        489         new_e = _wrap_proxy_error(new_e, conn.proxy.scheme)
-    --> 490     raise new_e
-        492 # conn.request() calls http.client.*.request, not the method in
-        493 # urllib3.request. It also calls makefile (recv) on the socket.
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/urllib3/connectionpool.py:466, in HTTPConnectionPool._make_request(self, conn, method, url, body, headers, retries, timeout, chunked, response_conn, preload_content, decode_content, enforce_content_length)
-        465 try:
-    --> 466     self._validate_conn(conn)
-        467 except (SocketTimeout, BaseSSLError) as e:
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/urllib3/connectionpool.py:1095, in HTTPSConnectionPool._validate_conn(self, conn)
-       1094 if conn.is_closed:
-    -> 1095     conn.connect()
-       1097 # TODO revise this, see https://github.com/urllib3/urllib3/issues/2791
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/urllib3/connection.py:615, in HTTPSConnection.connect(self)
-        614 sock: socket.socket | ssl.SSLSocket
-    --> 615 self.sock = sock = self._new_conn()
-        616 server_hostname: str = self.host
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/urllib3/connection.py:211, in HTTPConnection._new_conn(self)
-        210 except OSError as e:
-    --> 211     raise NewConnectionError(
-        212         self, f"Failed to establish a new connection: {e}"
-        213     ) from e
-        215 # Audit hooks are only available in Python 3.8+
-
-
-    NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x7fd52090eb10>: Failed to establish a new connection: [Errno 101] Network is unreachable
-
-    
-    The above exception was the direct cause of the following exception:
-
-
-    MaxRetryError                             Traceback (most recent call last)
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/requests/adapters.py:667, in HTTPAdapter.send(self, request, stream, timeout, verify, cert, proxies)
-        666 try:
-    --> 667     resp = conn.urlopen(
-        668         method=request.method,
-        669         url=url,
-        670         body=request.body,
-        671         headers=request.headers,
-        672         redirect=False,
-        673         assert_same_host=False,
-        674         preload_content=False,
-        675         decode_content=False,
-        676         retries=self.max_retries,
-        677         timeout=timeout,
-        678         chunked=chunked,
-        679     )
-        681 except (ProtocolError, OSError) as err:
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/urllib3/connectionpool.py:843, in HTTPConnectionPool.urlopen(self, method, url, body, headers, retries, redirect, assert_same_host, timeout, pool_timeout, release_conn, chunked, body_pos, preload_content, decode_content, **response_kw)
-        841     new_e = ProtocolError("Connection aborted.", new_e)
-    --> 843 retries = retries.increment(
-        844     method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
-        845 )
-        846 retries.sleep()
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/urllib3/util/retry.py:519, in Retry.increment(self, method, url, response, error, _pool, _stacktrace)
-        518     reason = error or ResponseError(cause)
-    --> 519     raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
-        521 log.debug("Incremented Retry for (url='%s'): %r", url, new_retry)
-
-
-    MaxRetryError: HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /kuleshov-group/PlantCaduceus_l24/resolve/main/config.json (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd52090eb10>: Failed to establish a new connection: [Errno 101] Network is unreachable'))
-
-    
-    During handling of the above exception, another exception occurred:
-
-
-    ConnectionError                           Traceback (most recent call last)
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/huggingface_hub/file_download.py:1746, in _get_metadata_or_catch_error(repo_id, filename, repo_type, revision, endpoint, proxies, etag_timeout, headers, token, local_files_only, relative_filename, storage_folder)
-       1745 try:
-    -> 1746     metadata = get_hf_file_metadata(
-       1747         url=url, proxies=proxies, timeout=etag_timeout, headers=headers, token=token
-       1748     )
-       1749 except EntryNotFoundError as http_error:
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:114, in validate_hf_hub_args.<locals>._inner_fn(*args, **kwargs)
-        112     kwargs = smoothly_deprecate_use_auth_token(fn_name=fn.__name__, has_token=has_token, kwargs=kwargs)
-    --> 114 return fn(*args, **kwargs)
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/huggingface_hub/file_download.py:1666, in get_hf_file_metadata(url, token, proxies, timeout, library_name, library_version, user_agent, headers)
-       1665 # Retrieve metadata
-    -> 1666 r = _request_wrapper(
-       1667     method="HEAD",
-       1668     url=url,
-       1669     headers=headers,
-       1670     allow_redirects=False,
-       1671     follow_relative_redirects=True,
-       1672     proxies=proxies,
-       1673     timeout=timeout,
-       1674 )
-       1675 hf_raise_for_status(r)
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/huggingface_hub/file_download.py:364, in _request_wrapper(method, url, follow_relative_redirects, **params)
-        363 if follow_relative_redirects:
-    --> 364     response = _request_wrapper(
-        365         method=method,
-        366         url=url,
-        367         follow_relative_redirects=False,
-        368         **params,
-        369     )
-        371     # If redirection, we redirect only relative paths.
-        372     # This is useful in case of a renamed repository.
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/huggingface_hub/file_download.py:387, in _request_wrapper(method, url, follow_relative_redirects, **params)
-        386 # Perform request and return if status_code is not in the retry list.
-    --> 387 response = get_session().request(method=method, url=url, **params)
-        388 hf_raise_for_status(response)
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/requests/sessions.py:589, in Session.request(self, method, url, params, data, headers, cookies, files, auth, timeout, allow_redirects, proxies, hooks, stream, verify, cert, json)
-        588 send_kwargs.update(settings)
-    --> 589 resp = self.send(prep, **send_kwargs)
-        591 return resp
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/requests/sessions.py:703, in Session.send(self, request, **kwargs)
-        702 # Send the request
-    --> 703 r = adapter.send(request, **kwargs)
-        705 # Total elapsed time of the request (approximately)
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/huggingface_hub/utils/_http.py:93, in UniqueRequestIdAdapter.send(self, request, *args, **kwargs)
-         92 try:
-    ---> 93     return super().send(request, *args, **kwargs)
-         94 except requests.RequestException as e:
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/requests/adapters.py:700, in HTTPAdapter.send(self, request, stream, timeout, verify, cert, proxies)
-        698         raise SSLError(e, request=request)
-    --> 700     raise ConnectionError(e, request=request)
-        702 except ClosedPoolError as e:
-
-
-    ConnectionError: (MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /kuleshov-group/PlantCaduceus_l24/resolve/main/config.json (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x7fd52090eb10>: Failed to establish a new connection: [Errno 101] Network is unreachable'))"), '(Request ID: 5f13dc32-2cb8-4601-8826-7a37e560cb83)')
-
-    
-    The above exception was the direct cause of the following exception:
-
-
-    LocalEntryNotFoundError                   Traceback (most recent call last)
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/transformers/utils/hub.py:403, in cached_file(path_or_repo_id, filename, cache_dir, force_download, resume_download, proxies, token, revision, local_files_only, subfolder, repo_type, user_agent, _raise_exceptions_for_gated_repo, _raise_exceptions_for_missing_entries, _raise_exceptions_for_connection_errors, _commit_hash, **deprecated_kwargs)
-        401 try:
-        402     # Load from URL or cache if already cached
-    --> 403     resolved_file = hf_hub_download(
-        404         path_or_repo_id,
-        405         filename,
-        406         subfolder=None if len(subfolder) == 0 else subfolder,
-        407         repo_type=repo_type,
-        408         revision=revision,
-        409         cache_dir=cache_dir,
-        410         user_agent=user_agent,
-        411         force_download=force_download,
-        412         proxies=proxies,
-        413         resume_download=resume_download,
-        414         token=token,
-        415         local_files_only=local_files_only,
-        416     )
-        417 except GatedRepoError as e:
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/huggingface_hub/utils/_deprecation.py:101, in _deprecate_arguments.<locals>._inner_deprecate_positional_args.<locals>.inner_f(*args, **kwargs)
-        100     warnings.warn(message, FutureWarning)
-    --> 101 return f(*args, **kwargs)
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:114, in validate_hf_hub_args.<locals>._inner_fn(*args, **kwargs)
-        112     kwargs = smoothly_deprecate_use_auth_token(fn_name=fn.__name__, has_token=has_token, kwargs=kwargs)
-    --> 114 return fn(*args, **kwargs)
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/huggingface_hub/file_download.py:1232, in hf_hub_download(repo_id, filename, subfolder, repo_type, revision, library_name, library_version, cache_dir, local_dir, user_agent, force_download, proxies, etag_timeout, token, local_files_only, headers, endpoint, legacy_cache_layout, resume_download, force_filename, local_dir_use_symlinks)
-       1231 else:
-    -> 1232     return _hf_hub_download_to_cache_dir(
-       1233         # Destination
-       1234         cache_dir=cache_dir,
-       1235         # File info
-       1236         repo_id=repo_id,
-       1237         filename=filename,
-       1238         repo_type=repo_type,
-       1239         revision=revision,
-       1240         # HTTP info
-       1241         endpoint=endpoint,
-       1242         etag_timeout=etag_timeout,
-       1243         headers=headers,
-       1244         proxies=proxies,
-       1245         token=token,
-       1246         # Additional options
-       1247         local_files_only=local_files_only,
-       1248         force_download=force_download,
-       1249     )
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/huggingface_hub/file_download.py:1339, in _hf_hub_download_to_cache_dir(cache_dir, repo_id, filename, repo_type, revision, endpoint, etag_timeout, headers, proxies, token, local_files_only, force_download)
-       1338     # Otherwise, raise appropriate error
-    -> 1339     _raise_on_head_call_error(head_call_error, force_download, local_files_only)
-       1341 # From now on, etag, commit_hash, url and size are not None.
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/huggingface_hub/file_download.py:1857, in _raise_on_head_call_error(head_call_error, force_download, local_files_only)
-       1855 else:
-       1856     # Otherwise: most likely a connection issue or Hub downtime => let's warn the user
-    -> 1857     raise LocalEntryNotFoundError(
-       1858         "An error happened while trying to locate the file on the Hub and we cannot find the requested files"
-       1859         " in the local cache. Please check your connection and try again or make sure your Internet connection"
-       1860         " is on."
-       1861     ) from head_call_error
-
-
-    LocalEntryNotFoundError: An error happened while trying to locate the file on the Hub and we cannot find the requested files in the local cache. Please check your connection and try again or make sure your Internet connection is on.
-
-    
-    The above exception was the direct cause of the following exception:
-
-
-    OSError                                   Traceback (most recent call last)
-
-    Cell In[14], line 5
-          3 model_path = 'kuleshov-group/PlantCaduceus_l24'
-          4 device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    ----> 5 model = AutoModelForMaskedLM.from_pretrained(model_path, trust_remote_code=True, device_map=device)
-          6 model.eval()
-          7 tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/transformers/models/auto/auto_factory.py:526, in _BaseAutoModelClass.from_pretrained(cls, pretrained_model_name_or_path, *model_args, **kwargs)
-        523 if kwargs.get("quantization_config", None) is not None:
-        524     _ = kwargs.pop("quantization_config")
-    --> 526 config, kwargs = AutoConfig.from_pretrained(
-        527     pretrained_model_name_or_path,
-        528     return_unused_kwargs=True,
-        529     trust_remote_code=trust_remote_code,
-        530     code_revision=code_revision,
-        531     _commit_hash=commit_hash,
-        532     **hub_kwargs,
-        533     **kwargs,
-        534 )
-        536 # if torch_dtype=auto was passed here, ensure to pass it on
-        537 if kwargs_orig.get("torch_dtype", None) == "auto":
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/transformers/models/auto/configuration_auto.py:1006, in AutoConfig.from_pretrained(cls, pretrained_model_name_or_path, **kwargs)
-       1003 trust_remote_code = kwargs.pop("trust_remote_code", None)
-       1004 code_revision = kwargs.pop("code_revision", None)
-    -> 1006 config_dict, unused_kwargs = PretrainedConfig.get_config_dict(pretrained_model_name_or_path, **kwargs)
-       1007 has_remote_code = "auto_map" in config_dict and "AutoConfig" in config_dict["auto_map"]
-       1008 has_local_code = "model_type" in config_dict and config_dict["model_type"] in CONFIG_MAPPING
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/transformers/configuration_utils.py:570, in PretrainedConfig.get_config_dict(cls, pretrained_model_name_or_path, **kwargs)
-        568 original_kwargs = copy.deepcopy(kwargs)
-        569 # Get config dict associated with the base config file
-    --> 570 config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
-        571 if config_dict is None:
-        572     return {}, kwargs
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/transformers/configuration_utils.py:629, in PretrainedConfig._get_config_dict(cls, pretrained_model_name_or_path, **kwargs)
-        625 configuration_file = kwargs.pop("_configuration_file", CONFIG_NAME) if gguf_file is None else gguf_file
-        627 try:
-        628     # Load from local folder or from cache or download from model Hub and cache
-    --> 629     resolved_config_file = cached_file(
-        630         pretrained_model_name_or_path,
-        631         configuration_file,
-        632         cache_dir=cache_dir,
-        633         force_download=force_download,
-        634         proxies=proxies,
-        635         resume_download=resume_download,
-        636         local_files_only=local_files_only,
-        637         token=token,
-        638         user_agent=user_agent,
-        639         revision=revision,
-        640         subfolder=subfolder,
-        641         _commit_hash=commit_hash,
-        642     )
-        643     if resolved_config_file is None:
-        644         return None, kwargs
-
-
-    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/transformers/utils/hub.py:446, in cached_file(path_or_repo_id, filename, cache_dir, force_download, resume_download, proxies, token, revision, local_files_only, subfolder, repo_type, user_agent, _raise_exceptions_for_gated_repo, _raise_exceptions_for_missing_entries, _raise_exceptions_for_connection_errors, _commit_hash, **deprecated_kwargs)
-        440     if (
-        441         resolved_file is not None
-        442         or not _raise_exceptions_for_missing_entries
-        443         or not _raise_exceptions_for_connection_errors
-        444     ):
-        445         return resolved_file
-    --> 446     raise EnvironmentError(
-        447         f"We couldn't connect to '{HUGGINGFACE_CO_RESOLVE_ENDPOINT}' to load this file, couldn't find it in the"
-        448         f" cached files and it looks like {path_or_repo_id} is not the path to a directory containing a file named"
-        449         f" {full_filename}.\nCheckout your internet connection or see how to run the library in offline mode at"
-        450         " 'https://huggingface.co/docs/transformers/installation#offline-mode'."
-        451     ) from e
-        452 except EntryNotFoundError as e:
-        453     if not _raise_exceptions_for_missing_entries:
-
-
-    OSError: We couldn't connect to 'https://huggingface.co' to load this file, couldn't find it in the cached files and it looks like kuleshov-group/PlantCaduceus_l24 is not the path to a directory containing a file named config.json.
-    Checkout your internet connection or see how to run the library in offline mode at 'https://huggingface.co/docs/transformers/installation#offline-mode'.
-
-
 # 12. <a id='toc12_'></a>[==============](#toc0_)
 
 # 13. <a id='toc13_'></a>[炼丹心得](#toc0_)
@@ -18902,6 +18628,7 @@ import torch.nn.functional as F
 
 class MyLayer(nn.Module):
     '''带参数的，自定义层'''
+
     def __init__(self):
         super().__init__()
         self.weight = nn.Parameter(torch.randn(2, requires_grad=True))  # 变量，立即初始化，相当于常量
@@ -18913,8 +18640,11 @@ class MyLayer(nn.Module):
         return F.relu(y_hat)
 
 
-X = torch.ones(2)
+# Test
 myLayer = MyLayer()
+
+X = torch.ones(2)
+
 myLayer(X)
 ```
 
@@ -19766,6 +19496,7 @@ torch.chunk(input, chunks, dim=0)
 # 示例 1：按行分割张量
 import torch
 
+
 # 创建一个 4x4 的张量
 x = torch.arange(16).view(4, 4)
 print("Original Tensor:")
@@ -19920,6 +19651,664 @@ if __name__ == "__main__":
 
     参数总数: 0.20 M
     参数占用内存: 0.78 MB
+
+
+## 13.9. <a id='toc13_9_'></a>[大模型微调](#toc0_)
+
+|特性|全模型微调（SFT）|参数高效微调（PEFT）|指令微调（Instruction Tuning）|强化学习微调（RLHF）|
+|---|---|---|---|---|
+|训练目标|优化单一任务|优化少量参数，提高训练效率|提高多任务能力，适应自然语言指令|生成符合人类反馈的内容|
+|计算开销|高|低（训练少量参数）|中等，取决于任务复杂度|高，训练奖励模型和强化学习|
+|数据需求|大量带标注的训练数据|训练数据较少，但任务数据需要多样|需要多样化的指令数据|需要人类反馈数据|
+|适用场景|单一任务的优化|资源有限的场景，快速微调|多任务学习，灵活的指令处理|开放式任务生成，基于人类偏好的优化|
+|优点|可以大幅提升单一任务性能|节省资源，减少训练成本|提升多任务能力和灵活性|增强生成质量，符合人类期望|
+|缺点|计算资源消耗大，容易过拟合|微调效果可能不如全模型微调|数据准备复杂，训练时间长|实现复杂，资源需求高|
+
+
+不需要更新参数：
+ - 提示词微调（Promot tuning）
+ 
+ 更新参数：
+ - 全量微调（Full Fine-Tuning）
+ - 高效参数微调（Efficient Fine-Tuning）
+ - 强化学习微调（RLHF）
+
+## 13.10. <a id='toc13_10_'></a>[加速器](#toc0_)
+
+数据并行、模型并行、混合并行与工具包的关系比较
+
+
+|特性|数据并行|模型并行|混合并行|
+|---|---|---|---|
+|定义|将训练数据划分到多个设备（GPU/节点）上，并进行并行计算，最后合并梯度。|将模型划分为多个部分，并分配到多个设备（GPU/节点）上进行并行计算。|结合数据并行和模型并行，既拆分数据也拆分模型以提高训练效率。|
+|适用场景|数据量大，但模型相对较小。适用于大规模数据训练，适合处理常见的深度学习任务。|模型大，单个设备无法存下整个模型，适用于非常大的模型（如Transformer、BERT类模型）。|适用于需要同时处理超大模型和大规模数据的训练任务，如训练GPT类模型等。|
+|工具包支持|DeepSpeed（通过DistributedDataParallel和ZeRO），Horovod（基于Ring-AllReduce），TensorFlow（tf.distribute.Strategy）|Megatron-LM（张量并行），DeepSpeed（ZeRO阶段3），FairScale（FSDP）|DeepSpeed（结合数据并行和ZeRO），Megatron-LM（结合数据并行和模型并行）|
+|性能优化|高效的梯度同步和数据拆分，适用于多GPU/多节点训练。|模型拆分，适合超大规模模型，减少单个设备内存压力。|综合了数据并行和模型并行的优势，适用于超大规模数据和模型训练。|
+|内存优化|通过数据拆分来减少每个设备的内存需求。|通过模型拆分来减轻设备的内存压力。|结合了数据和模型并行的内存优化，特别适用于超大模型和数据的训练。|
+|分布式训练支持|DeepSpeed（支持NCCL后端），Horovod（Ring-AllReduce），TensorFlow（MirroredStrategy）|Megatron-LM（张量并行），FairScale（FSDP），DeepSpeed（ZeRO阶段3）|DeepSpeed（支持两者的混合模式），Megatron-LM（数据和模型并行结合）|
+
+|特性/工具|Hugging Face Trainer|DeepSpeed|Horovod|Megatron-LM|FairScale|
+|---|---|---|---|---|---|
+|功能|高层封装的训练API，简化训练过程（适用于NLP任务）|低层次优化，支持大规模模型训练和数据并行，提供多种内存优化方案|分布式训练框架，适用于大规模数据并行训练，基于Horovod接口|专注于超大规模模型（如GPT-3），通过张量并行进行大规模训练|专注于大模型训练的内存优化，支持模型并行和数据并行|
+|适用场景|主要用于NLP任务，适用于Transformer类模型训练，方便与 Hugging Face 数据集和模型库集成|适用于大规模模型和数据的分布式训练，尤其适合超大模型（如GPT、BERT）|适用于大规模分布式训练，尤其是多节点环境中的数据并行|适用于需要极大计算和内存资源的超大规模模型训练（如GPT-3）|适用于内存受限的情况下进行大规模分布式训练（如BERT、GPT模型）|
+|易用性|非常易用，高层API，少量代码即可完成训练、微调、评估等任务|需要较多配置，适合需要高度定制化训练的高级用户|需要较高的分布式训练经验，配置较为复杂|需要深入了解模型并行、数据并行的概念，配置复杂|相对复杂，需要开发者了解内存优化和并行训练技术|
+|分布式训练支持|支持数据并行，集成了 Accelerate 库，支持多GPU训练|支持数据并行、模型并行和混合并行，尤其在大规模模型训练中表现优异|支持数据并行，分布式梯度同步（基于 Ring-AllReduce 或 NCCL）|支持模型并行和数据并行的结合，专门针对超大规模模型（如GPT-3）|支持数据并行和模型并行，内存优化，适合大规模训练
+|模型并行支持|不支持复杂的模型并行，主要聚焦于数据并行和微调|支持模型并行，尤其是在 ZeRO 和混合并行模式下支持大规模模型训练|不直接支持模型并行，专注于数据并行|通过张量并行（Tensor Parallelism）支持模型并行|支持模型并行，尤其是通过 FSDP（Fully Sharded Data Parallel）模式优化内存
+|内存优化|提供微调、自动混合精度（AMP）等基本优化|ZeRO（Zero Redundancy Optimizer）优化，支持多种内存优化技术|主要通过数据并行和全局梯度同步优化内存|张量并行和模型分片，通过分布式内存管理优化超大规模模型训练|通过 FSDP 和混合并行优化内存，减少训练时内存占用
+|性能|性能主要依赖于配置，适用于中小规模模型训练和微调|在大规模模型和数据训练中提供显著性能提升，特别是在分布式环境下|在多节点环境下性能较强，尤其是在数据并行模式下|适合极大规模的模型训练，提供高效的张量并行支持|在模型并行和内存优化方面提供较好性能，适合内存受限的场景
+|集成度|与 Hugging Face 模型库和数据集无缝集成，极大简化了训练过程|可以与 Hugging Face 集成，但需要更多配置和自定义|需要与 PyTorch 集成，配置较为复杂|可以与 Hugging Face 集成，但适用于大规模训练和模型开发者|适用于与 PyTorch 结合，专注于内存优化和并行训练
+|自动化功能|自动保存、评估、调优、日志记录、早期停止等功能|提供 ZeRO、FP16、混合精度等自动优化功能，但配置较为复杂|通过 Horovod 提供分布式训练的自动化控制|支持大规模模型的自动优化，尤其是通过模型并行与数据并行的结合|提供分布式训练的内存优化和自动化控制，尤其是 FSDP 优化
+
+### 13.10.1. <a id='toc13_10_1_'></a>[deepspeed](#toc0_)
+DeepSpeed 是一个由 Microsoft 提供的深度学习优化库，旨在提高深度学习模型训练的效率，特别是对于超大规模模型的训练。它提供了多种性能优化技术，包括内存优化、分布式训练、混合精度训练和模型并行等。DeepSpeed 的目标是让研究人员和开发者能够训练更大规模的模型，同时保持高效的内存利用和计算速度。
+
+#### 13.10.1.1. <a id='toc13_10_1_1_'></a>[数据并行](#toc0_)
+在 DeepSpeed 中，数据并行使用 DeepSpeed 和 torch.nn.DataParallel 的结合来加速训练，特别是在多GPU环境中。
+
+
+```python
+import deepspeed
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, Dataset
+
+
+# 定义模型
+class SimpleModel(nn.Module):
+    def __init__(self):
+        super(SimpleModel, self).__init__()
+        self.fc1 = nn.Linear(10, 20)
+        self.fc2 = nn.Linear(20, 2)
+
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        return self.fc2(x)
+
+
+# 创建数据集
+class SimpleDataset(Dataset):
+    def __init__(self, data_size):
+        self.data = torch.randn(data_size, 10)
+        self.labels = torch.randint(0, 2, (data_size,))
+
+    def __getitem__(self, index):
+        return self.data[index], self.labels[index]
+
+    def __len__(self):
+        return len(self.data)
+
+
+# 分布式训练配置
+def train():
+    model = SimpleModel()
+
+    # DeepSpeed配置
+    config = {
+        "train_batch_size": 32,
+        "steps_per_print": 200,
+        "zero_optimization": {
+            "stage": 2
+        },
+        # "fp16": {
+        #     "enabled": True
+        # },
+        # "cpu_offload": False
+        "zero_allow_untested_optimizer": True
+    }
+
+    # 创建数据加载器
+    dataset = SimpleDataset(1000)
+    dataloader = DataLoader(dataset, batch_size=32)
+
+    # 初始化DeepSpeed
+    model, optimizer, _, _ = deepspeed.initialize(model=model, optimizer=optim.SGD(model.parameters(), lr=0.01), config_params=config)
+
+    # 开始训练
+    for epoch in range(10):
+        model.train()
+        for data, labels in dataloader:
+            data, labels = data.cuda(), labels.cuda()
+
+            optimizer.zero_grad()
+            outputs = model(data)
+            loss = nn.CrossEntropyLoss()(outputs, labels)
+            model.backward(loss)
+            model.step()
+
+            print(f"Epoch {epoch}, Loss: {loss.item()}")
+
+
+# 启动DeepSpeed训练
+if __name__ == "__main__":
+    train()
+```
+
+    [2025-01-16 15:01:45,498] [INFO] [logging.py:128:log_dist] [Rank 0] DeepSpeed info: version=0.16.2, git-hash=056f307, git-branch=HEAD
+    [2025-01-16 15:01:45,499] [INFO] [config.py:733:__init__] Config mesh_device None world_size = 1
+    [2025-01-16 15:01:45,501] [INFO] [logging.py:128:log_dist] [Rank 0] DeepSpeed Flops Profiler Enabled: False
+    [2025-01-16 15:01:45,502] [INFO] [logging.py:128:log_dist] [Rank 0] Using client Optimizer as basic optimizer
+    [2025-01-16 15:01:45,502] [INFO] [logging.py:128:log_dist] [Rank 0] Removing param_group that has no 'params' in the basic Optimizer
+    [2025-01-16 15:01:45,503] [INFO] [logging.py:128:log_dist] [Rank 0] DeepSpeed Basic Optimizer = SGD
+    [2025-01-16 15:01:45,503] [INFO] [utils.py:59:is_zero_supported_optimizer] Checking ZeRO support for optimizer=SGD type=<class 'torch.optim.sgd.SGD'>
+    [2025-01-16 15:01:45,504] [WARNING] [engine.py:1244:_do_optimizer_sanity_check] **** You are using ZeRO with an untested optimizer, proceed with caution *****
+    [2025-01-16 15:01:45,504] [INFO] [logging.py:128:log_dist] [Rank 0] Creating torch.float32 ZeRO stage 2 optimizer
+    [2025-01-16 15:01:45,505] [INFO] [stage_1_and_2.py:149:__init__] Reduce bucket size 500000000
+    [2025-01-16 15:01:45,505] [INFO] [stage_1_and_2.py:150:__init__] Allgather bucket size 500000000
+    [2025-01-16 15:01:45,505] [INFO] [stage_1_and_2.py:151:__init__] CPU Offload: False
+    [2025-01-16 15:01:45,506] [INFO] [stage_1_and_2.py:152:__init__] Round robin gradient partitioning: False
+    [2025-01-16 15:01:45,649] [INFO] [utils.py:781:see_memory_usage] Before initializing optimizer states
+    [2025-01-16 15:01:45,650] [INFO] [utils.py:782:see_memory_usage] MA 0.36 GB         Max_MA 0.36 GB         CA 0.36 GB         Max_CA 0 GB 
+    [2025-01-16 15:01:45,651] [INFO] [utils.py:789:see_memory_usage] CPU Virtual Memory:  used = 148.31 GB, percent = 14.7%
+    [2025-01-16 15:01:45,786] [INFO] [utils.py:781:see_memory_usage] After initializing optimizer states
+    [2025-01-16 15:01:45,787] [INFO] [utils.py:782:see_memory_usage] MA 0.36 GB         Max_MA 0.36 GB         CA 0.36 GB         Max_CA 0 GB 
+    [2025-01-16 15:01:45,787] [INFO] [utils.py:789:see_memory_usage] CPU Virtual Memory:  used = 148.32 GB, percent = 14.7%
+    [2025-01-16 15:01:45,788] [INFO] [stage_1_and_2.py:544:__init__] optimizer state initialized
+    [2025-01-16 15:01:45,918] [INFO] [utils.py:781:see_memory_usage] After initializing ZeRO optimizer
+    [2025-01-16 15:01:45,919] [INFO] [utils.py:782:see_memory_usage] MA 0.36 GB         Max_MA 0.36 GB         CA 0.36 GB         Max_CA 0 GB 
+    [2025-01-16 15:01:45,920] [INFO] [utils.py:789:see_memory_usage] CPU Virtual Memory:  used = 148.28 GB, percent = 14.7%
+    [2025-01-16 15:01:45,921] [INFO] [logging.py:128:log_dist] [Rank 0] DeepSpeed Final Optimizer = DeepSpeedZeroOptimizer
+    [2025-01-16 15:01:45,921] [INFO] [logging.py:128:log_dist] [Rank 0] DeepSpeed using configured LR scheduler = None
+    [2025-01-16 15:01:45,922] [INFO] [logging.py:128:log_dist] [Rank 0] DeepSpeed LR Scheduler = None
+    [2025-01-16 15:01:45,922] [INFO] [logging.py:128:log_dist] [Rank 0] step=0, skipped=0, lr=[0.01], mom=[0]
+    [2025-01-16 15:01:45,923] [INFO] [config.py:999:print] DeepSpeedEngine configuration:
+    [2025-01-16 15:01:45,923] [INFO] [config.py:1003:print]   activation_checkpointing_config  {
+        "partition_activations": false, 
+        "contiguous_memory_optimization": false, 
+        "cpu_checkpointing": false, 
+        "number_checkpoints": null, 
+        "synchronize_checkpoint_boundary": false, 
+        "profile": false
+    }
+    [2025-01-16 15:01:45,924] [INFO] [config.py:1003:print]   aio_config ................... {'block_size': 1048576, 'queue_depth': 8, 'thread_count': 1, 'single_submit': False, 'overlap_events': True, 'use_gds': False}
+    [2025-01-16 15:01:45,924] [INFO] [config.py:1003:print]   amp_enabled .................. False
+    [2025-01-16 15:01:45,924] [INFO] [config.py:1003:print]   amp_params ................... False
+    [2025-01-16 15:01:45,925] [INFO] [config.py:1003:print]   autotuning_config ............ {
+        "enabled": false, 
+        "start_step": null, 
+        "end_step": null, 
+        "metric_path": null, 
+        "arg_mappings": null, 
+        "metric": "throughput", 
+        "model_info": null, 
+        "results_dir": "autotuning_results", 
+        "exps_dir": "autotuning_exps", 
+        "overwrite": true, 
+        "fast": true, 
+        "start_profile_step": 3, 
+        "end_profile_step": 5, 
+        "tuner_type": "gridsearch", 
+        "tuner_early_stopping": 5, 
+        "tuner_num_trials": 50, 
+        "model_info_path": null, 
+        "mp_size": 1, 
+        "max_train_batch_size": null, 
+        "min_train_batch_size": 1, 
+        "max_train_micro_batch_size_per_gpu": 1.024000e+03, 
+        "min_train_micro_batch_size_per_gpu": 1, 
+        "num_tuning_micro_batch_sizes": 3
+    }
+    [2025-01-16 15:01:45,925] [INFO] [config.py:1003:print]   bfloat16_enabled ............. False
+    [2025-01-16 15:01:45,926] [INFO] [config.py:1003:print]   bfloat16_immediate_grad_update  False
+    [2025-01-16 15:01:45,926] [INFO] [config.py:1003:print]   checkpoint_parallel_write_pipeline  False
+    [2025-01-16 15:01:45,927] [INFO] [config.py:1003:print]   checkpoint_tag_validation_enabled  True
+    [2025-01-16 15:01:45,927] [INFO] [config.py:1003:print]   checkpoint_tag_validation_fail  False
+    [2025-01-16 15:01:45,927] [INFO] [config.py:1003:print]   comms_config ................. <deepspeed.comm.config.DeepSpeedCommsConfig object at 0x7fdf1987b190>
+    [2025-01-16 15:01:45,928] [INFO] [config.py:1003:print]   communication_data_type ...... None
+    [2025-01-16 15:01:45,928] [INFO] [config.py:1003:print]   compression_config ........... {'weight_quantization': {'shared_parameters': {'enabled': False, 'quantizer_kernel': False, 'schedule_offset': 0, 'quantize_groups': 1, 'quantize_verbose': False, 'quantization_type': 'symmetric', 'quantize_weight_in_forward': False, 'rounding': 'nearest', 'fp16_mixed_quantize': False, 'quantize_change_ratio': 0.001}, 'different_groups': {}}, 'activation_quantization': {'shared_parameters': {'enabled': False, 'quantization_type': 'symmetric', 'range_calibration': 'dynamic', 'schedule_offset': 1000}, 'different_groups': {}}, 'sparse_pruning': {'shared_parameters': {'enabled': False, 'method': 'l1', 'schedule_offset': 1000}, 'different_groups': {}}, 'row_pruning': {'shared_parameters': {'enabled': False, 'method': 'l1', 'schedule_offset': 1000}, 'different_groups': {}}, 'head_pruning': {'shared_parameters': {'enabled': False, 'method': 'topk', 'schedule_offset': 1000}, 'different_groups': {}}, 'channel_pruning': {'shared_parameters': {'enabled': False, 'method': 'l1', 'schedule_offset': 1000}, 'different_groups': {}}, 'layer_reduction': {'enabled': False}}
+    [2025-01-16 15:01:45,928] [INFO] [config.py:1003:print]   curriculum_enabled_legacy .... False
+    [2025-01-16 15:01:45,929] [INFO] [config.py:1003:print]   curriculum_params_legacy ..... False
+    [2025-01-16 15:01:45,929] [INFO] [config.py:1003:print]   data_efficiency_config ....... {'enabled': False, 'seed': 1234, 'data_sampling': {'enabled': False, 'num_epochs': 1000, 'num_workers': 0, 'curriculum_learning': {'enabled': False}}, 'data_routing': {'enabled': False, 'random_ltd': {'enabled': False, 'layer_token_lr_schedule': {'enabled': False}}}}
+    [2025-01-16 15:01:45,929] [INFO] [config.py:1003:print]   data_efficiency_enabled ...... False
+    [2025-01-16 15:01:45,931] [INFO] [config.py:1003:print]   dataloader_drop_last ......... False
+    [2025-01-16 15:01:45,931] [INFO] [config.py:1003:print]   disable_allgather ............ False
+    [2025-01-16 15:01:45,932] [INFO] [config.py:1003:print]   dump_state ................... False
+    [2025-01-16 15:01:45,932] [INFO] [config.py:1003:print]   dynamic_loss_scale_args ...... None
+    [2025-01-16 15:01:45,932] [INFO] [config.py:1003:print]   eigenvalue_enabled ........... False
+    [2025-01-16 15:01:45,933] [INFO] [config.py:1003:print]   eigenvalue_gas_boundary_resolution  1
+    [2025-01-16 15:01:45,933] [INFO] [config.py:1003:print]   eigenvalue_layer_name ........ bert.encoder.layer
+    [2025-01-16 15:01:45,933] [INFO] [config.py:1003:print]   eigenvalue_layer_num ......... 0
+    [2025-01-16 15:01:45,934] [INFO] [config.py:1003:print]   eigenvalue_max_iter .......... 100
+    [2025-01-16 15:01:45,934] [INFO] [config.py:1003:print]   eigenvalue_stability ......... 1e-06
+    [2025-01-16 15:01:45,935] [INFO] [config.py:1003:print]   eigenvalue_tol ............... 0.01
+    [2025-01-16 15:01:45,935] [INFO] [config.py:1003:print]   eigenvalue_verbose ........... False
+    [2025-01-16 15:01:45,935] [INFO] [config.py:1003:print]   elasticity_enabled ........... False
+    [2025-01-16 15:01:45,936] [INFO] [config.py:1003:print]   flops_profiler_config ........ {
+        "enabled": false, 
+        "recompute_fwd_factor": 0.0, 
+        "profile_step": 1, 
+        "module_depth": -1, 
+        "top_modules": 1, 
+        "detailed": true, 
+        "output_file": null
+    }
+    [2025-01-16 15:01:45,936] [INFO] [config.py:1003:print]   fp16_auto_cast ............... None
+    [2025-01-16 15:01:45,936] [INFO] [config.py:1003:print]   fp16_enabled ................. False
+    [2025-01-16 15:01:45,937] [INFO] [config.py:1003:print]   fp16_master_weights_and_gradients  False
+    [2025-01-16 15:01:45,937] [INFO] [config.py:1003:print]   global_rank .................. 0
+    [2025-01-16 15:01:45,937] [INFO] [config.py:1003:print]   grad_accum_dtype ............. None
+    [2025-01-16 15:01:45,938] [INFO] [config.py:1003:print]   gradient_accumulation_steps .. 1
+    [2025-01-16 15:01:45,938] [INFO] [config.py:1003:print]   gradient_clipping ............ 0.0
+    [2025-01-16 15:01:45,938] [INFO] [config.py:1003:print]   gradient_predivide_factor .... 1.0
+    [2025-01-16 15:01:45,939] [INFO] [config.py:1003:print]   graph_harvesting ............. False
+    [2025-01-16 15:01:45,939] [INFO] [config.py:1003:print]   hybrid_engine ................ enabled=False max_out_tokens=512 inference_tp_size=1 release_inference_cache=False pin_parameters=True tp_gather_partition_size=8
+    [2025-01-16 15:01:45,939] [INFO] [config.py:1003:print]   initial_dynamic_scale ........ 65536
+    [2025-01-16 15:01:45,940] [INFO] [config.py:1003:print]   load_universal_checkpoint .... False
+    [2025-01-16 15:01:45,940] [INFO] [config.py:1003:print]   loss_scale ................... 0
+    [2025-01-16 15:01:45,940] [INFO] [config.py:1003:print]   memory_breakdown ............. False
+    [2025-01-16 15:01:45,941] [INFO] [config.py:1003:print]   mics_hierarchial_params_gather  False
+    [2025-01-16 15:01:45,941] [INFO] [config.py:1003:print]   mics_shard_size .............. -1
+    [2025-01-16 15:01:45,941] [INFO] [config.py:1003:print]   monitor_config ............... tensorboard=TensorBoardConfig(enabled=False, output_path='', job_name='DeepSpeedJobName') comet=CometConfig(enabled=False, samples_log_interval=100, project=None, workspace=None, api_key=None, experiment_name=None, experiment_key=None, online=None, mode=None) wandb=WandbConfig(enabled=False, group=None, team=None, project='deepspeed') csv_monitor=CSVConfig(enabled=False, output_path='', job_name='DeepSpeedJobName')
+    [2025-01-16 15:01:45,942] [INFO] [config.py:1003:print]   nebula_config ................ {
+        "enabled": false, 
+        "persistent_storage_path": null, 
+        "persistent_time_interval": 100, 
+        "num_of_version_in_retention": 2, 
+        "enable_nebula_load": true, 
+        "load_path": null
+    }
+    [2025-01-16 15:01:45,942] [INFO] [config.py:1003:print]   optimizer_legacy_fusion ...... False
+    [2025-01-16 15:01:45,945] [INFO] [config.py:1003:print]   optimizer_name ............... None
+    [2025-01-16 15:01:45,945] [INFO] [config.py:1003:print]   optimizer_params ............. None
+    [2025-01-16 15:01:45,946] [INFO] [config.py:1003:print]   pipeline ..................... {'stages': 'auto', 'partition': 'best', 'seed_layers': False, 'activation_checkpoint_interval': 0, 'pipe_partitioned': True, 'grad_partitioned': True}
+    [2025-01-16 15:01:45,946] [INFO] [config.py:1003:print]   pld_enabled .................. False
+    [2025-01-16 15:01:45,946] [INFO] [config.py:1003:print]   pld_params ................... False
+    [2025-01-16 15:01:45,947] [INFO] [config.py:1003:print]   prescale_gradients ........... False
+    [2025-01-16 15:01:45,947] [INFO] [config.py:1003:print]   scheduler_name ............... None
+    [2025-01-16 15:01:45,947] [INFO] [config.py:1003:print]   scheduler_params ............. None
+    [2025-01-16 15:01:45,948] [INFO] [config.py:1003:print]   seq_parallel_communication_data_type  torch.float32
+    [2025-01-16 15:01:45,948] [INFO] [config.py:1003:print]   sparse_attention ............. None
+    [2025-01-16 15:01:45,948] [INFO] [config.py:1003:print]   sparse_gradients_enabled ..... False
+    [2025-01-16 15:01:45,949] [INFO] [config.py:1003:print]   steps_per_print .............. 200
+    [2025-01-16 15:01:45,949] [INFO] [config.py:1003:print]   timers_config ................ enabled=True synchronized=True
+    [2025-01-16 15:01:45,949] [INFO] [config.py:1003:print]   train_batch_size ............. 32
+    [2025-01-16 15:01:45,950] [INFO] [config.py:1003:print]   train_micro_batch_size_per_gpu  32
+    [2025-01-16 15:01:45,950] [INFO] [config.py:1003:print]   use_data_before_expert_parallel_  False
+    [2025-01-16 15:01:45,950] [INFO] [config.py:1003:print]   use_node_local_storage ....... False
+    [2025-01-16 15:01:45,951] [INFO] [config.py:1003:print]   wall_clock_breakdown ......... False
+    [2025-01-16 15:01:45,951] [INFO] [config.py:1003:print]   weight_quantization_config ... None
+    [2025-01-16 15:01:45,951] [INFO] [config.py:1003:print]   world_size ................... 1
+    [2025-01-16 15:01:45,952] [INFO] [config.py:1003:print]   zero_allow_untested_optimizer  True
+    [2025-01-16 15:01:45,952] [INFO] [config.py:1003:print]   zero_config .................. stage=2 contiguous_gradients=True reduce_scatter=True reduce_bucket_size=500000000 use_multi_rank_bucket_allreduce=True allgather_partitions=True allgather_bucket_size=500000000 overlap_comm=False load_from_fp32_weights=True elastic_checkpoint=False offload_param=None offload_optimizer=None sub_group_size=1000000000 cpu_offload_param=None cpu_offload_use_pin_memory=None cpu_offload=None prefetch_bucket_size=50000000 param_persistence_threshold=100000 model_persistence_threshold=9223372036854775807 max_live_parameters=1000000000 max_reuse_distance=1000000000 gather_16bit_weights_on_model_save=False module_granularity_threshold=0 use_all_reduce_for_fetch_params=False stage3_gather_fp16_weights_on_model_save=False ignore_unused_parameters=True legacy_stage1=False round_robin_gradients=False zero_hpz_partition_size=1 zero_quantized_weights=False zero_quantized_nontrainable_weights=False zero_quantized_gradients=False zeropp_loco_param=None mics_shard_size=-1 mics_hierarchical_params_gather=False memory_efficient_linear=True pipeline_loading_checkpoint=False override_module_apply=True
+    [2025-01-16 15:01:45,952] [INFO] [config.py:1003:print]   zero_enabled ................. True
+    [2025-01-16 15:01:45,953] [INFO] [config.py:1003:print]   zero_force_ds_cpu_optimizer .. True
+    [2025-01-16 15:01:45,953] [INFO] [config.py:1003:print]   zero_optimization_stage ...... 2
+    [2025-01-16 15:01:45,953] [INFO] [config.py:989:print_user_config]   json = {
+        "train_batch_size": 32, 
+        "steps_per_print": 200, 
+        "zero_optimization": {
+            "stage": 2
+        }, 
+        "zero_allow_untested_optimizer": true
+    }
+
+
+
+    ---------------------------------------------------------------------------
+
+    AssertionError                            Traceback (most recent call last)
+
+    Cell In[7], line 75
+         73 # 启动DeepSpeed训练
+         74 if __name__ == "__main__":
+    ---> 75     train()
+
+
+    Cell In[7], line 62, in train()
+         60 model.train()
+         61 for data, labels in dataloader:
+    ---> 62     data, labels = data.cuda(), labels.cuda()
+         64     optimizer.zero_grad()
+         65     outputs = model(data)
+
+
+    File ~/miniconda3/envs/pytorch1/lib/python3.11/site-packages/torch/cuda/__init__.py:239, in _lazy_init()
+        235     raise RuntimeError(
+        236         "Cannot re-initialize CUDA in forked subprocess. To use CUDA with "
+        237         "multiprocessing, you must use the 'spawn' start method")
+        238 if not hasattr(torch._C, '_cuda_getDeviceCount'):
+    --> 239     raise AssertionError("Torch not compiled with CUDA enabled")
+        240 if _cudart is None:
+        241     raise AssertionError(
+        242         "libcudart functions unavailable. It looks like you have a broken build?")
+
+
+    AssertionError: Torch not compiled with CUDA enabled
+
+
+#### 13.10.1.2. <a id='toc13_10_1_2_'></a>[模型并行](#toc0_)
+在 DeepSpeed 中，模型并行允许将模型划分为多个部分并分配到不同的设备。通过这种方式，我们能够训练超大模型，超出单个GPU内存限制。
+
+
+```python
+import deepspeed
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+
+# 定义模型的多个部分
+class ModelPart1(nn.Module):
+    def __init__(self):
+        super(ModelPart1, self).__init__()
+        self.fc1 = nn.Linear(10, 50)
+
+    def forward(self, x):
+        return torch.relu(self.fc1(x))
+
+
+class ModelPart2(nn.Module):
+    def __init__(self):
+        super(ModelPart2, self).__init__()
+        self.fc2 = nn.Linear(50, 2)
+
+    def forward(self, x):
+        return self.fc2(x)
+
+
+# 模型组合
+class Model(nn.Module):
+    def __init__(self):
+        super(Model, self).__init__()
+        self.part1 = ModelPart1().to('cuda:0')
+        self.part2 = ModelPart2().to('cuda:1')
+
+    def forward(self, x):
+        x = self.part1(x)
+        return self.part2(x)
+
+
+# 分布式训练配置
+def train():
+    model = Model()
+
+    # DeepSpeed配置
+    config = {
+        "train_batch_size": 32,
+        "steps_per_print": 200,
+        "zero_optimization": {
+            "stage": 2
+        },
+        "fp16": {
+            "enabled": True
+        }
+    }
+
+    # 初始化DeepSpeed
+    model, optimizer, _, _ = deepspeed.initialize(model=model, optimizer=optim.SGD(model.parameters(), lr=0.01), config_params=config)
+
+    # 开始训练
+    data = torch.randn(32, 10).to('cuda:0')  # 模拟输入数据
+    labels = torch.randint(0, 2, (32,)).to('cuda:1')  # 标签
+
+    for epoch in range(10):
+        model.train()
+        optimizer.zero_grad()
+        outputs = model(data)
+        loss = nn.CrossEntropyLoss()(outputs, labels)
+        model.backward(loss)
+        model.step()
+
+        print(f"Epoch {epoch}, Loss: {loss.item()}")
+
+# 启动DeepSpeed训练
+if __name__ == "__main__":
+    train()
+```
+
+    [2025-01-16 14:34:38,491] [WARNING] [real_accelerator.py:181:get_accelerator] Setting accelerator to CPU. If you have GPU or other accelerator, we were unable to detect it.
+    [2025-01-16 14:34:38,493] [INFO] [real_accelerator.py:222:get_accelerator] Setting ds_accelerator to cpu (auto detect)
+
+
+    
+    A module that was compiled using NumPy 1.x cannot be run in
+    NumPy 2.2.1 as it may crash. To support both 1.x and 2.x
+    versions of NumPy, modules must be compiled with NumPy 2.0.
+    Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+    
+    If you are a user of the module, the easiest solution will be to
+    downgrade to 'numpy<2' or try to upgrade the affected module.
+    We expect that some modules will need time to support NumPy 2.
+    
+    Traceback (most recent call last):  File "<frozen runpy>", line 198, in _run_module_as_main
+      File "<frozen runpy>", line 88, in _run_code
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/ipykernel_launcher.py", line 18, in <module>
+        app.launch_new_instance()
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/traitlets/config/application.py", line 1075, in launch_instance
+        app.start()
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/ipykernel/kernelapp.py", line 739, in start
+        self.io_loop.start()
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/tornado/platform/asyncio.py", line 205, in start
+        self.asyncio_loop.run_forever()
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/asyncio/base_events.py", line 608, in run_forever
+        self._run_once()
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/asyncio/base_events.py", line 1936, in _run_once
+        handle._run()
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/asyncio/events.py", line 84, in _run
+        self._context.run(self._callback, *self._args)
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/ipykernel/kernelbase.py", line 545, in dispatch_queue
+        await self.process_one()
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/ipykernel/kernelbase.py", line 534, in process_one
+        await dispatch(*args)
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/ipykernel/kernelbase.py", line 437, in dispatch_shell
+        await result
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/ipykernel/ipkernel.py", line 362, in execute_request
+        await super().execute_request(stream, ident, parent)
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/ipykernel/kernelbase.py", line 778, in execute_request
+        reply_content = await reply_content
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/ipykernel/ipkernel.py", line 449, in do_execute
+        res = shell.run_cell(
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/ipykernel/zmqshell.py", line 549, in run_cell
+        return super().run_cell(*args, **kwargs)
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/IPython/core/interactiveshell.py", line 3075, in run_cell
+        result = self._run_cell(
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/IPython/core/interactiveshell.py", line 3130, in _run_cell
+        result = runner(coro)
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/IPython/core/async_helpers.py", line 128, in _pseudo_sync_runner
+        coro.send(None)
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/IPython/core/interactiveshell.py", line 3334, in run_cell_async
+        has_raised = await self.run_ast_nodes(code_ast.body, cell_name,
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/IPython/core/interactiveshell.py", line 3517, in run_ast_nodes
+        if await self.run_code(code, result, async_=asy):
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/IPython/core/interactiveshell.py", line 3577, in run_code
+        exec(code_obj, self.user_global_ns, self.user_ns)
+      File "/tmp/ipykernel_3340546/4292986897.py", line 1, in <module>
+        import deepspeed
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/__init__.py", line 26, in <module>
+        from . import module_inject
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/module_inject/__init__.py", line 6, in <module>
+        from .replace_module import replace_transformer_layer, revert_transformer_layer, ReplaceWithTensorSlicing, GroupQuantizer, generic_injection
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/module_inject/replace_module.py", line 652, in <module>
+        from ..pipe import PipelineModule
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/pipe/__init__.py", line 6, in <module>
+        from ..runtime.pipe import PipelineModule, LayerSpec, TiedLayerSpec
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/runtime/pipe/__init__.py", line 6, in <module>
+        from .module import PipelineModule, LayerSpec, TiedLayerSpec
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/runtime/pipe/module.py", line 19, in <module>
+        from ..activation_checkpointing import checkpointing
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/runtime/activation_checkpointing/checkpointing.py", line 26, in <module>
+        from deepspeed.runtime.config import DeepSpeedConfig
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/runtime/config.py", line 29, in <module>
+        from .zero.config import get_zero_config, ZeroStageEnum
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/runtime/zero/__init__.py", line 15, in <module>
+        from .mics import MiCS_Init
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/runtime/zero/mics.py", line 19, in <module>
+        from deepspeed.runtime.zero.stage3 import DeepSpeedZeroOptimizer_Stage3
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/runtime/zero/stage3.py", line 33, in <module>
+        from deepspeed.checkpoint.constants import OPTIMIZER_STATE_DICT, FP32_FLAT_GROUPS, PARTITION_COUNT, ZERO_STAGE, LOSS_SCALER
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/checkpoint/__init__.py", line 10, in <module>
+        from .utils import (get_layer_ckpt_name_for_rank, get_model_ckpt_name_for_rank, get_zero_ckpt_name_for_rank)
+      File "/bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/checkpoint/utils.py", line 41, in <module>
+        def clone_tensors_for_torch_save(item, device=torch.device('cpu')):
+    /bmp/backup/zhaosy/miniconda3/envs/pytorch1/lib/python3.11/site-packages/deepspeed/checkpoint/utils.py:41: UserWarning: Failed to initialize NumPy: _ARRAY_API not found (Triggered internally at /opt/conda/conda-bld/pytorch_1682343904035/work/torch/csrc/utils/tensor_numpy.cpp:84.)
+      def clone_tensors_for_torch_save(item, device=torch.device('cpu')):
+
+
+
+    ---------------------------------------------------------------------------
+
+    AssertionError                            Traceback (most recent call last)
+
+    Cell In[1], line 73
+         71 # 启动DeepSpeed训练
+         72 if __name__ == "__main__":
+    ---> 73     train()
+
+
+    Cell In[1], line 40, in train()
+         39 def train():
+    ---> 40     model = Model()
+         42     # DeepSpeed配置
+         43     config = {
+         44         "train_batch_size": 32,
+         45         "steps_per_print": 200,
+       (...)
+         51         }
+         52     }
+
+
+    Cell In[1], line 30, in Model.__init__(self)
+         28 def __init__(self):
+         29     super(Model, self).__init__()
+    ---> 30     self.part1 = ModelPart1().to('cuda:0')
+         31     self.part2 = ModelPart2().to('cuda:1')
+
+
+    File ~/miniconda3/envs/pytorch1/lib/python3.11/site-packages/torch/nn/modules/module.py:1145, in Module.to(self, *args, **kwargs)
+       1141         return t.to(device, dtype if t.is_floating_point() or t.is_complex() else None,
+       1142                     non_blocking, memory_format=convert_to_format)
+       1143     return t.to(device, dtype if t.is_floating_point() or t.is_complex() else None, non_blocking)
+    -> 1145 return self._apply(convert)
+
+
+    File ~/miniconda3/envs/pytorch1/lib/python3.11/site-packages/torch/nn/modules/module.py:797, in Module._apply(self, fn)
+        795 def _apply(self, fn):
+        796     for module in self.children():
+    --> 797         module._apply(fn)
+        799     def compute_should_use_set_data(tensor, tensor_applied):
+        800         if torch._has_compatible_shallow_copy_type(tensor, tensor_applied):
+        801             # If the new tensor has compatible tensor type as the existing tensor,
+        802             # the current behavior is to change the tensor in-place using `.data =`,
+       (...)
+        807             # global flag to let the user control whether they want the future
+        808             # behavior of overwriting the existing tensor or not.
+
+
+    File ~/miniconda3/envs/pytorch1/lib/python3.11/site-packages/torch/nn/modules/module.py:820, in Module._apply(self, fn)
+        816 # Tensors stored in modules are graph leaves, and we don't want to
+        817 # track autograd history of `param_applied`, so we have to use
+        818 # `with torch.no_grad():`
+        819 with torch.no_grad():
+    --> 820     param_applied = fn(param)
+        821 should_use_set_data = compute_should_use_set_data(param, param_applied)
+        822 if should_use_set_data:
+
+
+    File ~/miniconda3/envs/pytorch1/lib/python3.11/site-packages/torch/nn/modules/module.py:1143, in Module.to.<locals>.convert(t)
+       1140 if convert_to_format is not None and t.dim() in (4, 5):
+       1141     return t.to(device, dtype if t.is_floating_point() or t.is_complex() else None,
+       1142                 non_blocking, memory_format=convert_to_format)
+    -> 1143 return t.to(device, dtype if t.is_floating_point() or t.is_complex() else None, non_blocking)
+
+
+    File ~/miniconda3/envs/pytorch1/lib/python3.11/site-packages/torch/cuda/__init__.py:239, in _lazy_init()
+        235     raise RuntimeError(
+        236         "Cannot re-initialize CUDA in forked subprocess. To use CUDA with "
+        237         "multiprocessing, you must use the 'spawn' start method")
+        238 if not hasattr(torch._C, '_cuda_getDeviceCount'):
+    --> 239     raise AssertionError("Torch not compiled with CUDA enabled")
+        240 if _cudart is None:
+        241     raise AssertionError(
+        242         "libcudart functions unavailable. It looks like you have a broken build?")
+
+
+    AssertionError: Torch not compiled with CUDA enabled
+
+
+#### 13.10.1.3. <a id='toc13_10_1_3_'></a>[混合并行](#toc0_)
+混合并行结合了数据并行和模型并行的优势。数据被拆分到多个设备上，同时每个设备上存储模型的不同部分。DeepSpeed 提供了一个简单的API来实现这一点。
+
+
+```python
+import deepspeed
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+
+# 定义模型的多个部分
+class ModelPart1(nn.Module):
+    def __init__(self):
+        super(ModelPart1, self).__init__()
+        self.fc1 = nn.Linear(10, 50)
+
+    def forward(self, x):
+        return torch.relu(self.fc1(x))
+
+
+class ModelPart2(nn.Module):
+    def __init__(self):
+        super(ModelPart2, self).__init__()
+        self.fc2 = nn.Linear(50, 2)
+
+    def forward(self, x):
+        return self.fc2(x)
+
+
+# 模型组合
+class Model(nn.Module):
+    def __init__(self):
+        super(Model, self).__init__()
+        self.part1 = ModelPart1().to('cuda:0')
+        self.part2 = ModelPart2().to('cuda:1')
+
+    def forward(self, x):
+        x = self.part1(x)
+        return self.part2(x)
+
+
+# 分布式训练配置
+def train():
+    model = Model()
+
+    # DeepSpeed配置
+    config = {
+        "train_batch_size": 32,
+        "steps_per_print": 200,
+        "zero_optimization": {
+            "stage": 2
+        },
+        "fp16": {
+            "enabled": True
+        }
+    }
+
+    # 初始化DeepSpeed
+    model, optimizer, _, _ = deepspeed.initialize(model=model, optimizer=optim.SGD(model.parameters(), lr=0.01), config_params=config)
+
+    # 创建数据
+    data = torch.randn(32, 10).to('cuda:0')
+    labels = torch.randint(0, 2, (32,)).to('cuda:1')
+
+    for epoch in range(10):
+        model.train()
+        optimizer.zero_grad()
+        outputs = model(data)
+        loss = nn.CrossEntropyLoss()(outputs, labels)
+        model.backward(loss)
+        model.step()
+
+        print(f"Epoch {epoch}, Loss: {loss.item()}")
+
+# 启动DeepSpeed训练
+if __name__ == "__main__":
+    train()
+```
+
+### 13.10.2. <a id='toc13_10_2_'></a>[huggingface trainer and accelerate](#toc0_)
+#### 13.10.2.1. <a id='toc13_10_2_1_'></a>[数据并行](#toc0_)
+#### 13.10.2.2. <a id='toc13_10_2_2_'></a>[模型并行](#toc0_)
+#### 13.10.2.3. <a id='toc13_10_2_3_'></a>[混合并行](#toc0_)
 
 
 # 14. <a id='toc14_'></a>[PyTorch做迁移学习](#toc0_)
@@ -20490,7 +20879,7 @@ plt.show()
 
 
     
-![png](Learn-Pytorch_files/Learn-Pytorch_935_1.png)
+![png](Learn-Pytorch_files/Learn-Pytorch_953_1.png)
     
 
 
@@ -20659,6 +21048,7 @@ import time
 import tracemalloc
 import numpy as np
 
+
 # -----------------------------
 # 1. 数据集定义
 # -----------------------------
@@ -20674,6 +21064,7 @@ class DummyDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx], self.labels[idx]
 
+
 # -----------------------------
 # 2. 模型定义
 # -----------------------------
@@ -20684,6 +21075,7 @@ class ModelA(nn.Module):
 
     def forward(self, x):
         return self.fc(x)
+
 
 class ModelB(nn.Module):
     def __init__(self, input_dim, num_classes):
@@ -20696,11 +21088,11 @@ class ModelB(nn.Module):
 
     def forward(self, x):
         return self.fc(x)
+    
 
 # -----------------------------
 # 3. Benchmark 工具函数
 # -----------------------------
-
 def benchmark_training(model, dataloader, criterion, optimizer, device, num_epochs=5):
     """ 测量模型训练时间 """
     model.train()
@@ -20718,6 +21110,7 @@ def benchmark_training(model, dataloader, criterion, optimizer, device, num_epoc
     total_time = time.time() - start_time
     return total_time
 
+
 def benchmark_inference(model, dataloader, device):
     """ 测量模型推理时间 """
     model.eval()
@@ -20728,6 +21121,7 @@ def benchmark_inference(model, dataloader, device):
             _ = model(inputs)
     total_time = time.time() - start_time
     return total_time
+
 
 def measure_memory(model, dataloader, device):
     """ 测量模型内存占用 """
@@ -20742,6 +21136,7 @@ def measure_memory(model, dataloader, device):
     tracemalloc.stop()
     return current / 10**6, peak / 10**6  # 转换为 MB
 
+
 def evaluate_accuracy(model, dataloader, device):
     """ 测量模型准确性 """
     model.eval()
@@ -20755,6 +21150,7 @@ def evaluate_accuracy(model, dataloader, device):
             correct += (predictions == labels).sum().item()
             total += labels.size(0)
     return correct / total
+
 
 # -----------------------------
 # 4. Benchmark 主流程
@@ -20914,8 +21310,8 @@ train_iter = data.DataLoader(dataset=datasets, shuffle=True, batch_size=128, num
 
 ```python
 # 用纯PyTorch构建模型的网络结构
-
 from torch import nn
+
 
 class AlphaFold2(nn.Module):
     def __init__(self, in_features=2, out_features=1):
@@ -20941,8 +21337,6 @@ class AlphaFold2(nn.Module):
 
 ```python
 # 用PyTorch lightning构建训练步骤
-
-
 from torch import nn 
 from torch import optim
 
@@ -23854,8 +24248,8 @@ a_dict, b_dict, c_dict
 ```
 
     [NbConvertApp] Converting notebook Learn-Pytorch.ipynb to html
-    [NbConvertApp] WARNING | Alternative text is missing on 29 image(s).
-    [NbConvertApp] Writing 4342706 bytes to Format/Learn-Pytorch.html
+    [NbConvertApp] WARNING | Alternative text is missing on 46 image(s).
+    [NbConvertApp] Writing 4788510 bytes to Format/Learn-Pytorch.html
 
 
 
@@ -23866,6 +24260,5 @@ a_dict, b_dict, c_dict
 
     [NbConvertApp] Converting notebook Learn-Pytorch.ipynb to markdown
     [NbConvertApp] Support files will be in Learn-Pytorch_files/
-    [NbConvertApp] Making directory ./Format/Learn-Pytorch_files
-    [NbConvertApp] Writing 1090111 bytes to Format/Learn-Pytorch.md
+    [NbConvertApp] Writing 1088323 bytes to Format/Learn-Pytorch.md
 
