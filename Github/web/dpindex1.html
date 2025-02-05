@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 设置文档字符编码为UTF-8 -->
+    <meta charset="UTF-8">
+    <!-- 设置视口，确保页面在移动设备上正确显示 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面标题 -->
+    <title>Yu Zhao Lab</title>
+    <!-- 内联CSS样式 -->
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: Arial, sans-serif; /* 设置字体 */
+            margin: 0; /* 去除默认外边距 */
+            padding: 0; /* 去除默认内边距 */
+        }
+
+        /* 标题栏样式 */
+        header {
+            background-color: #800080; /* 清华紫色背景 */
+            color: black; /* 字体颜色 */
+            padding: 10px 20px; /* 内边距 */
+            display: flex; /* 使用Flex布局 */
+            justify-content: space-between; /* 内容左右对齐 */
+            align-items: center; /* 垂直居中 */
+            position: fixed; /* 固定定位 */
+            width: 100%; /* 宽度占满整个页面 */
+            top: 0; /* 固定在顶部 */
+            z-index: 1000; /* 确保标题栏在最上层 */
+        }
+
+        /* 标题文字样式 */
+        header h1 {
+            margin: 0; /* 去除默认外边距 */
+        }
+
+        /* 导航栏链接样式 */
+        header nav a {
+            color: black; /* 字体颜色 */
+            text-decoration: none; /* 去除下划线 */
+            margin-left: 20px; /* 链接之间的间距 */
+        }
+
+        /* 主内容区域样式 */
+        .container {
+            padding-top: 60px; /* 为固定标题栏留出空间 */
+        }
+
+        /* 每个部分的通用样式 */
+        section {
+            padding: 20px; /* 内边距 */
+        }
+
+        /* Home和Research Topics部分的布局 */
+        .home-research {
+            display: flex; /* 使用Flex布局 */
+            justify-content: space-between; /* 左右两部分分开 */
+        }
+
+        /* Home和Research Topics部分的子元素样式 */
+        .home-research > div {
+            width: 48%; /* 设置宽度为48%，留出一些间距 */
+        }
+
+        /* Groups、Publications、Projects部分的通用样式 */
+        .groups, .publications, .projects {
+            margin-top: 20px; /* 上边距 */
+        }
+
+        /* Projects部分中每个项目的布局 */
+        .projects .project {
+            display: flex; /* 使用Flex布局 */
+            margin-bottom: 20px; /* 项目之间的间距 */
+        }
+
+        /* Projects部分中图片的样式 */
+        .projects .project img {
+            width: 150px; /* 图片宽度 */
+            height: auto; /* 高度自适应 */
+            margin-right: 20px; /* 图片与文字之间的间距 */
+        }
+    </style>
+</head>
+<body>
+
+<!-- 标题栏 -->
+<header>
+    <h1>Yu Zhao Lab</h1> <!-- 实验室名称 -->
+    <nav>
+        <!-- 导航栏链接，点击后跳转到页面的对应部分 -->
+        <a href="#home">Home</a>
+        <a href="#groups">Groups</a>
+        <a href="#research-topics">Research Topics</a>
+        <a href="#publications">Publications</a>
+        <a href="#projects">Projects</a>
+    </nav>
+</header>
+
+<!-- 主内容区域 -->
+<div class="container">
+    <!-- Home部分 -->
+    <section id="home" class="home-research">
+        <div>
+            <!-- 照片 -->
+            <img src="yu_zhao.jpg" alt="Yu Zhao" style="width: 150px; height: auto;">
+            <!-- 姓名 -->
+            <h2>Yu Zhao</h2>
+            <!-- 联系方式 -->
+            <p>Email: yu.zhao@tsinghua.edu.cn</p>
+            <!-- 教育经历 -->
+            <h3>Education</h3>
+            <ul>
+                <li>PhD in Microbiology, Tsinghua University, 2010</li>
+                <li>BSc in Biology, Peking University, 2005</li>
+            </ul>
+            <!-- 研究总结 -->
+            <h3>Research Summary</h3>
+            <p>My research focuses on plant microbiome, microbial genetics, and AI applications in biology.</p>
+        </div>
+        <!-- Research Topics部分 -->
+        <div id="research-topics">
+            <h2>Research Topics</h2>
+            <ul>
+                <li>Plant Microecology</li>
+                <li>Microbial Genetics</li>
+                <li>Artificial Intelligence</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Groups部分 -->
+    <section id="groups" class="groups">
+        <h2>Groups</h2>
+        <!-- 博士后 -->
+        <h3>Postdocs</h3>
+        <ul>
+            <li>John Doe - john.doe@tsinghua.edu.cn</li>
+            <li>Jane Smith - jane.smith@tsinghua.edu.cn</li>
+        </ul>
+        <!-- 博士 -->
+        <h3>PhD Students</h3>
+        <ul>
+            <li>Alice Johnson - alice.johnson@tsinghua.edu.cn</li>
+            <li>Bob Brown - bob.brown@tsinghua.edu.cn</li>
+        </ul>
+        <!-- 硕士 -->
+        <h3>Master Students</h3>
+        <ul>
+            <li>Charlie Davis - charlie.davis@tsinghua.edu.cn</li>
+            <li>Diana Evans - diana.evans@tsinghua.edu.cn</li>
+        </ul>
+        <!-- 实习生 -->
+        <h3>Interns</h3>
+        <ul>
+            <li>Eve Green - eve.green@tsinghua.edu.cn</li>
+            <li>Frank Harris - frank.harris@tsinghua.edu.cn</li>
+        </ul>
+    </section>
+
+    <!-- Publications部分 -->
+    <section id="publications" class="publications">
+        <h2>Publications</h2>
+        <!-- 按研究主题分块展示 -->
+        <h3>Plant Microecology</h3>
+        <ul>
+            <li>2023 - Zhao, Y., et al. "Microbial interactions in plant roots." Nature Microbiology.</li>
+            <li>2022 - Zhao, Y., et al. "Diversity of root-associated microbes." PNAS.</li>
+        </ul>
+        <h3>Microbial Genetics</h3>
+        <ul>
+            <li>2023 - Zhao, Y., et al. "CRISPR-based gene editing in soil bacteria." Science.</li>
+            <li>2021 - Zhao, Y., et al. "Horizontal gene transfer in microbial communities." Cell.</li>
+        </ul>
+        <h3>Artificial Intelligence</h3>
+        <ul>
+            <li>2023 - Zhao, Y., et al. "AI-driven analysis of microbial genomes." Bioinformatics.</li>
+            <li>2022 - Zhao, Y., et al. "Machine learning for microbiome studies." Nature Methods.</li>
+        </ul>
+    </section>
+
+    <!-- Projects部分 -->
+    <section id="projects" class="projects">
+        <h2>Projects</h2>
+        <!-- 项目1 -->
+        <div class="project">
+            <img src="project1.jpg" alt="Project 1">
+            <div>
+                <h3>Project 1: Plant Microbiome Analysis</h3>
+                <p>This project aims to analyze the microbial communities associated with plant roots using advanced sequencing techniques.</p>
+            </div>
+        </div>
+        <!-- 项目2 -->
+        <div class="project">
+            <img src="project2.jpg" alt="Project 2">
+            <div>
+                <h3>Project 2: CRISPR-based Gene Editing</h3>
+                <p>This project focuses on developing CRISPR-based tools for editing genes in soil bacteria.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+</body>
+</html>

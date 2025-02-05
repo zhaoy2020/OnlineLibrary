@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yu Zhao Lab</title>
+    <style>
+        /* 设置全局样式 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 固定标题栏样式 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: #800080; /* 清华紫 */
+            color: black;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar a {
+            text-decoration: none;
+            color: black;
+            margin: 0 10px;
+        }
+
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+
+        .content {
+            margin-top: 70px; /* 留出标题栏的空间 */
+            display: flex;
+            justify-content: center;
+        }
+
+        .main {
+            width: 33%; /* 中间部分 */
+            padding: 20px;
+        }
+
+        .sidebar {
+            width: 33%;
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .photo-name {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .photo-name img {
+            width: 150px;
+            height: auto;
+            margin-right: 20px;
+        }
+
+        .publications, .projects {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .publications img, .projects img {
+            width: 100px;
+            height: auto;
+            margin-right: 20px;
+        }
+
+        .sticky {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+        }
+
+        h2, h3 {
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        a {
+            color: #800080; /* 清华紫 */
+        }
+
+        a:hover {
+            color: darkred;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="navbar">
+        <!-- <div>Yu Zhao Lab</div> -->
+        <div>
+            <a href="#home">Home</a>
+            <a href="#groups">Groups</a>
+            <a href="#research-topics">Research Topics</a>
+            <a href="#publications">Publications</a>
+            <a href="#projects">Projects</a>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="main">
+            <!-- Home 部分 -->
+            <div id="home" class="section">
+                <h2>Home</h2>
+                <div class="photo-name">
+                    <img src="Yu Zhao.jpg" alt="Yu Zhao">
+                    <div>
+                        <p><strong>Name:</strong> Yu Zhao 「赵羽」</p>
+                        <p><strong>School:</strong> China Agricultural University</p>
+                        <p><strong>Email:</strong><a href="mailto:zhao_sy@126.com"> zhao_sy@126.com</a></p>
+                        <p><a href="https://scholar.google.com/citations?hl=zh-CN&user=rj4BklwAAAAJ">Google Scholar</a> / <a href="https://github.com/zhaoy2020?tab=repositories">Github<a></p>
+                    </div>
+                </div>
+                <p><strong>Research Summary:</strong> Dr. Yu Zhao has extensive experience in microbiology, plant ecology, and AI-driven research solutions.</p>
+            </div>
+
+            <!-- Groups 部分 -->
+            <div id="groups" class="section">
+                <h2>Groups</h2>
+                <h3>Postdoctoral Fellows</h3>
+                <p>Dr. John Doe - <a href="mailto:john.doe@example.com">john.doe@example.com</a></p>
+                <h3>PhD Students</h3>
+                <p>Jane Smith - <a href="mailto:jane.smith@example.com">jane.smith@example.com</a></p>
+                <h3>Master's Students</h3>
+                <p>Ali Khan - <a href="mailto:ali.khan@example.com">ali.khan@example.com</a></p>
+                <h3>Interns</h3>
+                <p>Susan Lee - <a href="mailto:susan.lee@example.com">susan.lee@example.com</a></p>
+            </div>
+        </div>
+
+        <!-- Sidebar 部分 -->
+        <div class="sidebar">
+            <!-- Research Topics 部分 -->
+            <div id="research-topics" class="section">
+                <h2>Research Topics</h2>
+                <ul>
+                    <li><a href="#publications-plant-microecology">Plant Microecology</a></li>
+                    <li><a href="#publications-microbial-genetics">Microbial Genetics</a></li>
+                    <li><a href="#publications-ai">Artificial Intelligence</a></li>
+                </ul>
+            </div>
+
+            <!-- Publications 部分 -->
+            <div id="publications" class="section">
+                <h2>Publications</h2>
+                <div id="publications-plant-microecology">
+                    <h3>Plant Microecology</h3>
+                    <div>
+                        <div class="publications">
+                            <img src="PR.webp" alt="Journal">
+                            <div>
+                                <p><strong>Efficient transformation and genome editing in a nondomesticated, biocontrol strain, <i>Bacillus subtilis</i> GLB191</strong></p>
+                                <p><strong>Yu Zhao</strong>, Zhenshuo Wang, Qian Wang, Bing Wang, Xiaoning Bian, Qingchao Zeng, Daowan Lai, Qi Wang, Yan Li</p>
+                                <p>Phytopathology Research</p>
+                                <p><a href="https://doi.org/10.1186/s42483-024-00287-0">10.1186/s42483-024-00287-0</a></p>
+                            </div>
+                        </div>
+                        <div class="publications">
+                            <img src="stone.gif" alt="Journal">
+                            <div>
+                                <p><strong>Kiwifruit resistance to gray mold is enhanced by yeast-induced modulation of the endophytic microbiome</strong></p>
+                                <p>Qinhong Liao<sup>#</sup>, <strong>Yu Zhao<sup>#</sup></strong>, Zhenshuo Wang<sup>#</sup>, Longfeng Yu, Qiqian Su, Jiaoqian Li, Anran Yuan, Junkui Wang, Dawei Tian, Chenglin Lin, Xiaoya Huang, Wenhua Li, Zhiqiang Sun, Qi Wang, Jia Liu</p>
+                                <p>Science of The Total Environment</p>
+                                <p><a href="https://doi.org/10.1016/j.scitotenv.2024.173109">10.1016/j.scitotenv.2024.173109</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
