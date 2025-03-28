@@ -3,12 +3,17 @@
 - 2. [环境配置](#toc2_)    
 - 3. [utils](#toc3_)    
   - 3.1. [实验可重复性](#toc3_1_)    
-  - 3.2. [Metrics](#toc3_2_)    
-  - 3.3. [计时器](#toc3_3_)    
-    - 3.3.1. [cpu计时器](#toc3_3_1_)    
-    - 3.3.2. [gpu计时器](#toc3_3_2_)    
-  - 3.4. [统计参数量和内存占用](#toc3_4_)    
-  - 3.5. [numpy和pytorch计算速度比较](#toc3_5_)    
+  - 3.2. [Metrics和Visualization](#toc3_2_)    
+    - 3.2.1. [Metrics tracker](#toc3_2_1_)    
+    - 3.2.2. [可视化](#toc3_2_2_)    
+  - 3.3. [GPU](#toc3_3_)    
+  - 3.4. [Timer](#toc3_4_)    
+    - 3.4.1. [cpu计时器](#toc3_4_1_)    
+    - 3.4.2. [gpu计时器](#toc3_4_2_)    
+  - 3.5. [Callback](#toc3_5_)    
+  - 3.6. [Trainer](#toc3_6_)    
+  - 3.7. [ParametersNumbers](#toc3_7_)    
+  - 3.8. [numpy和pytorch计算速度比较](#toc3_8_)    
 - 4. [安装GPU驱动](#toc4_)    
   - 4.1. [安装策略](#toc4_1_)    
   - 4.2. [首先确认内核版本和发行版本，再确认显卡型号](#toc4_2_)    
@@ -26,9 +31,8 @@
   - 4.5. [安装对应版本的Pytorch](#toc4_5_)    
   - 4.6. [全局驱动个人CUDA Toolkit](#toc4_6_)    
   - 4.7. [GPU测试程序](#toc4_7_)    
-    - 4.7.1. [单机单卡](#toc4_7_1_)    
-    - 4.7.2. [单机多卡](#toc4_7_2_)    
-    - 4.7.3. [GPU burn压力测试](#toc4_7_3_)    
+    - 4.7.1. [在GPU上验证Trainer](#toc4_7_1_)    
+    - 4.7.2. [GPU burn压力测试](#toc4_7_2_)    
 - 5. [Pytorch模块介绍](#toc5_)    
   - 5.1. [导入模块](#toc5_1_)    
 - 6. [数据封装和加载](#toc6_)    
@@ -68,7 +72,7 @@
   - 7.3. [Tensors操作](#toc7_3_)    
     - 7.3.1. [索引和切片](#toc7_3_1_)    
     - 7.3.2. [修改维度](#toc7_3_2_)    
-      - 7.3.2.1. [[: None], [None, :]      ](#toc7_3_2_1_)    
+      - 7.3.2.1. [[: None], [None, :]               ](#toc7_3_2_1_)    
       - 7.3.2.2. [reshape函数](#toc7_3_2_2_)    
       - 7.3.2.3. [view函数](#toc7_3_2_3_)    
       - 7.3.2.4. [transpose函数](#toc7_3_2_4_)    
@@ -391,6 +395,7 @@
     - 15.3.2. [均方误差 (MSE)](#toc15_3_2_)    
     - 15.3.3. [均方根误差 (RMSE)](#toc15_3_3_)    
     - 15.3.4. [R² (决定系数)](#toc15_3_4_)    
+  - 15.4. [Metrics tracker](#toc15_4_)    
 - 16. [Benchmark](#toc16_)    
   - 16.1. [确定 Benchmark 目标](#toc16_1_)    
   - 16.2. [Benchmark模板](#toc16_2_)    
@@ -442,7 +447,19 @@
     - 27.4.3. [Jupyter Notebook适配](#toc27_4_3_)    
     - 27.4.4. [多线程/多进程支持](#toc27_4_4_)    
     - 27.4.5. [自定义进度条格式](#toc27_4_5_)    
-- 28. [转格式](#toc28_)    
+- 28. [callback](#toc28_)    
+  - 28.1. [基于getattr实现](#toc28_1_)    
+- 29. [typing](#toc29_)    
+  - 29.1. [基础类型注释](#toc29_1_)    
+  - 29.2. [复杂类型组合](#toc29_2_)    
+  - 29.3. [函数类型注解](#toc29_3_)    
+- 30. [collections](#toc30_)    
+  - 30.1. [namedtuple（具名元组）](#toc30_1_)    
+  - 30.2. [deque（双端队列）](#toc30_2_)    
+  - 30.3. [ defaultdict（默认字典）](#toc30_3_)    
+  - 30.4. [ OrderedDict（有序字典）](#toc30_4_)    
+  - 30.5. [Counter（计数器）](#toc30_5_)    
+- 31. [转格式](#toc31_)    
 
 <!-- vscode-jupyter-toc-config
 	numbering=true
@@ -484,7 +501,7 @@ conda install ipykernel matplotlib pandas seaborn -y
 ## 方法一：
 # conda install nvidia::cuda-toolkit -y
 ## 方法二（推荐）, with ncvv and etc.
-conda install nvidia/label/cuda-12.4.0::cuda -y
+conda install nvidia/label/cuda-12.4.0::cuda -y -c nvidia/label/cuda-12.4.0
 
 # Install PyTorch
 conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia -y
@@ -495,11 +512,11 @@ conda install esri::torch-geometric lightning deepspeed torchmetrics huggingface
 
 
 ```python
-name="pytorch1"
+name="pytorch"
 
 conda create -n $name -y && conda activate $name 
 
-conda install \
+conda install -y \
     nvidia/label/cuda-12.4.0::cuda \
     pytorch::pytorch \
     pytorch::torchvision \
@@ -514,7 +531,9 @@ conda install \
     conda-forge::matplotlib \
     anaconda::pandas \
     anaconda::seaborn \
-    -y
+    anaconda::numpy \
+    anaconda::scikit-learn \
+
 ```
 
 # 3. <a id='toc3_'></a>[utils](#toc0_)
@@ -526,27 +545,224 @@ conda install \
 
 
 ```python
+import random 
 import numpy as np 
 import torch
 
 
 # Function for setting the seed
-def set_seed(seed):
+def set_seed(seed: int = 42)-> None:
+    # Set the seed for Python's built-in random module
+    random.seed(seed)
+
+    # Set the seed for NumPy
     np.random.seed(seed)
+    
+    # Set the seed for PyTorch
     torch.manual_seed(seed)
     if torch.cuda.is_available():  # GPU operation have separate seed
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
+    # Additionally, some operations on a GPU are implemented stochastic for efficiency
+    # We want to ensure that all operations are deterministic on GPU (if used) for reproducibility
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
+    print(f"Set seed {seed} for reproducibility.")
+
+    return None
+
+
+# Call the function to set random seed for reproducibility
 set_seed(42)
 
-# Additionally, some operations on a GPU are implemented stochastic for efficiency
-# We want to ensure that all operations are deterministic on GPU (if used) for reproducibility
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
 ```
 
-## 3.2. <a id='toc3_2_'></a>[Metrics](#toc0_)
+    Set seed 42 for reproducibility.
+
+
+## 3.2. <a id='toc3_2_'></a>[Metrics和Visualization](#toc0_)
+
+### 3.2.1. <a id='toc3_2_1_'></a>[Metrics tracker](#toc0_)
+
+
+```python
+import torch
+from collections import defaultdict
+
+
+class MetricTracker:
+    def __init__(self):
+        '''
+        # 示例输出结构
+        history = {
+            'epoch': {
+                'train_loss_epoch': [0.5, 0.4, 0.3],          # 每个epoch的指标
+                'train_acc_epoch': [0.8, 0.85, 0.9],
+                'val_loss_epoch': [0.6, 0.5, 0.4],
+                'val_acc_epoch': [0.7, 0.75, 0.8]
+            },
+            'step': {
+                'train_loss_step': [0.55, 0.45, 0.35],        # 每个step的指标
+                'train_acc_step': [0.78, 0.83, 0.88],
+                'val_loss_step': [0.62, 0.52, 0.34],          # 验证阶段一般只在epoch结束时计算
+                'val_acc_step': [0.72, 0.77, 0.77],
+            },
+        }     
+        '''
+        self._metrics = {}                          # 存储指标计算函数
+        self._epoch_buffer = defaultdict(list)      # Epoch级别累积
+        self._step_buffer = defaultdict(list)       # Step级别累积
+        self._history = {
+            'epoch': defaultdict(list),             # 按阶段和指标名存储epoch指标
+            "step": defaultdict(list)               # 按阶段和指标名存储step指标
+        }
+        self.current_stage = 'train'                # 当前阶段标识
+
+    def add_metric(self, name, metric_fn):
+        """注册指标（如损失、准确率）"""
+        self._metrics[name] = metric_fn
+
+    def set_stage(self, stage):
+        """设置当前阶段（train/val/test）"""
+        self.current_stage = stage
+
+    def update(self, **kwargs):
+        """更新缓冲区（需传入指标函数所需的参数），紧邻每个batch之后计算。"""
+        for name, fn in self._metrics.items():
+            value = fn(**kwargs)
+            self._epoch_buffer[name].append(value)  # 累积到epoch
+            self._step_buffer[name].append(value)   # 累积到step
+
+    def compute_epoch_metrics(self):
+        """计算并返回当前阶段的Epoch平均指标"""
+        epoch_metrics = {}
+        for name, values in self._epoch_buffer.items():
+            avg_value = self._compute_avg(values)
+            epoch_metrics[name] = avg_value
+            self._history['epoch'][f"{self.current_stage}_{name}_epoch"].append(avg_value)
+        self._epoch_buffer.clear()  # 清空Epoch缓冲区
+        return epoch_metrics
+
+    def compute_step_metrics(self):
+        """计算并返回当前阶段的Step平均指标（自动清空Step缓冲区）"""
+        step_metrics = {}
+        for name, values in self._step_buffer.items():
+            avg_value = self._compute_avg(values)
+            step_metrics[name] = avg_value
+            self._history['step'][f"{self.current_stage}_{name}_step"].append(avg_value)
+        self._step_buffer.clear()  # 清空Step缓冲区
+        return step_metrics
+
+    def _compute_avg(self, values):
+        """通用平均值计算（支持标量和张量）"""
+        if not values:
+            return 0.0  # 避免空列表
+        if isinstance(values[0], (int, float)):
+            return sum(values) / len(values)
+        elif isinstance(values[0], torch.Tensor):
+            return torch.stack(values).mean(dim=0)
+        else:
+            raise TypeError(f"Unsupported data type: {type(values[0])}")
+
+    def get_history(self):
+        """获取所有历史记录（用于可视化）"""
+        return self._history
+```
+
+### 3.2.2. <a id='toc3_2_2_'></a>[可视化](#toc0_)
+
+
+```python
+%config InlineBackend.figure_format = 'svg'
+
+from IPython import display
+import matplotlib.pyplot as plt 
+from collections import defaultdict
+
+
+class Visualization:
+    '''接受MetricTracker计算的_history，自动绘图。'''
+
+    def refresh_plot(self, history: defaultdict[list]):
+        '''再jupyter中持续刷新展示图片'''
+        plt.close()                                 # close figure （推荐）
+        fig = self._show(history)
+        display.display(fig)                        # 在jupyter中展示 （推荐）
+        display.clear_output(wait= True)             # 等待 （必须） 
+
+    def _show(self, history: defaultdict[list]):
+        '''根据实验：train、val、test等，指标：loss、acc、f1等自动绘图'''
+        experiments, metrics = self._get_config(history)
+        fig, axess = plt.subplots(nrows= len(history.keys()), ncols= len(metrics))        
+        for i, strategy in enumerate(history.keys()):
+            for j, metric in enumerate(metrics):
+                for experiment in experiments:
+                    axess[i][j].plot(history[strategy][f"{experiment}_{metric}_{strategy}"], label= f"{experiment}_{metric}")
+                    axess[i][j].legend()
+                    axess[i][j].set_xlabel(strategy)
+                    axess[i][j].set_ylabel(metric)
+                    axess[i][j].set_title(f"{metric} curve")
+        fig.tight_layout()         
+        return fig           
+
+    def _get_config(self, history):
+        '''获得实验：train、val、test等，指标：loss、acc、f1等'''
+        experiments = set()
+        metrics = set()
+
+        for i in next(iter(history.values())).keys(): # 只去第一个值
+            experiment_name, metrics_name, _ = i.split("_")
+            experiments.add(experiment_name)
+            metrics.add(metrics_name)
+        return experiments, metrics
+    
+                     
+# test
+# 示例输出结构
+history = {
+    'epoch': {
+        'train_loss_epoch': [0.5, 0.4, 0.3],          # 每个epoch的指标
+        'train_acc_epoch': [0.8, 0.85, 0.9],
+        'val_loss_epoch': [0.6, 0.5, 0.4],
+        'val_acc_epoch': [0.7, 0.75, 0.8]
+    },
+    'step': {
+        'train_loss_step': [0.55, 0.45, 0.35],        # 每个step的指标
+        'train_acc_step': [0.78, 0.83, 0.88],
+        'val_loss_step': [0.62, 0.52, 0.34],          # 验证阶段一般只在epoch结束时计算
+        'val_acc_step': [0.72, 0.77, 0.77],
+    },
+}
+
+visualization = Visualization()
+visualization.refresh_plot(history= history)
+```
+
+
+    
+![svg](learn_PyTorch_files/learn_PyTorch_12_0.svg)
+    
+
+
+## 3.3. <a id='toc3_3_'></a>[GPU](#toc0_)
+
+
+```python
+# Fetching the device that will be used throughout this notebook
+def try_gpu(i=0):
+    """如果GPU可用，则返回GPU设备，否则返回CPU设备"""
+    if torch.cuda.is_avaliable():
+        return torch.device(f'cuda:{i}')
+    return torch.device('cpu')
+
+
+def try_all_gpus():
+    """返回所有可用的GPU设备"""
+    devices = [torch.device(f'cuda:{i}') for i in range(torch.cuda.device_count())]
+    return devices if devices else [torch.device('cpu')]
+
+```
 
 
 ```python
@@ -560,18 +776,6 @@ def use_svg_display():
     display.set_matplotlib_formats('svg')
     return None
 
-# Fetching the device that will be used throughout this notebook
-def try_gpu(i=0):
-    """如果GPU可用，则返回GPU设备，否则返回CPU设备"""
-    if torch.cuda.is_avaliable():
-        return torch.device(f'cuda:{i}')
-    return torch.device('cpu')
-
-
-def try_all_gpus():
-    """返回所有可用的GPU设备"""
-    devices = [torch.device(f'cuda:{i}') for i in range(torch.cuda.device_count())]
-    return devices if devices else [torch.device('cpu')]
 
 
 class Accumulator:
@@ -670,6 +874,13 @@ def evaluate_accuracy(net, data_iter):
     return metric[0] / metric[1]
 
 
+
+```
+
+## 3.4. <a id='toc3_4_'></a>[Timer](#toc0_)
+
+
+```python
 class Timer:
     """Record multiple running times."""
     def __init__(self):
@@ -698,9 +909,7 @@ class Timer:
         return np.array(self.times).cumsum().tolist()
 ```
 
-## 3.3. <a id='toc3_3_'></a>[计时器](#toc0_)
-
-### 3.3.1. <a id='toc3_3_1_'></a>[cpu计时器](#toc0_)
+### 3.4.1. <a id='toc3_4_1_'></a>[cpu计时器](#toc0_)
 
 * 自定义的一些使用的脚本。
 ```sehll
@@ -742,10 +951,10 @@ timer_on_cpu()
      0.0 d 
      0.0 h 
      0.0 m 
-     0.030338048934936523 s
+     0.030246496200561523 s
 
 
-### 3.3.2. <a id='toc3_3_2_'></a>[gpu计时器](#toc0_)
+### 3.4.2. <a id='toc3_4_2_'></a>[gpu计时器](#toc0_)
 
 
 ```python
@@ -775,13 +984,206 @@ a = torch.arange(45).reshape(3, 3, 5)
 b = torch.arange(45).reshape(3, 5, 3)
 c = torch.bmm(a, b)
 timer_on_gpu()
+
 ```
 
     ⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡ 
-    GPU time: 0.00104s
+    GPU time: 0.00070s
 
 
-## 3.4. <a id='toc3_4_'></a>[统计参数量和内存占用](#toc0_)
+## 3.5. <a id='toc3_5_'></a>[Callback](#toc0_)
+
+
+```python
+class Callback:
+    '''callback template'''
+
+    def on_train_begin(self, **kwargs):
+        pass
+    
+    def on_train_end(self, **kwargs):
+        pass
+    
+    def on_epoch_begin(self, **kwargs):
+        pass
+    
+    def on_epoch_end(self, **kwargs):
+        pass
+    
+    def on_step_begin(self, **kwargs):
+        pass
+    
+    def on_step_end(self, **kwargs):
+        pass
+
+
+class DemoCallback(Callback):
+    def on_train_begin(self, **kwargs):
+        print("Runing on_train_begin ...")
+
+```
+
+## 3.6. <a id='toc3_6_'></a>[Trainer](#toc0_)
+
+
+```python
+import torch 
+from tqdm import tqdm 
+import pickle 
+
+
+class Trainer:
+    def __init__(
+            self, 
+            device = "auto",
+            train_dataloader = None, 
+            val_dataloader = None, 
+            model = None, 
+            loss_fn = None, 
+            optimizer = None, 
+            is_tqdm = True, 
+            callbacks: list = [],
+    ):
+        # basic sets
+        self.device = self._get_device(device)
+        self.train_dataloader = train_dataloader
+        self.val_dataloader = val_dataloader
+        self.model = self._get_model(model)
+        self.loss_fn = loss_fn 
+        self.optimizer = optimizer
+        self.is_tqdm = is_tqdm
+        self.callbacks = callbacks
+
+        # set metrics_tracker 
+        self.metrics_tracker = MetricTracker()
+        self.metrics_tracker.add_metric('loss', lambda **kw: kw['loss'])  # 直接从kwargs获取loss
+        self.metrics_tracker.add_metric('acc', lambda **kw: (kw['y_hat'].argmax(1) == kw['y']).float().mean().item())
+
+        # visualization
+        self.visualization = Visualization()
+
+    def _get_device(self, device):
+        '''CPU or GPUs.'''
+        if device == "auto":
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        else:
+            device = torch.device(device)
+        print("=" * 100)
+        print(f"Runing on {device} ...")
+        print("=" * 100)
+        return device
+    
+    def _get_model(self, model):
+        '''Move the mode to device.'''
+        model = torch.nn.DataParallel(model).to(self.device)
+        return model
+    
+    def _disable_visualization(self):
+        '''Weather show tqdm.'''
+        if self.is_tqdm:
+            return False 
+        else:
+            return True
+        
+    def _call_callbacks(self, method_name, **kwargs):
+        '''Run the method of callback from callback dict with default order.'''
+        for callback in self.callbacks:
+            if hasattr(callback, method_name):
+                method = getattr(callback, method_name, f"{method_name} is not exist!")
+                return method(**kwargs)
+        
+    def train(self, epochs: int, **kwargs):
+        '''Main loop.'''
+        self._call_callbacks(method_name= "on_train_begin", **kwargs)
+
+        with tqdm(range(epochs), desc= "Training epoch", unit= "epoch", disable= self._disable_visualization()) as pbar:
+            for epoch in pbar:
+                # train
+                self._call_callbacks(method_name= "on_epoch_begin", **kwargs)
+                train_logs = self._train_step()
+                train_logs = {"train_"+name: value for name, value in train_logs.items()}
+                self._call_callbacks(method_name= "on_epoch_end", **kwargs)
+
+                # val
+                val_logs = self._validate_step()
+                val_logs = {"val_"+name: value for name, value in val_logs.items()}    
+
+                # update show progress bar or visualization
+                pbar.set_postfix({**train_logs, **val_logs})
+                if self._disable_visualization():
+                    visualization.refresh_plot(history= self.metrics_tracker.get_history())
+
+        self._call_callbacks(method_name= "on_train_end", **kwargs)
+
+    def _train_step(self, **kwargs):
+        '''On train step.'''
+        self.model.train() 
+        self.metrics_tracker.set_stage("train") ## for train
+
+        for X, y in self.train_dataloader:
+            self._call_callbacks(method_name= "on_step_begin", **kwargs)
+
+            X, y = X.to(self.device), y.to(self.device)
+            self.optimizer.zero_grad()
+            y_hat = self.model(X)
+            loss = self.loss_fn(y_hat, y)
+            loss.backward()
+            self.optimizer.step()
+
+            self.metrics_tracker.update(y_hat= y_hat, y= y, loss= loss.item()) ## update for train
+            self.metrics_tracker.compute_step_metrics() ## on step level with train
+            self._call_callbacks(method_name= "on_step_end", **kwargs)
+
+        train_metrics = self.metrics_tracker.compute_epoch_metrics() ## on epoch level with train
+        return train_metrics
+
+    def _validate_step(self):
+        '''On validate step.'''
+        self.model.eval()
+        self.metrics_tracker.set_stage("val") ## for val
+
+        with torch.no_grad():
+            for X, y in self.val_dataloader:
+                X, y = X.to(self.device), y.to(self.device)
+                y_hat = self.model(X)
+                loss = self.loss_fn(y_hat, y)
+
+                self.metrics_tracker.update(y_hat= y_hat, y= y, loss= loss.item()) ## update for val
+                self.metrics_tracker.compute_step_metrics() ## on step level with val
+
+            val_metrics = self.metrics_tracker.compute_epoch_metrics() ## on epoch level with val
+        return val_metrics
+    
+    def save_metrics(self, file_path):
+        '''Save the history with pickle format.'''
+        history = self.metrics_tracker.get_history()
+        with open(file_path, 'wb') as f:
+            pickle.dump(history, f)
+
+    def save_checkpoint(self, file_path):
+        '''Save checkpoint.'''
+        checkpoint = {
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+        }
+        torch.save(checkpoint, file_path)
+
+    def load_checkpoint(self, file_path):
+        '''Load checkpoint.'''
+        checkpoint = torch.load(file_path)
+        self.model.load_state_dict(state_dict= checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+
+# trainer.metrics_tracker._history
+# trainer.metrics_tracker.get_history()
+# trainer.save_metrics(file_path= "./cache/metrics_tracker_history.pickle")
+# trainer.save_checkpoint(file_path= './cache/checkpoint.pt')
+# trainer.load_checkpoint(file_path= './cache/checkpoint.pt')
+
+```
+
+## 3.7. <a id='toc3_7_'></a>[ParametersNumbers](#toc0_)
 PyTorch 在进行深度学习训练的时候，有 4 大部分的显存开销：
   - `模型参数(parameters)` ；
   - `模型参数的梯度(gradients)` ；
@@ -842,19 +1244,29 @@ print(f"模型大小: {size_all_mb:.2f} MB")
 import torch 
 
 
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+class ParameterSize:
+    def count_parameters(self, model):
+        return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def parameter_size(model, dtype=torch.float32):
-    bytes_per_param = torch.tensor([], dtype=dtype).element_size()
-    total_params = count_parameters(model)
-    total_size = total_params * bytes_per_param
-    print(f'{total_params/1000000} M parameters')
-    print(f'{total_size/(1024*1024):.2f} MB')
-    # return total_params, total_size
+    def get_parameter_size(self, model, dtype=torch.float32):
+        bytes_per_param = torch.tensor([], dtype=dtype).element_size()
+        total_params = self.count_parameters(model)
+        total_size = total_params * bytes_per_param
+        print(f'{total_params/1000000} M parameters')
+        print(f'{total_size/(1024*1024):.2f} MB')
+        # return total_params, total_size
+
+
+# Test
+parameter_size = ParameterSize()
+parameter_size.get_parameter_size(model)
 ```
 
-## 3.5. <a id='toc3_5_'></a>[numpy和pytorch计算速度比较](#toc0_)
+    1880.686592 M parameters
+    7174.25 MB
+
+
+## 3.8. <a id='toc3_8_'></a>[numpy和pytorch计算速度比较](#toc0_)
 
 
 ```python
@@ -880,7 +1292,7 @@ bt_gpu = torch.Tensor(b).to('cuda:0')
 %timeit a + b   # On cpu via numpy
 ```
 
-    1.5 ms ± 15.7 μs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
+    1.51 ms ± 71.6 μs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
 
 
 
@@ -888,7 +1300,7 @@ bt_gpu = torch.Tensor(b).to('cuda:0')
 %timeit at + bt # On cpu via PyTorch
 ```
 
-    24.8 μs ± 332 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+    27 μs ± 617 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
 
 
 
@@ -905,10 +1317,11 @@ torch.cuda.synchronize()
 print(f'Time: {0.001 * start.elapsed_time(stop)} s')
 ```
 
-    Time: 0.08263510131835938 s
+    Time: 0.0005188480019569397 s
 
 
 # 4. <a id='toc4_'></a>[安装GPU驱动](#toc0_)
+
 
 以CentOS8安装NVIDIA Tesla A100为例，下载CUDA Toolkit和CuDNN，需要注意cudnn的版本必须与cuda的版本相匹配：
 
@@ -921,6 +1334,7 @@ print(f'Time: {0.001 * start.elapsed_time(stop)} s')
   4. CUDA Deep Neural Network (cuDNN)：CuDNN是NVIDIA提供的一个`深度神经网络加速库`，它包含了一系列高性能的基本函数和算法，用于加速深度学习任务的计算；CuDNN需要与CUDA Toolkit一起使用，以优化深度学习任务。
 
 ## 4.1. <a id='toc4_1_'></a>[安装策略](#toc0_)
+
 
 - 方式一 `全局驱动，各自cuda`：
     - `只安装NVIDIA Tesla A100的driver，每个用户自己利用conda安装CUDA Toolkit、cuDNN和对应的Pytorch版本（推荐），但是得注意选择兼容型号。（推荐）`
@@ -1140,15 +1554,13 @@ conda create -n pytorch-gpu && conda activate pytorch-gpu
 # conda install cudatoolkit
 # or 
 # conda install cuda-nvcc
-conda install nvidia/label/cuda-12.4.0::cuda
+conda install nvidia/label/cuda-12.4.0::cuda -y  -c nvidia/label/cuda-12.4.0
 ```
 
 ## 4.7. <a id='toc4_7_'></a>[GPU测试程序](#toc0_)
-### 4.7.1. <a id='toc4_7_1_'></a>[单机单卡](#toc0_)
-```shell
-net.to('cuda:0')
-x_gpu = x.to('cuda:0')
-```
+
+
+### 4.7.1. <a id='toc4_7_1_'></a>[在GPU上验证Trainer](#toc0_)
 
 
 ```python
@@ -1156,42 +1568,18 @@ import torch
 import torch.nn as nn 
 import torch.utils.data as data
 import torchvision
-import time 
 
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # 数据准备
-dbs = './Pytorch_datasets/'
-train_dataset = torchvision.datasets.MNIST(
-    root=dbs, 
-    train=True, 
-    download=True, 
-    transform=torchvision.transforms.Compose(
-        [torchvision.transforms.ToTensor(), 
-        #  torchvision.transforms.Normalize((0.1307,), (0.3081,))
-        ]
-    )
-)
+dbs = './data/'
+transforms = torchvision.transforms.Compose([torchvision.transforms.ToTensor(), ])
 
-test_dataset = torchvision.datasets.MNIST(
-    root=dbs, 
-    train=False, 
-    download=True, 
-    transform=torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(), 
-        #  torchvision.transforms.Normalize((0.1307,), (0.3081,))
-        ]
-    )
-)
+train_dataset = torchvision.datasets.MNIST(root= dbs, train= True, download= True, transform= transforms)
+test_dataset = torchvision.datasets.MNIST(root= dbs, train= False, download= True, transform= transforms)
 # 迭代型数据方式
-train_iter = data.DataLoader(
-    dataset=train_dataset, 
-    batch_size=128, 
-    shuffle=True
-)
-# test_iter = data.DataLoader(dataset=test_dataset) # test不需要batch训练
+train_iter = data.DataLoader(dataset= train_dataset, batch_size= 128, shuffle= True)    # train需要shuffle
+test_iter = data.DataLoader(dataset= test_dataset, batch_size= 128)                     # test不需要shuffle训练
+
 
 # 网络结构
 class Net(nn.Module):
@@ -1205,280 +1593,46 @@ class Net(nn.Module):
 
     def forward(self, X):
         return self.network(X)
-    
-# 训练过程封装
-def train_steps(epochs, train_dataset, train_iter, test_dataset, net, loss_fn, opt, device):
-    '''
-    参数记录
-    epochs = epochs                         # epoch
-    train_dataset = train_dataset           # 全部train数据集
-    train_iter = train_iter                 # batch之后的train数据集
-    test_dataset = test_dataset             # 全部test数据集
-    net = net                               # 网络模型
-    loss_fn = loss_fn                       # 损失函数
-    opt = opt                               # 优化器
-    device = device                         # device GPU/CPU
-    '''
 
-    print('='*100)
-    print(f"Runing on {device}")
-    print('='*100)
-    train_all_data_gpu = train_dataset.data.to(device)
-    train_all_targets_gpu = train_dataset.targets.to(device)
-    test_all_data_gpu = test_dataset.data.to(device)
-    test_all_targets_gpu = test_dataset.targets.to(device)
-    net.to(device)
 
-    # 开始迭代
-    start = time.time()
-    for epoch in range(epochs):
-        for batch_record in train_iter:
-            X, y = batch_record                 # 分配X, y
-            X, y = X.to(device), y.to(device)   # 复制到device（GPU/CPU）上
-            # print(X[0])
-            # print(X[0].dtype)
-            # break
-            opt.zero_grad()                         # 默认是累加，此处从新求导
-            y_hat = net(X)                          # 计算y_hat
-            loss = loss_fn(y_hat, y)                # 计算loss
-            loss.backward()                         # 计算梯度
-            opt.step()                              # 更新网络参数
-
-        net.eval()  # 切换至评估模式
-                    # 模型默认是net.train()
-                    # 但是net中含有BN、Dropout等，在test时必须固定train时学好的参数，不能被test又改变了
-                    # 但net中没有BN、Dropout等时，加不加net.eval()都无所谓
-
-        with torch.no_grad(): # with下内容不进行grad计算，可以节省运算和内存
-            train_loss = loss_fn(net(train_all_data_gpu/256), train_all_targets_gpu)
-            # print(train_loss)
-            train_acc_cmp = net(train_all_data_gpu/256).argmax(axis=1) == train_all_targets_gpu
-            train_acc = (train_acc_cmp.sum() / len(train_acc_cmp)) * 100
-            # print(train_acc)
-            test_acc_cmp = net(test_all_data_gpu/256).argmax(axis=1) == test_all_targets_gpu
-            test_acc = (test_acc_cmp.sum() / len(test_acc_cmp)) * 100
-            # print(test_acc)
-            print(f"epoch {epoch+1}/{epochs}: train_loss={train_loss}, train_acc={train_acc}, test_acc={test_acc}")
-
-    stop = time.time()
-    seconds = stop - start
-    def convert_seconds(seconds):
-        days = seconds // (24 * 3600)
-        hours = (seconds % (24 * 3600)) // 3600
-        minutes = (seconds % 3600) // 60
-        remaining_seconds = seconds % 60
-        return days, hours, minutes, remaining_seconds
-    days, hours, minutes, remaining_seconds = convert_seconds(seconds)
-    print('='*100, '\n', f"Total：{days} d/ {hours} h/ {minutes} m/ {remaining_seconds} s")
-    # return (train_loss, train_acc, test_acc)
-    return None
+# Trainer
+## callback
+class PrintCallback(Callback):
+    def on_train_begin(self, **kwargs):
+        print("Runing on train begin ...")
 
 # lr 0.01 -> 0.5
-# 结果表明还是会快一点收敛
 net = Net()  
 loss_fn = nn.CrossEntropyLoss()
-opt = torch.optim.SGD(params=net.parameters(), lr=0.5)   
-train_steps(
-    epochs=10, 
-    train_dataset=train_dataset, 
-    train_iter=train_iter, 
-    test_dataset=test_dataset, 
-    net=net,                        
-    loss_fn=loss_fn, 
-    opt=opt, 
-    device=device 
-) 
-```
+opt = torch.optim.SGD(params= net.parameters(), lr=0.5)   
 
-    ====================================================================================================
-    Runing on cuda:0
-    ====================================================================================================
-    epoch 1/10: train_loss=1.6274998188018799, train_acc=84.3983383178711, test_acc=84.86000061035156
-    epoch 2/10: train_loss=1.5564780235290527, train_acc=91.80333709716797, test_acc=92.20999145507812
-    epoch 3/10: train_loss=1.5359078645706177, train_acc=93.42666625976562, test_acc=93.30999755859375
-    epoch 4/10: train_loss=1.5250604152679443, train_acc=94.48833465576172, test_acc=94.14999389648438
-    epoch 5/10: train_loss=1.5173759460449219, train_acc=95.15666961669922, test_acc=94.68999481201172
-    epoch 6/10: train_loss=1.5116100311279297, train_acc=95.62833404541016, test_acc=94.97000122070312
-    epoch 7/10: train_loss=1.5059237480163574, train_acc=96.125, test_acc=95.5199966430664
-    epoch 8/10: train_loss=1.5021032094955444, train_acc=96.46500396728516, test_acc=95.77999877929688
-    epoch 9/10: train_loss=1.4987181425094604, train_acc=96.77667236328125, test_acc=96.22000122070312
-    epoch 10/10: train_loss=1.4955240488052368, train_acc=97.086669921875, test_acc=96.41000366210938
-    ==================================================================================================== 
-     Total：0.0 d/ 0.0 h/ 0.0 m/ 55.98274064064026 s
+trainer = Trainer(
+    device= 'auto', 
+    train_dataloader= train_iter, 
+    val_dataloader= test_iter, 
+    model= net, 
+    loss_fn= loss_fn, 
+    optimizer= opt, 
+    is_tqdm= False, 
+    callbacks= [PrintCallback(), ]
+)
 
+trainer.train(epochs= 30)
 
-### 4.7.2. <a id='toc4_7_2_'></a>[单机多卡](#toc0_)
-```shell
-torch.nn.DataParallel()
+# trainer.metrics_tracker._history
+# trainer.metrics_tracker.get_history()
+# trainer.save_metrics(file_path= "./cache/metrics_tracker_history.pickle")
+# trainer.save_checkpoint(file_path= './cache/checkpoint.pt')
+# trainer.load_checkpoint(file_path= './cache/checkpoint.pt')
 ```
 
 
-```python
-import torch 
-import torch.nn as nn 
-import torch.utils.data as data
-import torchvision
-import time 
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-# 数据准备
-dbs = './Pytorch_datasets/'
-train_dataset = torchvision.datasets.MNIST(
-    root=dbs, 
-    train=True, 
-    download=True, 
-    transform=torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(), 
-            #  torchvision.transforms.Normalize((0.1307,), (0.3081,))
-        ]
-    )
-)
-
-test_dataset = torchvision.datasets.MNIST(
-    root=dbs, 
-    train=False, 
-    download=True, 
-    transform=torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(), 
-            #  torchvision.transforms.Normalize((0.1307,), (0.3081,))
-        ]
-    )
-)
-
-# 迭代型数据方式
-train_iter = data.DataLoader(
-    dataset=train_dataset, 
-    batch_size=128, 
-    shuffle=True
-)
-# test_iter = data.DataLoader(dataset=test_dataset) # test不需要batch训练
-
-# 网络结构
-class Net(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.network = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(28*28, 1024), nn.ReLU(),
-            nn.Linear(1024, 10), nn.Softmax()
-        )
-
-    def forward(self, X):
-        return self.network(X)
     
-# 训练过程封装
-def train_steps(epochs, train_dataset, train_iter, test_dataset, net, loss_fn, opt, device):
-    '''
-    参数记录
-    epochs = epochs                         # epoch
-    train_dataset = train_dataset           # 全部train数据集
-    train_iter = train_iter                 # batch之后的train数据集
-    test_dataset = test_dataset             # 全部test数据集
-    net = net                               # 网络模型
-    loss_fn = loss_fn                       # 损失函数
-    opt = opt                               # 优化器
-    device = device                         # device GPU/CPU
-    '''
-
-    print('='*100)
-    print(f"Runing on {device}")
-    print('='*100)
-    train_all_data_gpu = train_dataset.data.to(device)
-    train_all_targets_gpu = train_dataset.targets.to(device)
-    test_all_data_gpu = test_dataset.data.to(device)
-    test_all_targets_gpu = test_dataset.targets.to(device)
-    net = nn.DataParallel(module=net)
-    net = net.to(device)
-
-    # 开始迭代
-    start = time.time()
-    for epoch in range(epochs):
-        for batch_record in train_iter:
-            X, y = batch_record                 # 分配X, y
-            X, y = X.to(device), y.to(device)   # 复制到device（GPU/CPU）上
-            # print(X[0])
-            # print(X[0].dtype)
-            # break
-            opt.zero_grad()                     # 默认是累加，此处从新求导
-            y_hat = net(X)          # 计算y_hat
-            loss = loss_fn(y_hat, y)# 计算loss
-            loss.backward()         # 计算梯度
-            opt.step()              # 更新网络参数
-
-        net.eval()  # 切换至评估模式
-                    # 模型默认是net.train()
-                    # 但是net中含有BN、Dropout等，在test时必须固定train时学好的参数，不能被test又改变了
-                    # 但net中没有BN、Dropout等时，加不加net.eval()都无所谓
-
-        with torch.no_grad(): # with下内容不进行grad计算，可以节省运算和内存
-            train_loss = loss_fn(net(train_all_data_gpu/256), train_all_targets_gpu)
-            # print(train_loss)
-            train_acc_cmp = net(train_all_data_gpu/256).argmax(axis=1) == train_all_targets_gpu
-            train_acc = (train_acc_cmp.sum() / len(train_acc_cmp)) * 100
-            # print(train_acc)
-            test_acc_cmp = net(test_all_data_gpu/256).argmax(axis=1) == test_all_targets_gpu
-            test_acc = (test_acc_cmp.sum() / len(test_acc_cmp)) * 100
-            # print(test_acc)
-            print(f"epoch {epoch+1}/{epochs}: train_loss={train_loss}, train_acc={train_acc}, test_acc={test_acc}")
-
-    stop = time.time()
-    seconds = stop - start
-    def convert_seconds(seconds):
-        days = seconds // (24 * 3600)
-        hours = (seconds % (24 * 3600)) // 3600
-        minutes = (seconds % 3600) // 60
-        remaining_seconds = seconds % 60
-        return days, hours, minutes, remaining_seconds
-    days, hours, minutes, remaining_seconds = convert_seconds(seconds)
-    print('='*100, '\n', f"Total：{days} d/ {hours} h/ {minutes} m/ {remaining_seconds} s")
-    # return (train_loss, train_acc, test_acc)
-    return None
-
-# lr 0.01 -> 0.5
-# 结果表明还是会快一点收敛
-net = Net()  
-loss_fn = nn.CrossEntropyLoss()
-opt = torch.optim.SGD(params=net.parameters(), lr=0.5)   
-train_steps(
-    epochs=10, 
-    train_dataset=train_dataset, 
-    train_iter=train_iter, 
-    test_dataset=test_dataset, 
-    net=net,                        
-    loss_fn=loss_fn, 
-    opt=opt, 
-    device=device 
-)
-```
-
-    ====================================================================================================
-    Runing on cuda:0
-    ====================================================================================================
-    epoch 1/10: train_loss=1.575600504875183, train_acc=90.44833374023438, test_acc=90.77999877929688
-    epoch 2/10: train_loss=1.547834038734436, train_acc=92.36333465576172, test_acc=92.48999786376953
-    epoch 3/10: train_loss=1.5322562456130981, train_acc=93.78500366210938, test_acc=93.61000061035156
-    epoch 4/10: train_loss=1.5213903188705444, train_acc=94.74333190917969, test_acc=94.43999481201172
-    epoch 5/10: train_loss=1.5164926052093506, train_acc=95.19166564941406, test_acc=94.81999969482422
-    epoch 6/10: train_loss=1.5106992721557617, train_acc=95.68499755859375, test_acc=95.27999877929688
-    epoch 7/10: train_loss=1.5050891637802124, train_acc=96.26000213623047, test_acc=95.63999938964844
-    epoch 8/10: train_loss=1.5017056465148926, train_acc=96.55667114257812, test_acc=95.9000015258789
-    epoch 9/10: train_loss=1.4975892305374146, train_acc=96.89666748046875, test_acc=96.29000091552734
-    epoch 10/10: train_loss=1.4955655336380005, train_acc=97.086669921875, test_acc=96.52999877929688
-    ==================================================================================================== 
-     Total：0.0 d/ 0.0 h/ 1.0 m/ 7.511963844299316 s
+![svg](learn_PyTorch_files/learn_PyTorch_67_0.svg)
+    
 
 
-
-```python
-# device = [ 'cpu' if not torch.cuda.is_available() else ]
-device = [f'cuda:{i}' for i in range(torch.cuda.device_count())] if torch.cuda.is_available() else ['cpu']
-device
-```
-
-### 4.7.3. <a id='toc4_7_3_'></a>[GPU burn压力测试](#toc0_)
+### 4.7.2. <a id='toc4_7_2_'></a>[GPU burn压力测试](#toc0_)
 ```shell
 李沐在装机配置后，进行GPU压力测试所用的程序为GPU_burn（可从github上下载）
 ```
@@ -1489,8 +1643,8 @@ device
 
 ```bash
 %%bash 
-# git clone:
-git clone https://github.com/wilicc/gpu-burn.git
+# git clone
+# git clone https://github.com/wilicc/gpu-burn.git
 
 cd gpu-burn
 
@@ -1565,8 +1719,8 @@ print('pytorch version: ', torch.__version__)
 print(f"torchvision version: {torchvision.__version__}")
 ```
 
-    pytorch version:  2.5.1.post303
-    torchvision version: 0.20.1a0+9f8010e
+    pytorch version:  2.6.0+cu124
+    torchvision version: 0.21.0+cu124
 
 
 # 6. <a id='toc6_'></a>[数据封装和加载](#toc0_)
@@ -1683,7 +1837,7 @@ type(datasets), datasets
 
 
     (torch.utils.data.dataset.TensorDataset,
-     <torch.utils.data.dataset.TensorDataset at 0x7f802704b260>)
+     <torch.utils.data.dataset.TensorDataset at 0x7f56ec473610>)
 
 
 
@@ -1798,14 +1952,14 @@ datasets, datasets[0], datasets[1], datasets.__getitem__(1), datasets[2], datase
 from torch.utils.data import Subset 
 
 
-subset = Subset(dataset=datasets, indices=[1, 2, 3])    # 从datasets中抽取indices=[1, 2, 3]的子集
+subset = Subset(dataset= datasets, indices= [1, 2, 3])    # 从datasets中抽取indices=[1, 2, 3]的子集
 
 print("子集大小:", len(subset))  # 输出: 3
 print("子集中的第一个样本:", subset[0])  # 输出: 1
 ```
 
     子集大小: 3
-    子集中的第一个样本: (tensor(1), tensor(1))
+    子集中的第一个样本: (tensor(1), tensor(2))
 
 
 ### 6.2.5. <a id='toc6_2_5_'></a>[random_split](#toc0_)
@@ -1825,7 +1979,7 @@ from torch.utils.data import random_split
 
 
 # 使用 Generator 设置随机数种子
-train_dataset, validation_dataset, test_dataset = random_split(dataset=datasets, lengths=[10, 3, 2], generator=torch.Generator().manual_seed(42))
+train_dataset, validation_dataset, test_dataset = random_split(dataset= datasets, lengths= [10, 3, 2], generator= torch.Generator().manual_seed(42))
 
 print(f"训练集大小: {len(train_dataset)}")
 print(f"验证集大小: {len(validation_dataset)}")
@@ -2559,11 +2713,11 @@ import torch
 
 
 x = torch.normal(
-    mean=0, 
-    std=1, 
-    size=(128, 12, 5), 
-    dtype=torch.float32, 
-    device='cpu'
+    mean= 0, 
+    std= 1, 
+    size= (128, 12, 5), 
+    dtype= torch.float32, 
+    device= 'cpu'
 )
 
 x.shape, x.device, x.dtype
@@ -3058,7 +3212,7 @@ x[0:3, 0] # 1-3行，1列
         ```
     
 
-#### 7.3.2.1. <a id='toc7_3_2_1_'></a>[[: None], [None, :]](#toc0_)       [&#8593;](#toc0_)
+#### 7.3.2.1. <a id='toc7_3_2_1_'></a>[[: None], [None, :]](#toc0_)                [&#8593;](#toc0_)
 含义：[None, :] 是利用 Python 的`切片语法`为张量增加一个新维度。
 - None：相当于在第 0 维增加一个新维度。
 - :：表示保留张量原本的所有元素。
@@ -5435,7 +5589,7 @@ plt.plot(data)
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_340_2.png)
+![png](learn_PyTorch_files/learn_PyTorch_351_2.png)
     
 
 
@@ -5488,7 +5642,7 @@ d2l.plt.scatter(features[:, (1)].detach().numpy(),
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_345_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_356_0.svg)
     
 
 
@@ -5502,7 +5656,7 @@ d2l.plt.scatter(features[:, (0)].detach().numpy(),
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_346_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_357_0.svg)
     
 
 
@@ -7033,7 +7187,7 @@ plt.title('Function')
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_460_1.png)
+![png](learn_PyTorch_files/learn_PyTorch_471_1.png)
     
 
 
@@ -7065,7 +7219,7 @@ plt.title('grad')
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_462_1.png)
+![png](learn_PyTorch_files/learn_PyTorch_473_1.png)
     
 
 
@@ -7121,7 +7275,7 @@ plt.plot(x, y, c=c)
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_464_1.png)
+![png](learn_PyTorch_files/learn_PyTorch_475_1.png)
     
 
 
@@ -7150,7 +7304,7 @@ plt.plot(x, y, c=c)
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_465_1.png)
+![png](learn_PyTorch_files/learn_PyTorch_476_1.png)
     
 
 
@@ -7179,7 +7333,7 @@ plt.plot(x, y, c=c)
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_466_1.png)
+![png](learn_PyTorch_files/learn_PyTorch_477_1.png)
     
 
 
@@ -7208,7 +7362,7 @@ plt.plot(x, y, c=c)
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_467_1.png)
+![png](learn_PyTorch_files/learn_PyTorch_478_1.png)
     
 
 
@@ -7478,62 +7632,6 @@ train_iter = data.DataLoader(
 
 # test_iter = data.DataLoader(dataset=test_dataset) # test不需要batch训练
 ```
-
-    Downloading http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
-    Failed to download (trying next):
-    HTTP Error 403: Forbidden
-    
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz to ./Pytorch_datasets/MNIST/raw/train-images-idx3-ubyte.gz
-
-
-    100%|██████████| 9912422/9912422 [00:02<00:00, 3659860.80it/s]
-
-
-    Extracting ./Pytorch_datasets/MNIST/raw/train-images-idx3-ubyte.gz to ./Pytorch_datasets/MNIST/raw
-    
-    Downloading http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
-    Failed to download (trying next):
-    HTTP Error 403: Forbidden
-    
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz to ./Pytorch_datasets/MNIST/raw/train-labels-idx1-ubyte.gz
-
-
-    100%|██████████| 28881/28881 [00:00<00:00, 119645.04it/s]
-
-
-    Extracting ./Pytorch_datasets/MNIST/raw/train-labels-idx1-ubyte.gz to ./Pytorch_datasets/MNIST/raw
-    
-    Downloading http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
-    Failed to download (trying next):
-    HTTP Error 403: Forbidden
-    
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz to ./Pytorch_datasets/MNIST/raw/t10k-images-idx3-ubyte.gz
-
-
-    100%|██████████| 1648877/1648877 [00:01<00:00, 912416.46it/s] 
-
-
-    Extracting ./Pytorch_datasets/MNIST/raw/t10k-images-idx3-ubyte.gz to ./Pytorch_datasets/MNIST/raw
-    
-    Downloading http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
-    Failed to download (trying next):
-    HTTP Error 403: Forbidden
-    
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz to ./Pytorch_datasets/MNIST/raw/t10k-labels-idx1-ubyte.gz
-
-
-    100%|██████████| 4542/4542 [00:00<00:00, 17224709.56it/s]
-
-    Extracting ./Pytorch_datasets/MNIST/raw/t10k-labels-idx1-ubyte.gz to ./Pytorch_datasets/MNIST/raw
-    
-
-
-    
-
 
 
 ```python
@@ -7846,327 +7944,29 @@ def training_step(
 
 
 ```python
-# 开始训练
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+from torch.utils import data 
+
 
 net = Net()
 loss_fn = nn.CrossEntropyLoss()
 opt = torch.optim.SGD(params=net.parameters(), lr=0.01)
 
-train_steps(
-    epochs=10, 
-    train_dataset=train_dataset, 
-    train_iter=train_iter, 
-    test_dataset=test_dataset, 
-    net=net,                        
-    loss_fn=loss_fn, 
-    opt=opt, 
-    device=device, 
-    train_figure=True, 
-    resume = False, 
-    PATH = './Pytorch_params/weights'
-) 
+trainer= Trainer(
+    device= 'auto', 
+    train_dataloader= data.DataLoader(train_dataset, batch_size= 128, shuffle= True),
+    val_dataloader= data.DataLoader(test_dataset, batch_size= 128), 
+    model= net, 
+    loss_fn= loss_fn, 
+    optimizer= opt, 
+    is_tqdm= False
+)
+
+trainer.train(epochs= 5)
 ```
 
-    ====================================================================================================
-    耗时： 59.95664095878601 seconds.
-
-
-
-
-
-    (tensor(1.7594, device='cuda:0'),
-     tensor(0.7902, device='cuda:0'),
-     tensor(0.8000, device='cuda:0'))
-
-
-
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-    findfont: Generic family 'sans-serif' not found because none of the following families were found: Times new roman, Arial, KaiTi
-
-
 
     
-![png](learn_PyTorch_files/learn_PyTorch_496_3.png)
-    
-
-
-
-```python
-best = torch.load('./Pytorch_params/weights/best.pt')
-best['epoch'], best['loss'], best['model_state_dict']
-```
-
-    /tmp/ipykernel_32820/198423743.py:1: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
-      best = torch.load('./Pytorch_params/weights/best.pt')
-
-
-
-
-
-    (9,
-     tensor(0.8000, device='cuda:0'),
-     OrderedDict([('network.1.weight',
-                   tensor([[-0.0241, -0.0069,  0.0088,  ..., -0.0267, -0.0129, -0.0065],
-                           [ 0.0302, -0.0323,  0.0237,  ..., -0.0168,  0.0240,  0.0341],
-                           [-0.0151,  0.0176, -0.0027,  ...,  0.0083, -0.0131,  0.0065],
-                           ...,
-                           [ 0.0030,  0.0136, -0.0048,  ..., -0.0145, -0.0219, -0.0337],
-                           [-0.0136, -0.0261,  0.0065,  ..., -0.0004,  0.0057,  0.0013],
-                           [-0.0356, -0.0046, -0.0026,  ..., -0.0298,  0.0247,  0.0137]],
-                          device='cuda:0')),
-                  ('network.1.bias',
-                   tensor([ 3.9702e-02,  3.4285e-02,  4.3656e-02, -7.5687e-04,  4.5628e-02,
-                           -1.5764e-03,  9.1527e-03,  1.2884e-02,  5.1464e-02,  1.3203e-02,
-                            3.2777e-02,  2.3281e-02, -7.0645e-07, -2.0750e-02,  1.0967e-02,
-                            1.6538e-02, -3.8702e-02,  1.7775e-02,  4.1511e-02,  1.2678e-02,
-                            2.1664e-02, -2.0623e-02,  3.2701e-02,  2.3492e-02,  4.9457e-03,
-                            3.9780e-02, -1.1985e-02,  4.2158e-02,  5.6506e-02,  2.7593e-02,
-                            9.5884e-03,  2.4593e-02,  5.3445e-03,  1.0407e-02, -2.9220e-02,
-                           -7.0291e-03,  1.5674e-02, -1.9235e-02,  2.1151e-02,  2.2816e-02,
-                            7.4965e-03,  5.0568e-02, -8.6301e-03, -1.1696e-02,  1.7590e-02,
-                            5.1232e-02, -1.1965e-02,  3.1024e-02,  3.3625e-02,  1.2786e-02,
-                            2.7856e-02,  2.0230e-02,  1.9761e-02,  4.9548e-02,  4.0749e-02,
-                            1.2994e-02,  5.2624e-02,  2.0533e-02,  2.9313e-02,  6.8340e-03,
-                           -2.8082e-02,  1.5062e-02, -3.0884e-02, -2.3156e-02, -2.2881e-03,
-                            2.6252e-03, -3.0055e-02, -1.5311e-02,  3.1937e-02,  3.6528e-02,
-                            3.3189e-02, -1.0149e-02,  2.0503e-02, -1.4367e-02,  4.2755e-02,
-                           -1.9800e-02, -1.1765e-02,  3.1096e-02,  2.9567e-02, -2.6079e-02,
-                            2.4057e-02,  2.8671e-02,  6.5098e-03,  1.6217e-02,  1.6545e-02,
-                            1.9598e-02,  3.9184e-02, -1.1046e-02,  6.2070e-03,  3.1246e-02,
-                            9.4902e-03,  3.0827e-02, -1.2420e-02, -1.8113e-02, -7.5191e-03,
-                           -2.3051e-02,  1.2938e-02, -1.2393e-02, -2.3524e-02, -9.9774e-03,
-                            8.9223e-03,  3.3172e-02,  3.3347e-02,  1.9719e-02, -5.4457e-03,
-                            1.0521e-02, -2.5926e-03,  3.6220e-03, -8.9649e-03,  3.5096e-03,
-                            3.9662e-02,  8.8037e-03,  2.5711e-02, -6.7204e-03, -8.7729e-03,
-                            1.3268e-02,  2.2215e-02, -7.2406e-03,  1.6775e-03, -1.3178e-02,
-                            2.2741e-02, -1.6813e-02,  6.5540e-03,  4.7898e-02,  1.7329e-02,
-                           -1.8237e-02,  2.3492e-02, -2.1715e-02,  3.1797e-02, -2.3865e-03,
-                            1.9146e-03,  2.0191e-02,  2.1575e-02, -5.3633e-03,  1.5864e-02,
-                            4.8251e-02, -1.8978e-03, -2.8512e-03,  3.3479e-02,  3.3359e-02,
-                           -2.1005e-02,  1.0200e-04, -2.5433e-02, -8.3805e-03,  5.2502e-02,
-                           -2.7321e-02,  6.5998e-02,  8.3883e-03,  2.5566e-02,  8.6262e-03,
-                           -2.2832e-02,  4.9074e-02, -2.7729e-02, -6.6179e-03,  3.1971e-02,
-                            4.1276e-02, -2.6954e-02, -9.3661e-03, -6.8694e-03,  1.2666e-02,
-                           -1.8432e-02, -3.2942e-02,  3.6010e-02,  1.3340e-02,  1.3230e-02,
-                            1.2177e-03, -4.0268e-03,  2.4358e-02, -1.4252e-02,  1.7725e-02,
-                            1.4390e-02,  4.5555e-02,  4.3820e-03, -9.9201e-03,  2.5283e-03,
-                           -1.3692e-02, -3.6250e-02,  2.1885e-03,  3.5891e-02,  2.4769e-02,
-                            9.7989e-03,  4.4549e-02,  1.1250e-02,  2.9513e-04, -8.4876e-03,
-                           -1.0764e-02, -5.3896e-03,  3.9276e-02,  3.1027e-02,  1.1406e-02,
-                            3.0260e-02,  1.2267e-02,  4.6958e-03,  3.7215e-02,  3.9977e-02,
-                            3.3820e-02, -1.0931e-02,  1.0565e-02,  1.1181e-02, -1.3401e-02,
-                            3.6825e-02,  4.5035e-02, -2.7077e-02, -2.0625e-02, -1.2974e-02,
-                           -2.3754e-02,  3.1041e-02,  4.6583e-02,  5.2671e-02, -1.2074e-02,
-                           -1.2163e-02, -2.2311e-02, -1.4121e-02, -2.3022e-02,  1.5178e-02,
-                            2.2413e-02,  2.1362e-02, -1.1371e-02, -2.4531e-02,  3.2458e-02,
-                            2.1671e-02,  3.3461e-02,  6.0620e-03,  2.3813e-02,  4.7138e-02,
-                           -3.1214e-02, -2.6454e-03, -2.5188e-02,  3.4154e-02,  2.0549e-02,
-                           -9.4273e-03,  2.9883e-02, -8.0837e-03,  4.4898e-02,  5.3602e-03,
-                           -2.3646e-02,  2.8702e-02,  2.7271e-02,  5.5416e-02, -2.3502e-02,
-                            1.4266e-02, -4.1066e-02,  3.4123e-02,  2.6651e-02,  3.1687e-02,
-                            2.6590e-02, -3.7192e-03,  2.8239e-02,  5.7477e-03, -2.0121e-02,
-                            5.4461e-03,  3.0526e-02, -9.5012e-03,  2.7479e-02, -2.8464e-02,
-                            4.6071e-02], device='cuda:0')),
-                  ('network.3.weight',
-                   tensor([[-0.0505, -0.1163, -0.0902,  ..., -0.0762,  0.0453,  0.0470],
-                           [ 0.0724,  0.1765,  0.0936,  ..., -0.0425,  0.0104, -0.0149],
-                           [-0.0884, -0.0270,  0.0364,  ..., -0.0410, -0.0254, -0.0206],
-                           ...,
-                           [-0.0540,  0.0514, -0.1432,  ..., -0.1346, -0.0148,  0.1571],
-                           [ 0.0946,  0.0494,  0.0184,  ...,  0.0630,  0.0512, -0.0797],
-                           [ 0.0776,  0.0689, -0.0066,  ..., -0.0522,  0.0436, -0.0084]],
-                          device='cuda:0')),
-                  ('network.3.bias',
-                   tensor([-0.0526,  0.1243, -0.0987,  0.0301,  0.0522, -0.0409,  0.0423,  0.0652,
-                           -0.1231,  0.0462], device='cuda:0'))]))
-
-
-
-
-```python
-# 再试一次，会不会造成net的parameter的累加，结果表明不会
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-net = Net()   
-loss_fn = nn.CrossEntropyLoss()
-opt = torch.optim.SGD(params=net.parameters(), lr=0.01)  
-    
-train_steps(epochs=10, 
-            train_dataset=train_dataset, 
-            train_iter=train_iter, 
-            test_dataset=test_dataset, 
-            net=net,                        
-            loss_fn=loss_fn, 
-            opt=opt, 
-            device=device, 
-            train_figure=True, 
-            resume = False
-) 
-```
-
-    ====================================================================================================
-    耗时： 70.18707489967346 seconds.
-
-
-
-
-
-    (tensor(1.7867), tensor(0.7317), tensor(0.7402))
-
-
-
-
-    
-![png](learn_PyTorch_files/learn_PyTorch_498_2.png)
+![svg](learn_PyTorch_files/learn_PyTorch_507_0.svg)
     
 
 
@@ -8177,39 +7977,26 @@ train_steps(epochs=10,
 ```python
 # lr 0.01 -> 0.5
 # 结果表明还是会快一点收敛
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 net = Net()      
 loss_fn = nn.CrossEntropyLoss()
-opt = torch.optim.SGD(params=net.parameters(), lr=0.5)   
+opt = torch.optim.SGD(params= net.parameters(), lr= 0.5)   
    
-train_steps(
-    epochs=10, 
-    train_dataset=train_dataset, 
-    train_iter=train_iter, 
-    test_dataset=test_dataset, 
-    net=net,                        
-    loss_fn=loss_fn, 
-    opt=opt, 
-    device=device, 
-    train_figure=True
-) 
+trainer= Trainer(
+    device= 'auto', 
+    train_dataloader= data.DataLoader(train_dataset, batch_size= 128, shuffle= True),
+    val_dataloader= data.DataLoader(test_dataset, batch_size= 128), 
+    model= net, 
+    loss_fn= loss_fn, 
+    optimizer= opt, 
+    is_tqdm= False
+)
+
+trainer.train(epochs= 5)
 ```
-
-    ====================================================================================================
-    耗时： 69.80070853233337 seconds.
-
-
-
-
-
-    (tensor(1.4991), tensor(0.9673), tensor(0.9614))
-
-
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_500_2.png)
+![svg](learn_PyTorch_files/learn_PyTorch_509_0.svg)
     
 
 
@@ -8233,39 +8020,27 @@ class Net1(nn.Module):
     def forward(self, X):
         return self.network(X)
     
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 net = Net1()  
 loss_fn = nn.CrossEntropyLoss()
-opt = torch.optim.SGD(params=net.parameters(), lr=0.5)   
+opt = torch.optim.SGD(params= net.parameters(), lr= 0.5)   
    
-train_steps(
-    epochs=10, 
-    train_dataset=train_dataset, 
-    train_iter=train_iter, 
-    test_dataset=test_dataset, 
-    net=net,                        
-    loss_fn=loss_fn, 
-    opt=opt, 
-    device=device, 
-    train_figure=True
-) 
+trainer= Trainer(
+    device= 'auto', 
+    train_dataloader= data.DataLoader(train_dataset, batch_size= 128, shuffle= True),
+    val_dataloader= data.DataLoader(test_dataset, batch_size= 128), 
+    model= net, 
+    loss_fn= loss_fn, 
+    optimizer= opt, 
+    is_tqdm= False
+)
+
+trainer.train(epochs= 5)
 ```
-
-    ====================================================================================================
-    耗时： 87.9712917804718 seconds.
-
-
-
-
-
-    (tensor(1.4962), tensor(0.9704), tensor(0.9643))
-
-
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_502_2.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_511_0.svg)
     
 
 
@@ -8275,9 +8050,6 @@ import torch
 import torch.nn as nn 
 import torch.nn.functional as F 
 
-
-# 开始训练
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # 网络结构
 class Net(nn.Module):
@@ -8297,7 +8069,6 @@ class Net(nn.Module):
         self.layer4 = nn.Linear(self.num_hidden, 10)
         self.layer5 = nn.Softmax()
 
-
     def forward(self, X):
         y = self.layer1(X)
         y = self.layer2(y)
@@ -8309,37 +8080,27 @@ class Net(nn.Module):
         y = self.layer5(y)
         return y
 
+
 net = Net()
 loss_fn = nn.CrossEntropyLoss()
 opt = torch.optim.SGD(params=net.parameters(), lr=0.5)
 
-train_steps(
-    epochs=30, 
-    train_dataset=train_dataset, 
-    train_iter=train_iter, 
-    test_dataset=test_dataset, 
-    net=net,                        
-    loss_fn=loss_fn, 
-    opt=opt, 
-    device=device, 
-    train_figure=True
-) 
+trainer= Trainer(
+    device= 'auto', 
+    train_dataloader= data.DataLoader(train_dataset, batch_size= 128, shuffle= True),
+    val_dataloader= data.DataLoader(test_dataset, batch_size= 128), 
+    model= net, 
+    loss_fn= loss_fn, 
+    optimizer= opt, 
+    is_tqdm= False
+)
+
+trainer.train(epochs= 5)
 ```
-
-    ====================================================================================================
-    耗时： 210.56247329711914 seconds.
-
-
-
-
-
-    (tensor(1.4977), tensor(0.9650), tensor(0.9571))
-
-
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_503_2.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_512_0.svg)
     
 
 
@@ -8459,12 +8220,12 @@ stop = time.time()
 print(f"打印图片耗时： {stop - start} seconds")
 ```
 
-    打印图片耗时： 2.1511104106903076 seconds
+    打印图片耗时： 3.3102283477783203 seconds
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_509_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_518_1.svg)
     
 
 
@@ -8491,7 +8252,7 @@ print(f"打印数值耗时： {stop - start} seconds")
     8/10: 	 train_loss=7.899999618530273 	 train_acc=0.9989413619041443
     9/10: 	 train_loss=8.899999618530273 	 train_acc=0.5010212063789368
     10/10: 	 train_loss=9.899999618530273 	 train_acc=-0.4575355648994446
-    打印数值耗时： 0.0017552375793457031 seconds
+    打印数值耗时： 0.001786947250366211 seconds
 
 
 # 9. <a id='toc9_'></a>[在 GPU 上训练](#toc0_)
@@ -8620,6 +8381,32 @@ device
 
 
     ['cuda:0', 'cuda:1']
+
+
+
+
+```python
+# cuda() -> 1
+torch.cuda.set_device(device= 1)
+x = torch.tensor([1]).cuda()
+print(f"current device id: {torch.cuda.current_device()}")
+
+# cuda() -> 0
+torch.cuda.set_device(device= 0)
+y = torch.tensor([1]).cuda()
+print(f"current device id: {torch.cuda.current_device()}")
+
+x.device, y.device
+```
+
+    current device id: 1
+    current device id: 0
+
+
+
+
+
+    (device(type='cuda', index=1), device(type='cuda', index=0))
 
 
 
@@ -8894,43 +8681,29 @@ train_steps(
 
 
 ### 9.3.2. <a id='toc9_3_2_'></a>[DDP](#toc0_)
-```shell
+
+[中文官方教程：https://pytorch.ac.cn/docs/stable/notes/ddp.html](https://pytorch.ac.cn/docs/stable/notes/ddp.html)
+
+[https://pytorch.ac.cn/tutorials/beginner/ddp_series_multigpu.html](https://pytorch.ac.cn/tutorials/beginner/ddp_series_multigpu.html)
+
 1. 与 DataParallel 的单进程控制多 GPU 不同，在 distributed 的帮助下，我们只需要编写一份代码，torch 就会自动将其分配给 
  个进程，分别在 n 个 GPU 上运行。
 2. 单机多进程
-```
-```python
-详解
-torch.nn.parallel.DistributedDataParallel(module, device_ids, output_device)
+
+
+详解: `torch.nn.parallel.DistributedDataParallel(module, device_ids, output_device)`
     
-```
-
-
-```python
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-import torchvision
-import torchvision.transforms as transforms
-import torch.distributed as dist
-import torch.multiprocessing as mp
-import os 
-
-
-def ddp_setup(rank, world_size):
-    '''
-    Args:
-        rank: unique identifier of each process
-        world_size: Total number of process
-    '''
-    os.environ["MASTER_ADDR"] = "localhost"
-    os.environ["MASTER_PORT"] = "12357"
-    dist.init_process_group(backend='nccl', rank=rank, world_size=world_size)
-    torch.cuda.set_device(rank)
-```
 
 #### 9.3.2.1. <a id='toc9_3_2_1_'></a>[在colab上测试可用](#toc0_)
+
+前提：一般是一个进程对应一个GPU。
+
+```python
+- 假设有二台机器（节点, node），该节点上有两个GPUs：
+  - world_size: int   # node_nums * GPU_nums    -> 2 * 2 = 4
+  - rank: int         # [0, ... , world_size-1] -> [0, 1, 2, 3]
+  - loacal_rank: int  # node1 -> [0, 1] , node2 -> [0, 1]
+```
 
 
 ```python
@@ -8964,70 +8737,80 @@ class CNN(nn.Module):
         x = self.fc2(x)
         return x
 
-def train(local_rank, world_size):
-  
-  os.environ["MASTER_PORT"] = "12357"
-  os.environ["MASTER_ADDR"] = "localhost"
 
-  # 设置每个进程的GPU
-  torch.cuda.set_device(local_rank)
-  device = torch.device("cuda", local_rank)
+def train(local_rank, world_size):  
+    os.environ["MASTER_PORT"] = "12357"
+    os.environ["MASTER_ADDR"] = "localhost"
 
-  # 初始化进程组
-  dist.init_process_group(backend='nccl', world_size=world_size, rank=local_rank)
+    # 设置每个进程的GPU
+    torch.cuda.set_device(local_rank) # 后续.cuda()，都会到local_rank序号的GPU上
+    device = torch.device("cuda", local_rank)
 
-  # 数据预处理和加载
-  transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
-  trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+    # 初始化进程组
+    dist.init_process_group(backend= 'nccl', world_size= world_size, rank= local_rank)
 
-  # 使用DistributedSampler来对数据进行分布式采样
-  train_sampler = torch.utils.data.distributed.DistributedSampler(trainset)
-  trainloader = torch.utils.data.DataLoader(trainset, batch_size=32, shuffle=False, sampler=train_sampler)
+    # 数据预处理和加载
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
+    trainset = torchvision.datasets.MNIST(root= './data', train= True, download= True, transform=transform)
 
-  # 创建CNN模型实例，并放入多个GPU上
-  model = CNN().to(device)
-  model = nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
+    # 使用DistributedSampler来对数据进行分布式采样
+    train_sampler = torch.utils.data.distributed.DistributedSampler(trainset)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size= 32, shuffle= False, sampler= train_sampler)
 
-  # 定义损失函数和优化器
-  criterion = nn.CrossEntropyLoss()
-  optimizer = optim.Adam(model.parameters(), lr=0.001)
+    # 创建CNN模型实例，并放入多个GPU上
+    model = CNN().to(device)
+    ddp_model = nn.parallel.DistributedDataParallel(model, device_ids= [local_rank])
 
-  # 训练模型
-  num_epochs = 5
+    # 定义损失函数和优化器
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(ddp_model.parameters(), lr= 0.001)
 
-  for epoch in range(num_epochs):
-      model.train()
-      running_loss = 0.0
+    # 训练模型
+    num_epochs = 5
 
-      for i, data in enumerate(trainloader, 0):
-          inputs, labels = data
-          inputs, labels = inputs.to(device), labels.to(device)
-          optimizer.zero_grad()
+    for epoch in range(num_epochs):
+        train_sampler.set_epoch(epoch) 
+        ddp_model.train()
+        running_loss = 0.0
 
-          outputs = model(inputs)
-          loss = criterion(outputs, labels)
-          loss.backward()
-          optimizer.step()
+        for i, data in enumerate(trainloader, 0):
+            inputs, labels = data
+            inputs, labels = inputs.to(device), labels.to(device)
+            optimizer.zero_grad()
 
-          running_loss += loss.item()
+            outputs = ddp_model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
 
-      print(f"Local Rank {local_rank}, Epoch {epoch + 1}/{num_epochs}, Training Loss: {running_loss / len(trainloader):.4f}")
+            running_loss += loss.item()
 
-  dist.destroy_process_group()
+        print(f"Local Rank {local_rank}, Epoch {epoch + 1}/{num_epochs}, Training Loss: {running_loss / len(trainloader):.4f}")
 
-# Process格式：
+    dist.destroy_process_group()
+
+
+
 if __name__ == "__main__":
-  # size = torch.cuda.device_count()
-  size = 10
-  processes = []
-  world_size = 1
-  for rank in range(size):
-      p = Process(target=train, args=(rank, world_size))
-      p.start()
-      processes.append(p)
+    world_size: int = torch.cuda.device_count()                         # 2
+    local_ranks: list = [i for i in range(torch.cuda.device_count())]   # [0, 1]
 
-  for p in processes:
-      p.join()
+    # Process格式：
+    # processes = []
+    # for local_rank in local_ranks:
+    #     p = Process(target= train, args= (local_rank, world_size))
+    #     p.start()
+    #     processes.append(p)
+
+    # for p in processes:
+    #     p.join()
+
+    mp.spawn(
+        train,
+        args= (0, world_size),
+        nprocs= world_size,
+        join= True
+    )
 
 ```
 
@@ -9036,6 +8819,119 @@ if __name__ == "__main__":
 目前PyTorch的多机多卡训练，主要有两种方式：   
     1. torch.nn.parallel.DistributedDataParallel()
 ```
+
+
+```python
+torchrun --nproc_per_node=4 --master_port= 29500 train.py
+        # --nproc_per_node= N	指定当前节点（机器）使用的 GPU 数量
+        # --nnodes= M	        总节点数（默认 1，单机训练）
+        # --node_rank= K        当前节点序号（多机训练时使用）
+        # --master_addr= IP	    主节点 IP 地址（默认 127.0.0.1）
+        # --master_port= PORT	主节点端口（默认 29500）
+```
+
+
+```python
+import torch.multiprocessing as mp
+from torch.utils.data.distributed import DistributedSampler
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.distributed import init_process_group, destroy_process_group
+import os
+```
+
+构建进程组：
+- 在初始化组进程之前，调用 set_device，它为每个进程设置默认 GPU。这对于防止 GPU:0 上的挂起或过度内存使用非常重要。
+- init_process_group 初始化分布式进程组。
+
+
+```python
+def ddp_setup(rank: int, world_size: int):
+   """
+   Args:
+       rank: Unique identifier of each process
+      world_size: Total number of processes
+   """
+   os.environ["MASTER_ADDR"] = "localhost"
+   os.environ["MASTER_PORT"] = "12355"
+   torch.cuda.set_device(rank)
+   init_process_group(backend="nccl", rank=rank, world_size=world_size)
+```
+
+数据分发:
+- DistributedSampler 将输入数据分块到所有分布式进程中。
+- DataLoader 结合了数据集和采样器，并提供给定数据集上的可迭代对象。
+- `在每个 epoch 开始时在 DistributedSampler 上调用 set_epoch() 方法是必要的，以使混洗在多个 epoch 中正常工作。否则，每个 epoch 中将使用相同的顺序。`
+    ```python
+    for epoch in range(epochs):
+        sampler.set_epoch(epoch)
+    ```
+
+
+```python
+from torch.utils.data import Dataset, DataLoader, DistributedSampler
+
+
+# 使用 DistributedSampler 确保数据分片
+sampler = DistributedSampler(
+    dataset,
+    num_replicas= dist.get_world_size(),  # 总进程数
+    rank= dist.get_rank(),                # 当前进程的全局 rank
+    shuffle= True
+)
+
+dataloader = DataLoader(
+    dataset,
+    batch_size= 64,
+    sampler= sampler,
+    shuffle= False                        # Sampler 已处理 shuffle
+)
+
+
+for epoch in range(epochs):
+    sampler.set_epoch(epoch)
+```
+
+模型并行化:
+
+
+```python
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+
+model = SimpleCNN().to(device)
+ddp_model = DDP(model, device_ids= [local_rank])  # 关键包装操作
+```
+
+保存模型检查点:
+- 个进程都将保存其相同的模型副本,我们只需要从一个进程保存模型检查点。
+
+
+```python
+if rank == 0:
+    self._save_checkpoint(epoch)
+```
+
+运行分布式训练任务：
+- 包括新参数 rank（替换 device）和 world_size。
+- rank 在调用 mp.spawn 时由 DDP 自动分配。
+- world_size 是整个训练作业中的进程数。
+
+
+```python
+import torch 
+
+
+torch.cuda.set_device(1)
+x = torch.tensor([1]).cuda()
+x.device
+```
+
+
+
+
+    device(type='cuda', index=1)
+
+
 
 # 10. <a id='toc10_'></a>[模型和参数的保存与加载](#toc0_)
 
@@ -11001,7 +10897,7 @@ train_ch8(net, train_iter, vocab, lr, num_epochs, d2l.try_gpu())
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_631_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_653_1.svg)
     
 
 
@@ -14043,7 +13939,7 @@ train_seq2seq(net, train_iter, lr, num_epochs, tgt_vocab, device)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_688_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_710_1.svg)
     
 
 
@@ -14176,7 +14072,7 @@ plt.legend()
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_695_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_717_1.svg)
     
 
 
@@ -14220,7 +14116,7 @@ plt.legend()
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_697_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_719_1.svg)
     
 
 
@@ -14295,7 +14191,7 @@ print(f'NW_PY: {t2 - t1} s, NW_PYT: {t3 - t2} s, NW_PYT_B: {t4 - t3} s')
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_699_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_721_1.svg)
     
 
 
@@ -14353,7 +14249,7 @@ plt.legend()
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_701_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_723_1.svg)
     
 
 
@@ -14372,7 +14268,7 @@ with torch.no_grad():
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_702_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_724_0.svg)
     
 
 
@@ -14665,13 +14561,13 @@ for batch in range(attention.attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_709_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_731_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_709_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_731_1.svg)
     
 
 
@@ -14843,13 +14739,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_714_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_736_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_714_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_736_1.svg)
     
 
 
@@ -14961,13 +14857,13 @@ for batch in range(weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_719_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_741_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_719_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_741_1.svg)
     
 
 
@@ -15078,13 +14974,13 @@ for batch in range(attention.attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_723_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_745_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_723_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_745_1.svg)
     
 
 
@@ -15191,13 +15087,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_727_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_749_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_727_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_749_1.svg)
     
 
 
@@ -15580,13 +15476,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_738_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_760_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_738_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_760_1.svg)
     
 
 
@@ -15827,13 +15723,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_742_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_764_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_742_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_764_1.svg)
     
 
 
@@ -16110,7 +16006,7 @@ model_graph.visual_graph
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_747_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_769_0.svg)
     
 
 
@@ -16231,7 +16127,7 @@ d2l.train_seq2seq(net, train_iter, lr, num_epochs, tgt_vocab, device)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_751_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_773_1.svg)
     
 
 
@@ -16267,7 +16163,7 @@ d2l.show_heatmaps(attention_weights[:, :, :, :len(engs[-1].split()) + 1].cpu(), 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_754_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_776_0.svg)
     
 
 
@@ -16514,7 +16410,7 @@ plt.legend()
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_762_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_784_1.svg)
     
 
 
@@ -17105,7 +17001,7 @@ d2l.train_seq2seq(net, train_iter, lr, num_epochs, tgt_vocab, device)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_779_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_801_1.svg)
     
 
 
@@ -17961,7 +17857,7 @@ train_bert(train_iter, net, loss, len(vocab), devices, 100)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_813_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_835_1.svg)
     
 
 
@@ -18105,7 +18001,7 @@ d2l.plt.hist([len(line) for line in train_tokens], bins=range(0, 1000, 50));
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_824_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_846_0.svg)
     
 
 
@@ -18388,7 +18284,7 @@ d2l.train_ch13(net, train_iter, test_iter, loss, trainer, num_epochs, devices)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_843_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_865_1.svg)
     
 
 
@@ -20970,7 +20866,7 @@ plt.show()
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_964_1.png)
+![png](learn_PyTorch_files/learn_PyTorch_986_1.png)
     
 
 
@@ -20996,8 +20892,28 @@ $\text{公式: Accuracy}=\frac{\text{正确预测样本数}}{\text{总样本数}
 
 
 ```python
+import torch 
 
+y_hat = torch.tensor(y_pred) 
+y = torch.tensor(y_true)
 ```
+
+
+```python
+def accuracy(y_hat, y):
+    correct = (y_hat == y).sum().item()
+    total = y.size(0)   # batch总数
+    return correct / total 
+
+accuracy(y_hat= y_hat, y= y)
+```
+
+
+
+
+    0.8571428571428571
+
+
 
 ### 15.2.3. <a id='toc15_2_3_'></a>[精确率 (Precision)](#toc0_)
 
@@ -21007,8 +20923,70 @@ $\text{公式: Precision}=\frac{\text{真正例 }(\mathrm{TP})}{\text{真正例 
 
 
 ```python
+import torch 
+ 
 
+def precision(preds: torch.Tensor, 
+                        targets: torch.Tensor, 
+                        average: str = 'macro', 
+                        num_classes: int = None, 
+                        eps: float = 1e-6) -> torch.Tensor:
+    """
+    计算精确率（Precision）的PyTorch函数 
+    参数：
+        - preds: 预测类别标签（形状为[N,]的整数张量）
+        - targets: 真实类别标签（形状为[N,]的整数张量）
+        - average: 平均方式，可选'macro'（类平均）、'micro'（全局统计）、'weighted'（加权平均）或None（返回各类别值）
+        - num_classes: 手动指定类别数（若未指定，则自动推断）
+        - eps: 防止除零的小量 
+    返回：
+        - 精确率数值（float）或各类别精确率（Tensor）
+    """
+    assert preds.shape  == targets.shape,  "预测值与真实标签形状需一致"
+    
+    # 自动推断类别数 
+    if num_classes is None:
+        num_classes = max(preds.max().item(),  targets.max().item())  + 1 
+    
+    # 生成混淆矩阵 
+    confusion_matrix = torch.zeros(num_classes,  num_classes, dtype=torch.int64) 
+    for p, t in zip(preds.flatten(),  targets.flatten()): 
+        confusion_matrix[p.long(), t.long()]  += 1 
+    
+    # 计算TP和FP 
+    tp = confusion_matrix.diag()                # 对角线为各类别TP 
+    fp = confusion_matrix.sum(dim=1)  - tp      # 每行总和-TP=FP 
+    
+    # 计算各类别精确率 
+    precision_per_class = tp.float()  / (tp + fp + eps)
+    
+    # 根据平均方式处理结果 
+    if average == 'macro':
+        result = precision_per_class.nanmean()   # 忽略NaN（如0/0情况）
+    elif average == 'micro':
+        total_tp = tp.sum().float() 
+        total_fp = fp.sum().float() 
+        result = total_tp / (total_tp + total_fp + eps)
+    elif average == 'weighted':
+        weights = targets.bincount(minlength=num_classes).float()  / targets.numel() 
+        result = (precision_per_class * weights).sum()
+    elif average is None:
+        result = precision_per_class 
+    else:
+        raise ValueError(f"无效的average参数：{average}")
+    
+    return result 
+
+
+precision(preds= y_hat, targets= y)
 ```
+
+
+
+
+    tensor(0.8750)
+
+
 
 ### 15.2.4. <a id='toc15_2_4_'></a>[召回率 (Recall)](#toc0_)
 
@@ -21018,8 +20996,72 @@ $\text{公式: Recall}=\frac{\text{真正例 }(\mathrm{TP})}{\text{真正例 }(\
 
 
 ```python
+import torch 
 
+ 
+def recall(preds: torch.Tensor,
+                     targets: torch.Tensor,
+                     average: str = 'macro',
+                     num_classes: int = None,
+                     eps: float = 1e-6) -> torch.Tensor:
+    """
+    计算召回率（Recall）的PyTorch函数 
+ 
+    参数：
+    - preds: 预测类别标签（形状为[N,]的整数张量）
+    - targets: 真实类别标签（形状为[N,]的整数张量）
+    - average: 平均方式，可选'macro'（类平均）、'micro'（全局统计）、'weighted'（加权平均）或None（返回各类别值）
+    - num_classes: 手动指定类别数（若未指定，则自动推断）
+    - eps: 防止除零的小量 
+ 
+    返回：
+    - 召回率数值（float）或各类别召回率（Tensor）
+    """
+    assert preds.shape  == targets.shape,  "预测值与真实标签形状需一致"
+    
+    # 自动推断类别数 
+    if num_classes is None:
+        num_classes = max(preds.max().item(),  targets.max().item())  + 1 
+    
+    # 生成混淆矩阵（行为预测类别，列为真实类别）
+    confusion_matrix = torch.zeros(num_classes,  num_classes, dtype=torch.int64) 
+    for p, t in zip(preds.flatten(),  targets.flatten()): 
+        confusion_matrix[p.long(), t.long()]  += 1 
+    
+    # 计算TP和FN 
+    tp = confusion_matrix.diag()                # 对角线为各类别TP 
+    fn = confusion_matrix.sum(dim=0)  - tp      # 每列总和-TP=FN 
+    
+    # 计算各类别召回率 
+    recall_per_class = tp.float()  / (tp + fn + eps)
+    
+    # 根据平均方式处理结果 
+    if average == 'macro':
+        result = recall_per_class.nanmean()     # 忽略NaN（如0/0情况）
+    elif average == 'micro':
+        total_tp = tp.sum().float() 
+        total_fn = fn.sum().float() 
+        result = total_tp / (total_tp + total_fn + eps)
+    elif average == 'weighted':
+        weights = targets.bincount(minlength=num_classes).float()  / targets.numel() 
+        result = (recall_per_class * weights).sum()
+    elif average is None:
+        result = recall_per_class 
+    else:
+        raise ValueError(f"无效的average参数：{average}")
+    
+    return result 
+
+
+recall(preds= y_hat, targets= y)
 ```
+
+
+
+
+    tensor(0.8750)
+
+
 
 ### 15.2.5. <a id='toc15_2_5_'></a>[F1-Score](#toc0_)
 
@@ -21031,8 +21073,80 @@ $\text{公式: }F1=2\times\frac{\mathrm{Precision}\times\mathrm{Recall}}{\mathrm
 
 
 ```python
+import torch 
+ 
 
+def f1(preds: torch.Tensor,
+                 targets: torch.Tensor,
+                 average: str = 'macro',
+                 num_classes: int = None,
+                 eps: float = 1e-6) -> torch.Tensor:
+    """
+    计算F1值的PyTorch函数 
+ 
+    参数：
+    - preds: 预测类别标签（形状为[N,]的整数张量）
+    - targets: 真实类别标签（形状为[N,]的整数张量）
+    - average: 平均方式，可选'macro'（类平均）、'micro'（全局统计）、'weighted'（加权平均）或None（返回各类别值）
+    - num_classes: 手动指定类别数（若未指定，则自动推断）
+    - eps: 防止除零的小量 
+ 
+    返回：
+    - F1值（float）或各类别F1值（Tensor）
+    """
+    assert preds.shape  == targets.shape,  "预测值与真实标签形状需一致"
+    
+    # 自动推断类别数 
+    if num_classes is None:
+        num_classes = max(preds.max().item(),  targets.max().item())  + 1 
+    
+    # 生成混淆矩阵（行=预测类别，列=真实类别）
+    confusion_matrix = torch.zeros(num_classes,  num_classes, dtype=torch.int64) 
+    for p, t in zip(preds.flatten(),  targets.flatten()): 
+        confusion_matrix[p.long(), t.long()]  += 1 
+    
+    # 计算TP、FP、FN 
+    tp = confusion_matrix.diag()                    # 对角线为各类别TP 
+    fp = confusion_matrix.sum(dim=1)  - tp          # 每行总和-TP=FP 
+    fn = confusion_matrix.sum(dim=0)  - tp         # 每列总和-TP=FN 
+    
+    # 计算各类别精确率和召回率 
+    precision_per_class = tp.float()  / (tp + fp + eps)
+    recall_per_class = tp.float()  / (tp + fn + eps)
+    
+    # 计算各类别F1值（调和平均）
+    f1_per_class = 2 * (precision_per_class * recall_per_class) / (precision_per_class + recall_per_class + eps)
+    
+    # 根据平均方式处理结果 
+    if average == 'macro':
+        result = f1_per_class.nanmean()            # 忽略NaN（如0/0情况）
+    elif average == 'micro':
+        total_tp = tp.sum().float() 
+        total_fp = fp.sum().float() 
+        total_fn = fn.sum().float() 
+        micro_precision = total_tp / (total_tp + total_fp + eps)
+        micro_recall = total_tp / (total_tp + total_fn + eps)
+        result = 2 * (micro_precision * micro_recall) / (micro_precision + micro_recall + eps)
+    elif average == 'weighted':
+        weights = targets.bincount(minlength=num_classes).float()  / targets.numel() 
+        result = (f1_per_class * weights).sum()
+    elif average is None:
+        result = f1_per_class 
+    else:
+        raise ValueError(f"无效的average参数：{average}")
+    
+    return result 
+
+
+f1(preds= y_hat, targets= y)
 ```
+
+
+
+
+    tensor(0.8571)
+
+
 
 ### 15.2.6. <a id='toc15_2_6_'></a>[ROC 曲线和 AUC (Area Under Curve)](#toc0_)
 ROC 曲线: 通过绘制不同阈值下的 假正例率 (FPR) 和 真正例率 (TPR) 来评估分类器性能。
@@ -21043,7 +21157,51 @@ AUC: 曲线下面积，表示模型区分正负例的能力。
 
 
 ```python
+import torch
+from torch import Tensor
 
+
+def roc_auc(
+    scores: Tensor,  # 模型输出的概率值（形状[N]）
+    targets: Tensor,  # 真实标签（0或1，形状[N]）
+    num_thresholds: int = 100  # 阈值采样数
+) -> tuple[list, list, float]:
+    """
+    计算ROC曲线坐标点及AUC值
+    """
+    # 按概率降序排序
+    sorted_indices = torch.argsort(scores,  descending=True)
+    sorted_scores = scores[sorted_indices]
+    sorted_targets = targets[sorted_indices]
+
+    # 初始化变量
+    tpr_list, fpr_list = [], []
+    tp = fp = 0
+    total_p = sorted_targets.sum().item() 
+    total_n = len(sorted_targets) - total_p
+
+    # 遍历所有样本作为阈值分割点
+    for i in range(len(sorted_scores)):
+        if sorted_targets[i] == 1:
+            tp += 1
+        else:
+            fp += 1
+        tpr = tp / (total_p + 1e-6)
+        fpr = fp / (total_n + 1e-6)
+        tpr_list.append(tpr) 
+        fpr_list.append(fpr) 
+
+    # 计算AUC（梯形法则积分）
+    auc = 0.0
+    for i in range(1, len(fpr_list)):
+        delta_fpr = fpr_list[i] - fpr_list[i-1]
+        avg_tpr = (tpr_list[i] + tpr_list[i-1]) / 2
+        auc += delta_fpr * avg_tpr
+
+    return fpr_list, tpr_list, auc
+
+
+# roc_auc()
 ```
 
 ### 15.2.7. <a id='toc15_2_7_'></a>[多分类问题指标](#toc0_)
@@ -21068,8 +21226,54 @@ Top-k Accuracy: 预测中真实标签出现在模型输出概率前 k 个类别�
 
 
 ```python
+import torch 
+ 
 
+def mae(preds: torch.Tensor,
+        targets: torch.Tensor,
+        dim: int or tuple = None,
+        keepdim: bool = False,
+        reduction: str = 'mean') -> torch.Tensor:
+    """
+    计算平均绝对误差（Mean Absolute Error）的PyTorch函数 
+ 
+    参数：
+    - preds: 预测值张量（形状需与targets一致）
+    - targets: 真实值张量（形状需与preds一致）
+    - dim: 指定计算维度（默认全局计算）
+    - keepdim: 是否保留维度（仅当指定dim时生效）
+    - reduction: 聚合方式，可选'mean'（平均）、'sum'（求和）或'none'（保留原始形状）
+ 
+    返回：
+    - MAE数值（标量）或未聚合的绝对误差（张量）
+    """
+    assert preds.shape  == targets.shape,  "预测值与真实值形状需一致"
+    
+    # 计算绝对误差 
+    abs_errors = torch.abs(preds  - targets)
+    
+    # 选择聚合方式 
+    if reduction == 'mean':
+        result = torch.mean(abs_errors,  dim=dim, keepdim=keepdim)
+    elif reduction == 'sum':
+        result = torch.sum(abs_errors,  dim=dim, keepdim=keepdim)
+    elif reduction == 'none':
+        result = abs_errors 
+    else:
+        raise ValueError(f"无效的reduction参数：{reduction}")
+    
+    return result 
+
+
+mae(preds= y_hat.float(), targets= y.float())
 ```
+
+
+
+
+    tensor(0.1429)
+
+
 
 ### 15.3.2. <a id='toc15_3_2_'></a>[均方误差 (MSE)](#toc0_)
 公式: MSE = $\frac{1}{N}\sum_{i=1}^{N}(y_i-\hat{y}_i)^2$
@@ -21081,8 +21285,54 @@ Top-k Accuracy: 预测中真实标签出现在模型输出概率前 k 个类别�
 
 
 ```python
+import torch 
+ 
 
+def mse(preds: torch.Tensor,
+        targets: torch.Tensor,
+        dim: int or tuple = None,
+        keepdim: bool = False,
+        reduction: str = 'mean') -> torch.Tensor:
+    """
+    计算均方误差（Mean Squared Error）的PyTorch函数 
+ 
+    参数：
+    - preds: 预测值张量（形状需与targets一致）
+    - targets: 真实值张量（形状需与preds一致）
+    - dim: 指定计算维度（默认全局计算）
+    - keepdim: 是否保留维度（仅当指定dim时生效）
+    - reduction: 聚合方式，可选'mean'（平均）、'sum'（求和）或'none'（保留原始形状）
+ 
+    返回：
+    - MSE数值（标量）或未聚合的平方误差（张量）
+    """
+    assert preds.shape  == targets.shape,  f"形状不一致：预测值{preds.shape}  vs 真实值{targets.shape}" 
+    
+    # 计算平方误差 
+    squared_errors = torch.square(preds  - targets)
+    
+    # 选择聚合方式 
+    if reduction == 'mean':
+        result = torch.mean(squared_errors,  dim=dim, keepdim=keepdim)
+    elif reduction == 'sum':
+        result = torch.sum(squared_errors,  dim=dim, keepdim=keepdim)
+    elif reduction == 'none':
+        result = squared_errors 
+    else:
+        raise ValueError(f"无效的reduction参数：{reduction}，可选'mean'/'sum'/'none'")
+    
+    return result 
+
+
+mse(preds= y_hat.float(), targets= y.float())
 ```
+
+
+
+
+    tensor(0.1429)
+
+
 
 ### 15.3.3. <a id='toc15_3_3_'></a>[均方根误差 (RMSE)](#toc0_)
 公式: RMSE = $\sqrt{\frac{1}{N}\sum_{i=1}^{N}(y_i-\hat{y}_i)^2}$
@@ -21094,8 +21344,46 @@ Top-k Accuracy: 预测中真实标签出现在模型输出概率前 k 个类别�
 
 
 ```python
+import torch 
+ 
+def rmse(preds: torch.Tensor,
+        targets: torch.Tensor,
+        dim: int or tuple = None,
+        keepdim: bool = False,
+        eps: float = 1e-8) -> torch.Tensor:
+    """
+    计算均方根误差（Root Mean Squared Error）
+ 
+    参数说明：
+    - preds: 预测值张量（需与targets同维度）
+    - targets: 真实值张量 
+    - dim: 聚合维度（如设为(1,2)表示在H,W维度计算）
+    - keepdim: 是否保留计算维度 
+    - eps: 数值稳定系数（避免零除）
+    
+    返回：
+    - 指定维度的RMSE标量或张量 
+    """
+    assert preds.shape  == targets.shape,  f"形状不匹配：预测值{preds.shape} ，真实值{targets.shape}" 
+    
+    # 计算平方误差均值（沿指定维度）
+    mse = torch.mean((preds  - targets)**2, dim=dim, keepdim=keepdim)
+    
+    # 开平方获得RMSE 
+    rmse = torch.sqrt(mse  + eps)
+    
+    return rmse 
 
+
+rmse(preds= y_hat.float(), targets= y.float())
 ```
+
+
+
+
+    tensor(0.3780)
+
+
 
 ### 15.3.4. <a id='toc15_3_4_'></a>[R² (决定系数)](#toc0_)
 
@@ -21108,7 +21396,221 @@ $\text{公式: }R^2=1-\frac{\sum_{i=1}^{N}(y_i-\hat{y}_i)^2}{\sum_{i=1}^{N}(y_i-
 
 
 ```python
+import torch 
 
+ 
+def R2(preds: torch.Tensor, 
+        targets: torch.Tensor,
+        dim: int = None,
+        adjusted: bool = False,
+        n_features: int = None,
+        eps: float = 1e-8) -> torch.Tensor:
+    """
+    计算决定系数R²（支持多维度计算与自由度调整）
+    
+    参数：
+    - preds: 预测值张量（形状需与targets一致）
+    - targets: 真实值张量 
+    - dim: 计算维度（None表示全局计算）
+    - adjusted: 是否计算调整后R² 
+    - n_features: 特征数（仅调整R²需要）
+    - eps: 数值稳定系数 
+    
+    返回：
+    - R²值（范围可能为[-∞,1]）
+    """
+    # 计算总平方和（SST）
+    mean_target = torch.mean(targets,  dim=dim, keepdim=True)
+    ss_total = torch.sum((targets  - mean_target)**2, dim=dim)
+    
+    # 计算残差平方和（SSE）
+    ss_res = torch.sum((targets  - preds)**2, dim=dim)
+    
+    # 基础R²计算 
+    r2 = 1 - (ss_res + eps) / (ss_total + eps)
+    
+    # 调整R²计算 
+    if adjusted:
+        assert n_features is not None, "调整R²需指定特征数"
+        n_samples = targets.shape[0]  if dim is None else targets.shape[dim] 
+        adj_factor = (n_samples - 1) / (n_samples - n_features - 1 + eps)
+        r2 = 1 - (1 - r2) * adj_factor 
+        
+    return r2 
+
+
+R2(preds= y_hat.float(), targets= y.float())
+```
+
+
+
+
+    tensor(0.4167)
+
+
+
+## 15.4. <a id='toc15_4_'></a>[Metrics tracker](#toc0_)
+
+自己手写指标追踪器：
+
+
+```python
+import torch
+from collections import defaultdict
+
+
+class MetricTracker:
+    def __init__(self):
+        '''
+        # 示例输出结构
+        history = {
+            'epoch': {
+                'train_loss': [0.5, 0.4, 0.3],          # 每个epoch的指标
+                'train_acc': [0.8, 0.85, 0.9],
+                'val_loss': [0.6, 0.5, 0.4],
+                'val_acc': [0.7, 0.75, 0.8]
+            },
+            'step': {
+                'train_loss': [0.55, 0.45, 0.35, ...],  # 每个step的指标
+                'train_acc': [0.78, 0.83, 0.88, ...],
+                'val_loss': [0.62, 0.52, ...],          # 验证阶段一般只在epoch结束时计算
+                'val_acc': [0.72, 0.77, ...]
+            }
+        }     
+        '''
+        self._metrics = {}                          # 存储指标计算函数
+        self._epoch_buffer = defaultdict(list)      # Epoch级别累积
+        self._step_buffer = defaultdict(list)       # Step级别累积
+        self._history ={
+            'epoch': defaultdict(list),             # 按阶段和指标名存储epoch指标
+            "step": defaultdict(list)               # 按阶段和指标名存储step指标
+        }
+        self.current_stage = 'train'                # 当前阶段标识
+
+    def add_metric(self, name, metric_fn):
+        """注册指标（如损失、准确率）"""
+        self._metrics[name] = metric_fn
+
+    def set_stage(self, stage):
+        """设置当前阶段（train/val/test）"""
+        self.current_stage = stage
+
+    def update(self, **kwargs):
+        """更新缓冲区（需传入指标函数所需的参数），紧邻每个batch之后计算。"""
+        for name, fn in self._metrics.items():
+            value = fn(**kwargs)
+            self._epoch_buffer[name].append(value)  # 累积到epoch
+            self._step_buffer[name].append(value)   # 累积到step
+
+    def compute_epoch_metrics(self):
+        """计算并返回当前阶段的Epoch平均指标"""
+        epoch_metrics = {}
+        for name, values in self._epoch_buffer.items():
+            avg_value = self._compute_avg(values)
+            epoch_metrics[name] = avg_value
+            self._history['epoch'][f"{self.current_stage}_{name}"].append(avg_value)
+        self._epoch_buffer.clear()  # 清空Epoch缓冲区
+        return epoch_metrics
+
+    def compute_step_metrics(self):
+        """计算并返回当前阶段的Step平均指标（自动清空Step缓冲区）"""
+        step_metrics = {}
+        for name, values in self._step_buffer.items():
+            avg_value = self._compute_avg(values)
+            step_metrics[name] = avg_value
+            self._history['step'][f"{self.current_stage}_{name}_step"].append(avg_value)
+        self._step_buffer.clear()  # 清空Step缓冲区
+        return step_metrics
+
+    def _compute_avg(self, values):
+        """通用平均值计算（支持标量和张量）"""
+        if not values:
+            return 0.0  # 避免空列表
+        if isinstance(values[0], (int, float)):
+            return sum(values) / len(values)
+        elif isinstance(values[0], torch.Tensor):
+            return torch.stack(values).mean(dim=0)
+        else:
+            raise TypeError(f"Unsupported data type: {type(values[0])}")
+
+    def get_history(self):
+        """获取所有历史记录（用于可视化）"""
+        return self._history
+    
+
+def f1_score(**kwargs):
+    outputs = kwargs['y_hat']
+    labels = kwargs['y']
+    preds = outputs.argmax(1)
+    tp = ((preds == 1) & (labels == 1)).sum().item()
+    fp = ((preds == 1) & (labels == 0)).sum().item()
+    fn = ((preds == 0) & (labels == 1)).sum().item()
+    precision = tp / (tp + fp + 1e-8)
+    recall = tp / (tp + fn + 1e-8)
+    return 2 * (precision * recall) / (precision + recall + 1e-8)
+
+
+if __name__ == "__main__":
+    # test
+    tracker = MetricTracker()
+    tracker.add_metric('loss', lambda **kw: kw['loss'])  # 直接从kwargs获取loss
+    tracker.add_metric('acc', lambda **kw: (kw['y_hat'].argmax(1) == kw['y']).float().mean().item())
+    tracker.add_metric('f1', f1_score)
+    
+```
+
+`伪代码演示：`
+
+```python
+def train_model(model, train_loader, val_loader, optimizer, num_epochs, step_interval=100):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+    
+    tracker = MetricTracker()
+    tracker.add_metric('loss', lambda **kw: kw['loss'])  # 直接从kwargs获取loss
+    tracker.add_metric('acc', lambda **kw: (kw['outputs'].argmax(1) == kw['labels']).float().mean().item())
+    
+    for epoch in range(num_epochs):
+        # ---- 训练阶段 ----
+        tracker.set_stage('train')
+        model.train()
+        for step, (inputs, labels) in enumerate(train_loader, 1):
+            inputs, labels = inputs.to(device), labels.to(device)
+            
+            # 前向传播
+            outputs = model(inputs)
+            loss = torch.nn.functional.cross_entropy(outputs, labels)
+            
+            # 反向传播
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            # 更新指标（需传递指标函数所需的参数）
+            tracker.update(outputs=outputs, labels=labels, loss=loss.item())
+
+            # Step级别记录（每step_interval个batch）
+            if step % step_interval == 0:
+                step_metrics = tracker.compute_step_metrics()
+                print(f"Epoch {epoch} | Step {step} | Train Step Metrics: {step_metrics}")
+
+        # Epoch级别记录
+        train_metrics = tracker.compute_epoch_metrics()
+        print(f"Epoch {epoch} | Train Epoch Metrics: {train_metrics}")
+
+        # ---- 验证阶段 ----
+        tracker.set_stage('val')
+        model.eval()
+        with torch.no_grad():
+            for inputs, labels in val_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
+                outputs = model(inputs)
+                tracker.update(outputs=outputs, labels=labels, loss=torch.nn.functional.cross_entropy(outputs, labels).item())
+        
+        val_metrics = tracker.compute_epoch_metrics()
+        print(f"Epoch {epoch} | Val Metrics: {val_metrics}")
+
+    return tracker.get_history()
 ```
 
 # 16. <a id='toc16_'></a>[Benchmark](#toc0_)
@@ -21334,16 +21836,12 @@ if __name__ == "__main__":
 
 
 ```python
-import lightning as L
+import pytorch_lightning as L
 
 print(f'Pytorch lightning version: {L.__version__}')
 ```
 
-    /bmp/backup/zhaosy/miniconda3/envs/pytorch/lib/python3.12/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-      from .autonotebook import tqdm as notebook_tqdm
-
-
-    Pytorch lightning version: 2.4.0
+    Pytorch lightning version: 2.5.1
 
 
 ## 17.2. <a id='toc17_2_'></a>[Data.py](#toc0_)
@@ -21356,21 +21854,24 @@ print(f'Pytorch lightning version: {L.__version__}')
 
 import torch 
 
+
 def syn_datas(
     w = torch.tensor([2.0, -3.0]),
-    b = torch.tensor([3.4]), 
-    nums = 10000):
+    b = torch.tensor([3.4]), nums = 10000):
     X = torch.normal(mean=0, std=0.1, size=(nums, w.shape[0]), dtype=torch.float32)
     y = X @ w + b
     y += torch.normal(mean=0, std=0.1, size=y.shape, dtype=torch.float)
     return X, y 
 
+
 # 预设参数，注意 形状/维度
 preset_weight = torch.tensor([2.0, -3.0], dtype=torch.float32).reshape(2, 1)
 preset_bias = torch.tensor([3.4], dtype=torch.float32)
 
+
 # 虚拟数据
 features, labels = syn_datas(w=preset_weight, b=preset_bias, nums=10000)
+
 
 # 初步查看
 features.shape, labels.shape, features[0], labels[0]
@@ -21381,8 +21882,8 @@ features.shape, labels.shape, features[0], labels[0]
 
     (torch.Size([10000, 2]),
      torch.Size([10000, 1]),
-     tensor([ 0.1441, -0.0539]),
-     tensor([3.7984]))
+     tensor([0.1184, 0.0257]),
+     tensor([3.5712]))
 
 
 
@@ -21390,9 +21891,10 @@ features.shape, labels.shape, features[0], labels[0]
 ```python
 from torch.utils import data 
 
+
 datasets = data.TensorDataset(features, labels)
 
-train_iter = data.DataLoader(dataset=datasets, shuffle=True, batch_size=128, num_workers=10)
+train_iter = data.DataLoader(dataset=datasets, shuffle= True, batch_size= 128, num_workers= 10)
 ```
 
 ## 17.3. <a id='toc17_3_'></a>[Model.py](#toc0_)
@@ -21431,7 +21933,7 @@ class AlphaFold2(nn.Module):
 from torch import nn 
 from torch import optim
 
-import lightning as L
+import pytorch_lightning as L
 
 
 class AlphaFold2Wrapper(L.LightningModule):
@@ -21544,21 +22046,21 @@ class AlphaFold2Wrapper(L.LightningModule):
 alphafold2 = AlphaFold2Wrapper(learning_rate=0.01)
 
 trainer = L.Trainer(
-    accelerator="gpu",              # cpu, gpu, tpu, auto
-    devices=1, 
-    # strategy="ddp",                 # ddp, ddp_spawn, ddp_notebook
-    # num_nodes=1,                    # Number of GPU nodes for distributed training.
+    accelerator= "gpu",              # cpu, gpu, tpu, auto
+    devices= 1, 
+    # strategy= "ddp",                 # ddp, ddp_spawn, ddp_notebook
+    # num_nodes= 1,                    # Number of GPU nodes for distributed training.
 
     # precision="32-true",            # There are two different techniques to set the mixed precision. “True” precision and “Mixed” precision.
 
     # callbacks = ,
     
-    # min_epochs=1,
-    max_epochs=10, 
+    # min_epochs= 1,
+    max_epochs= 10, 
     # min_steps=None,                 # Force training for at least this number of global steps. Trainer will train model for at least min_steps or min_epochs (latest).
-    max_steps=-1,                   # Stop training after this number of global steps. Training will stop if max_steps or max_epochs have reached (earliest).
-    log_every_n_steps=1,           ## How often to add logging rows (does not write to disk)
-    check_val_every_n_epoch=1,      # default used by the Trainer
+    max_steps= -1,                   # Stop training after this number of global steps. Training will stop if max_steps or max_epochs have reached (earliest).
+    log_every_n_steps= 1,           ## How often to add logging rows (does not write to disk)
+    check_val_every_n_epoch= 1,      # default used by the Trainer
 
     # default_root_dir=os.getcwd(),   # os.getcwd()
     # enable_progress_bar=True,       # Whether to enable or disable the progress bar. Defaults to True.
@@ -21568,9 +22070,11 @@ trainer = L.Trainer(
 )
 ```
 
+    You are using the plain ModelCheckpoint callback. Consider using LitModelCheckpoint which with seamless uploading to Model registry.
     GPU available: True (cuda), used: True
     TPU available: False, using: 0 TPU cores
     HPU available: False, using: 0 HPUs
+    /bmp/backup/zhaosy/miniconda3/envs/deeplearning/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/logger_connector/logger_connector.py:76: Starting from v1.9.0, `tensorboardX` has been removed as a dependency of the `pytorch_lightning` package, due to potential conflicts with other packages in the ML ecosystem. For this reason, `logger=True` will use `CSVLogger` as the default logger, unless the `tensorboard` or `tensorboardX` packages are found. Please `pip install lightning[extra]` or one of them to enable TensorBoard support by default
 
 
 ### 17.4.1. <a id='toc17_4_1_'></a>[Training and vlidation](#toc0_)
@@ -21579,39 +22083,11 @@ Training的同时进行Validation。
 
 ```python
 trainer.fit(
-    model=alphafold2, 
-    train_dataloaders=train_iter, 
-    val_dataloaders=train_iter
+    model= alphafold2, 
+    train_dataloaders= train_iter, 
+    val_dataloaders= train_iter
 )
 ```
-
-    LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
-    
-      | Name       | Type       | Params | Mode 
-    --------------------------------------------------
-    0 | demo_model | AlphaFold2 | 3      | train
-    1 | loss_fn    | MSELoss    | 0      | train
-    --------------------------------------------------
-    3         Trainable params
-    0         Non-trainable params
-    3         Total params
-    0.000     Total estimated model params size (MB)
-    4         Modules in train mode
-    0         Modules in eval mode
-
-
-    Sanity Checking: |          | 0/? [00:00<?, ?it/s]
-
-    /bmp/backup/zhaosy/miniconda3/envs/pytorch/lib/python3.12/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:475: Your `val_dataloader`'s sampler has shuffling enabled, it is strongly recommended that you turn shuffling off for val/test dataloaders.
-
-
-    Epoch 9: 100%|██████████| 79/79 [00:01<00:00, 75.30it/s, v_num=0, train_loss=0.217, val_loss=0.133] 
-
-    `Trainer.fit` stopped: `max_epochs=10` reached.
-
-
-    Epoch 9: 100%|██████████| 79/79 [00:01<00:00, 74.95it/s, v_num=0, train_loss=0.217, val_loss=0.133]
-
 
 ### 17.4.2. <a id='toc17_4_2_'></a>[Validation](#toc0_)
 只进行validation。
@@ -21624,18 +22100,21 @@ trainer.validate(model=alphafold2, dataloaders=train_iter)
     LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
 
 
-    Validation DataLoader 0: 100%|██████████| 79/79 [00:00<00:00, 359.93it/s]
+
+    Validation: |          | 0/? [00:00<?, ?it/s]
+
+
     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
          Validate metric           DataLoader 0
     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-            val_loss            0.13269878923892975
+            val_loss            12.767409324645996
     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 
 
 
 
-    [{'val_loss': 0.13269878923892975}]
+    [{'val_loss': 12.767409324645996}]
 
 
 
@@ -21648,21 +22127,24 @@ trainer.test(model=alphafold2, dataloaders=train_iter)
 ```
 
     LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
-    /bmp/backup/zhaosy/miniconda3/envs/pytorch/lib/python3.12/site-packages/lightning/pytorch/trainer/connectors/data_connector.py:475: Your `test_dataloader`'s sampler has shuffling enabled, it is strongly recommended that you turn shuffling off for val/test dataloaders.
+    /bmp/backup/zhaosy/miniconda3/envs/deeplearning/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:476: Your `test_dataloader`'s sampler has shuffling enabled, it is strongly recommended that you turn shuffling off for val/test dataloaders.
 
 
-    Testing DataLoader 0: 100%|██████████| 79/79 [00:00<00:00, 404.56it/s]
+
+    Testing: |          | 0/? [00:00<?, ?it/s]
+
+
     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
            Test metric             DataLoader 0
     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-            test_loss           0.13269877433776855
+            test_loss           12.767407417297363
     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 
 
 
 
-    [{'test_loss': 0.13269877433776855}]
+    [{'test_loss': 12.767407417297363}]
 
 
 
@@ -21686,1012 +22168,1013 @@ trainer.predict(model=alphafold2, dataloaders=features)
     LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
 
 
-    Predicting DataLoader 0: 100%|██████████| 10000/10000 [00:08<00:00, 1224.36it/s]
+
+    Predicting: |          | 0/? [00:00<?, ?it/s]
 
 
 
 
 
-    [tensor([3.4124]),
-     tensor([3.3868]),
-     tensor([3.3909]),
-     tensor([3.3817]),
-     tensor([3.4208]),
-     tensor([3.3964]),
-     tensor([3.3973]),
-     tensor([3.3862]),
-     tensor([3.3966]),
-     tensor([3.4032]),
-     tensor([3.4066]),
-     tensor([3.3905]),
-     tensor([3.3932]),
-     tensor([3.3774]),
-     tensor([3.3949]),
-     tensor([3.3956]),
-     tensor([3.3845]),
-     tensor([3.3931]),
-     tensor([3.3935]),
-     tensor([3.3898]),
-     tensor([3.4090]),
-     tensor([3.4059]),
-     tensor([3.3987]),
-     tensor([3.3881]),
-     tensor([3.3913]),
-     tensor([3.4166]),
-     tensor([3.3755]),
-     tensor([3.4028]),
-     tensor([3.4021]),
-     tensor([3.4224]),
-     tensor([3.3956]),
-     tensor([3.3914]),
-     tensor([3.3979]),
-     tensor([3.3889]),
-     tensor([3.3950]),
-     tensor([3.3908]),
-     tensor([3.4049]),
-     tensor([3.4014]),
-     tensor([3.3925]),
-     tensor([3.3970]),
-     tensor([3.4043]),
-     tensor([3.4050]),
-     tensor([3.4055]),
-     tensor([3.4033]),
-     tensor([3.3873]),
-     tensor([3.3934]),
-     tensor([3.4031]),
-     tensor([3.4101]),
-     tensor([3.3942]),
-     tensor([3.3713]),
-     tensor([3.3908]),
-     tensor([3.3955]),
-     tensor([3.3886]),
-     tensor([3.4044]),
-     tensor([3.3781]),
-     tensor([3.4005]),
-     tensor([3.4258]),
-     tensor([3.3873]),
-     tensor([3.3782]),
-     tensor([3.3928]),
-     tensor([3.4193]),
-     tensor([3.3874]),
-     tensor([3.3984]),
-     tensor([3.3887]),
-     tensor([3.4131]),
-     tensor([3.4129]),
-     tensor([3.4034]),
-     tensor([3.3979]),
-     tensor([3.3874]),
-     tensor([3.3870]),
-     tensor([3.4152]),
-     tensor([3.3893]),
-     tensor([3.3938]),
-     tensor([3.3955]),
-     tensor([3.3921]),
-     tensor([3.3895]),
-     tensor([3.3981]),
-     tensor([3.3871]),
-     tensor([3.4101]),
-     tensor([3.4051]),
-     tensor([3.3864]),
-     tensor([3.4033]),
-     tensor([3.3987]),
-     tensor([3.3935]),
-     tensor([3.4010]),
-     tensor([3.3961]),
-     tensor([3.3918]),
-     tensor([3.3886]),
-     tensor([3.4129]),
-     tensor([3.3801]),
-     tensor([3.3956]),
-     tensor([3.3981]),
-     tensor([3.3972]),
-     tensor([3.3699]),
-     tensor([3.3770]),
-     tensor([3.4040]),
-     tensor([3.3986]),
-     tensor([3.3855]),
-     tensor([3.3998]),
-     tensor([3.4040]),
-     tensor([3.3861]),
-     tensor([3.3966]),
-     tensor([3.4106]),
-     tensor([3.4038]),
-     tensor([3.4075]),
-     tensor([3.3972]),
-     tensor([3.3843]),
-     tensor([3.3849]),
-     tensor([3.3885]),
-     tensor([3.3999]),
-     tensor([3.3865]),
-     tensor([3.3973]),
-     tensor([3.3804]),
-     tensor([3.3916]),
-     tensor([3.3607]),
-     tensor([3.3936]),
-     tensor([3.3948]),
-     tensor([3.3984]),
-     tensor([3.3910]),
-     tensor([3.4078]),
-     tensor([3.4075]),
-     tensor([3.3888]),
-     tensor([3.3929]),
-     tensor([3.3968]),
-     tensor([3.3875]),
-     tensor([3.3859]),
-     tensor([3.3864]),
-     tensor([3.4090]),
-     tensor([3.3977]),
-     tensor([3.4027]),
-     tensor([3.4120]),
-     tensor([3.4087]),
-     tensor([3.3966]),
-     tensor([3.3961]),
-     tensor([3.3787]),
-     tensor([3.3978]),
-     tensor([3.3952]),
-     tensor([3.3897]),
-     tensor([3.4006]),
-     tensor([3.4003]),
-     tensor([3.4146]),
-     tensor([3.4132]),
-     tensor([3.3967]),
-     tensor([3.3859]),
-     tensor([3.3974]),
-     tensor([3.3895]),
-     tensor([3.4091]),
-     tensor([3.3953]),
-     tensor([3.3847]),
-     tensor([3.3809]),
-     tensor([3.4056]),
-     tensor([3.3944]),
-     tensor([3.4027]),
-     tensor([3.3968]),
-     tensor([3.3890]),
-     tensor([3.4088]),
-     tensor([3.4081]),
-     tensor([3.4046]),
-     tensor([3.4032]),
-     tensor([3.3874]),
-     tensor([3.3803]),
-     tensor([3.3998]),
-     tensor([3.4051]),
-     tensor([3.4086]),
-     tensor([3.3976]),
-     tensor([3.3843]),
-     tensor([3.4084]),
-     tensor([3.3904]),
-     tensor([3.3955]),
-     tensor([3.3869]),
-     tensor([3.3834]),
-     tensor([3.4043]),
-     tensor([3.4136]),
-     tensor([3.4164]),
-     tensor([3.3850]),
-     tensor([3.3986]),
-     tensor([3.3877]),
-     tensor([3.3948]),
-     tensor([3.4094]),
-     tensor([3.3838]),
-     tensor([3.3951]),
-     tensor([3.3938]),
-     tensor([3.4015]),
-     tensor([3.3974]),
-     tensor([3.3974]),
-     tensor([3.3943]),
-     tensor([3.4021]),
-     tensor([3.3885]),
-     tensor([3.3933]),
-     tensor([3.4221]),
-     tensor([3.3944]),
-     tensor([3.3702]),
-     tensor([3.3849]),
-     tensor([3.3721]),
-     tensor([3.4130]),
-     tensor([3.4109]),
-     tensor([3.3931]),
-     tensor([3.4006]),
-     tensor([3.3931]),
-     tensor([3.3830]),
-     tensor([3.4076]),
-     tensor([3.4150]),
-     tensor([3.3928]),
-     tensor([3.3854]),
-     tensor([3.3955]),
-     tensor([3.3874]),
-     tensor([3.3804]),
-     tensor([3.3996]),
-     tensor([3.3997]),
-     tensor([3.3945]),
-     tensor([3.3966]),
-     tensor([3.3844]),
-     tensor([3.4151]),
-     tensor([3.3878]),
-     tensor([3.4081]),
-     tensor([3.3861]),
-     tensor([3.3918]),
-     tensor([3.3909]),
-     tensor([3.3790]),
-     tensor([3.3976]),
-     tensor([3.3993]),
-     tensor([3.3754]),
-     tensor([3.3959]),
-     tensor([3.4031]),
-     tensor([3.3949]),
-     tensor([3.3995]),
-     tensor([3.4028]),
-     tensor([3.3978]),
-     tensor([3.3845]),
-     tensor([3.3905]),
-     tensor([3.4012]),
-     tensor([3.4248]),
-     tensor([3.4041]),
-     tensor([3.3908]),
-     tensor([3.3819]),
-     tensor([3.3824]),
-     tensor([3.4074]),
-     tensor([3.4040]),
-     tensor([3.3797]),
-     tensor([3.3876]),
-     tensor([3.3864]),
-     tensor([3.3888]),
-     tensor([3.3748]),
-     tensor([3.3762]),
-     tensor([3.3839]),
-     tensor([3.4036]),
-     tensor([3.4012]),
-     tensor([3.4112]),
-     tensor([3.3962]),
-     tensor([3.3846]),
-     tensor([3.3814]),
-     tensor([3.4060]),
-     tensor([3.3960]),
-     tensor([3.3785]),
-     tensor([3.4101]),
-     tensor([3.3812]),
-     tensor([3.4179]),
-     tensor([3.3958]),
-     tensor([3.4003]),
-     tensor([3.3811]),
-     tensor([3.3881]),
-     tensor([3.3697]),
-     tensor([3.3896]),
-     tensor([3.4057]),
-     tensor([3.4168]),
-     tensor([3.4068]),
-     tensor([3.3944]),
-     tensor([3.3939]),
-     tensor([3.3898]),
-     tensor([3.4055]),
-     tensor([3.4003]),
-     tensor([3.3825]),
-     tensor([3.3823]),
-     tensor([3.3900]),
-     tensor([3.4036]),
-     tensor([3.3910]),
-     tensor([3.3669]),
-     tensor([3.4105]),
-     tensor([3.3908]),
-     tensor([3.3930]),
-     tensor([3.3747]),
-     tensor([3.4005]),
-     tensor([3.4129]),
-     tensor([3.3842]),
-     tensor([3.4011]),
-     tensor([3.3984]),
-     tensor([3.3772]),
-     tensor([3.4038]),
-     tensor([3.3999]),
-     tensor([3.3987]),
-     tensor([3.3911]),
-     tensor([3.4013]),
-     tensor([3.4021]),
-     tensor([3.3991]),
-     tensor([3.3840]),
-     tensor([3.4171]),
-     tensor([3.4068]),
-     tensor([3.4061]),
-     tensor([3.3943]),
-     tensor([3.4080]),
-     tensor([3.3757]),
-     tensor([3.3950]),
-     tensor([3.3848]),
-     tensor([3.3827]),
-     tensor([3.4070]),
-     tensor([3.4035]),
-     tensor([3.3793]),
-     tensor([3.3813]),
-     tensor([3.4006]),
-     tensor([3.3937]),
-     tensor([3.3855]),
-     tensor([3.3849]),
-     tensor([3.3879]),
-     tensor([3.4032]),
-     tensor([3.3842]),
-     tensor([3.4141]),
-     tensor([3.3924]),
-     tensor([3.3830]),
-     tensor([3.4130]),
-     tensor([3.3903]),
-     tensor([3.3871]),
-     tensor([3.4162]),
-     tensor([3.4080]),
-     tensor([3.3905]),
-     tensor([3.3957]),
-     tensor([3.3950]),
-     tensor([3.3955]),
-     tensor([3.4070]),
-     tensor([3.4014]),
-     tensor([3.3858]),
-     tensor([3.3889]),
-     tensor([3.3913]),
-     tensor([3.4134]),
-     tensor([3.3972]),
-     tensor([3.4066]),
-     tensor([3.4012]),
-     tensor([3.3954]),
-     tensor([3.3905]),
-     tensor([3.3966]),
-     tensor([3.3846]),
-     tensor([3.4101]),
-     tensor([3.4278]),
-     tensor([3.4167]),
-     tensor([3.3849]),
-     tensor([3.4030]),
-     tensor([3.3895]),
-     tensor([3.3883]),
-     tensor([3.3797]),
-     tensor([3.3906]),
-     tensor([3.3962]),
-     tensor([3.3998]),
-     tensor([3.3837]),
-     tensor([3.3906]),
-     tensor([3.3814]),
-     tensor([3.3948]),
-     tensor([3.4101]),
-     tensor([3.3900]),
-     tensor([3.3951]),
-     tensor([3.3977]),
-     tensor([3.3841]),
-     tensor([3.4076]),
-     tensor([3.4021]),
-     tensor([3.3867]),
-     tensor([3.3944]),
-     tensor([3.3987]),
-     tensor([3.3875]),
-     tensor([3.3883]),
-     tensor([3.3954]),
-     tensor([3.4117]),
-     tensor([3.3833]),
-     tensor([3.4028]),
-     tensor([3.3847]),
-     tensor([3.3911]),
-     tensor([3.4061]),
-     tensor([3.3887]),
-     tensor([3.4028]),
-     tensor([3.3935]),
-     tensor([3.4019]),
-     tensor([3.3861]),
-     tensor([3.3714]),
-     tensor([3.3898]),
-     tensor([3.4068]),
-     tensor([3.3961]),
-     tensor([3.4316]),
-     tensor([3.3874]),
-     tensor([3.3967]),
-     tensor([3.4210]),
-     tensor([3.4201]),
-     tensor([3.4086]),
-     tensor([3.3852]),
-     tensor([3.3954]),
-     tensor([3.4149]),
-     tensor([3.4019]),
-     tensor([3.4001]),
-     tensor([3.3926]),
-     tensor([3.4000]),
-     tensor([3.4079]),
-     tensor([3.3977]),
-     tensor([3.3997]),
-     tensor([3.3957]),
-     tensor([3.4179]),
-     tensor([3.4061]),
-     tensor([3.3923]),
-     tensor([3.4027]),
-     tensor([3.3974]),
-     tensor([3.3904]),
-     tensor([3.4022]),
-     tensor([3.3988]),
-     tensor([3.3825]),
-     tensor([3.3840]),
-     tensor([3.4073]),
-     tensor([3.3974]),
-     tensor([3.3830]),
-     tensor([3.3974]),
-     tensor([3.3870]),
-     tensor([3.4090]),
-     tensor([3.3719]),
-     tensor([3.4009]),
-     tensor([3.3729]),
-     tensor([3.4007]),
-     tensor([3.3830]),
-     tensor([3.4080]),
-     tensor([3.3862]),
-     tensor([3.3794]),
-     tensor([3.3971]),
-     tensor([3.3994]),
-     tensor([3.3896]),
-     tensor([3.3780]),
-     tensor([3.4054]),
-     tensor([3.3893]),
-     tensor([3.3879]),
-     tensor([3.3838]),
-     tensor([3.3832]),
-     tensor([3.4018]),
-     tensor([3.3888]),
-     tensor([3.3988]),
-     tensor([3.3934]),
-     tensor([3.3899]),
-     tensor([3.4056]),
-     tensor([3.3880]),
-     tensor([3.3884]),
-     tensor([3.4088]),
-     tensor([3.3989]),
-     tensor([3.3885]),
-     tensor([3.4058]),
-     tensor([3.4244]),
-     tensor([3.4051]),
-     tensor([3.4101]),
-     tensor([3.3924]),
-     tensor([3.4058]),
-     tensor([3.4032]),
-     tensor([3.4103]),
-     tensor([3.4106]),
-     tensor([3.4228]),
-     tensor([3.4213]),
-     tensor([3.3915]),
-     tensor([3.4078]),
-     tensor([3.3992]),
-     tensor([3.3945]),
-     tensor([3.3877]),
-     tensor([3.3812]),
-     tensor([3.3730]),
-     tensor([3.4031]),
-     tensor([3.3698]),
-     tensor([3.4008]),
-     tensor([3.3902]),
-     tensor([3.3899]),
-     tensor([3.3998]),
-     tensor([3.4109]),
-     tensor([3.4035]),
-     tensor([3.3786]),
-     tensor([3.3959]),
-     tensor([3.3848]),
-     tensor([3.4000]),
-     tensor([3.3748]),
-     tensor([3.4036]),
-     tensor([3.4022]),
-     tensor([3.3908]),
-     tensor([3.3926]),
-     tensor([3.3972]),
-     tensor([3.4044]),
-     tensor([3.4077]),
-     tensor([3.3990]),
-     tensor([3.3943]),
-     tensor([3.3992]),
-     tensor([3.3849]),
-     tensor([3.4102]),
-     tensor([3.3814]),
-     tensor([3.4102]),
-     tensor([3.3866]),
-     tensor([3.4003]),
-     tensor([3.4128]),
-     tensor([3.3874]),
-     tensor([3.4031]),
-     tensor([3.3985]),
-     tensor([3.3962]),
-     tensor([3.3875]),
-     tensor([3.4017]),
-     tensor([3.3998]),
-     tensor([3.3957]),
-     tensor([3.3932]),
-     tensor([3.3958]),
-     tensor([3.3973]),
-     tensor([3.3950]),
-     tensor([3.3947]),
-     tensor([3.3999]),
-     tensor([3.4081]),
-     tensor([3.3979]),
-     tensor([3.4067]),
-     tensor([3.3806]),
-     tensor([3.4036]),
-     tensor([3.4196]),
-     tensor([3.3900]),
-     tensor([3.3872]),
-     tensor([3.3964]),
-     tensor([3.3935]),
-     tensor([3.4003]),
-     tensor([3.3981]),
-     tensor([3.4003]),
-     tensor([3.3864]),
-     tensor([3.3797]),
-     tensor([3.3957]),
-     tensor([3.4134]),
-     tensor([3.4020]),
-     tensor([3.3841]),
-     tensor([3.3775]),
-     tensor([3.3854]),
-     tensor([3.3974]),
-     tensor([3.3947]),
-     tensor([3.4116]),
-     tensor([3.4051]),
-     tensor([3.3892]),
-     tensor([3.4026]),
-     tensor([3.3893]),
-     tensor([3.4023]),
-     tensor([3.3904]),
-     tensor([3.3944]),
-     tensor([3.4056]),
-     tensor([3.4035]),
-     tensor([3.3766]),
-     tensor([3.3897]),
-     tensor([3.3936]),
-     tensor([3.4063]),
-     tensor([3.3832]),
-     tensor([3.4096]),
-     tensor([3.3850]),
-     tensor([3.4216]),
-     tensor([3.4043]),
-     tensor([3.3882]),
-     tensor([3.3908]),
-     tensor([3.3987]),
-     tensor([3.3989]),
-     tensor([3.4090]),
-     tensor([3.3868]),
-     tensor([3.3926]),
-     tensor([3.3796]),
-     tensor([3.3829]),
-     tensor([3.4089]),
-     tensor([3.3850]),
-     tensor([3.3933]),
-     tensor([3.3950]),
-     tensor([3.3988]),
-     tensor([3.4028]),
-     tensor([3.3891]),
-     tensor([3.4035]),
-     tensor([3.3948]),
-     tensor([3.3858]),
-     tensor([3.3911]),
-     tensor([3.3868]),
-     tensor([3.3836]),
-     tensor([3.3964]),
-     tensor([3.4149]),
-     tensor([3.3960]),
-     tensor([3.3946]),
-     tensor([3.4032]),
-     tensor([3.3866]),
-     tensor([3.4022]),
-     tensor([3.3883]),
-     tensor([3.3948]),
-     tensor([3.3981]),
-     tensor([3.4169]),
-     tensor([3.3975]),
-     tensor([3.4144]),
-     tensor([3.3744]),
-     tensor([3.4058]),
-     tensor([3.3935]),
-     tensor([3.3881]),
-     tensor([3.3699]),
-     tensor([3.4189]),
-     tensor([3.3954]),
-     tensor([3.3870]),
-     tensor([3.3865]),
-     tensor([3.3838]),
-     tensor([3.3925]),
-     tensor([3.3861]),
-     tensor([3.3957]),
-     tensor([3.4019]),
-     tensor([3.4072]),
-     tensor([3.3948]),
-     tensor([3.4002]),
-     tensor([3.3793]),
-     tensor([3.4097]),
-     tensor([3.3896]),
-     tensor([3.4005]),
-     tensor([3.3942]),
-     tensor([3.3988]),
-     tensor([3.3954]),
-     tensor([3.3904]),
-     tensor([3.4143]),
-     tensor([3.3803]),
-     tensor([3.4204]),
-     tensor([3.3789]),
-     tensor([3.3836]),
-     tensor([3.4065]),
-     tensor([3.3721]),
-     tensor([3.3925]),
-     tensor([3.3979]),
-     tensor([3.4049]),
-     tensor([3.3764]),
-     tensor([3.3928]),
-     tensor([3.3979]),
-     tensor([3.3951]),
-     tensor([3.4004]),
-     tensor([3.3832]),
-     tensor([3.4129]),
-     tensor([3.4088]),
-     tensor([3.3887]),
-     tensor([3.3962]),
-     tensor([3.3855]),
-     tensor([3.3939]),
-     tensor([3.3819]),
-     tensor([3.3905]),
-     tensor([3.4249]),
-     tensor([3.4143]),
-     tensor([3.4135]),
-     tensor([3.3960]),
-     tensor([3.4036]),
-     tensor([3.3716]),
-     tensor([3.3956]),
-     tensor([3.4005]),
-     tensor([3.3983]),
-     tensor([3.4125]),
-     tensor([3.3915]),
-     tensor([3.4220]),
-     tensor([3.3756]),
-     tensor([3.3922]),
-     tensor([3.3857]),
-     tensor([3.4030]),
-     tensor([3.3887]),
-     tensor([3.3770]),
-     tensor([3.3992]),
-     tensor([3.4071]),
-     tensor([3.4107]),
-     tensor([3.4151]),
-     tensor([3.4113]),
-     tensor([3.4054]),
-     tensor([3.4038]),
-     tensor([3.3863]),
-     tensor([3.4015]),
-     tensor([3.4036]),
-     tensor([3.3857]),
-     tensor([3.3983]),
-     tensor([3.3962]),
-     tensor([3.3979]),
-     tensor([3.3808]),
-     tensor([3.4076]),
-     tensor([3.4043]),
-     tensor([3.3870]),
-     tensor([3.3957]),
-     tensor([3.3880]),
-     tensor([3.3957]),
-     tensor([3.3983]),
-     tensor([3.3919]),
-     tensor([3.4050]),
-     tensor([3.3837]),
-     tensor([3.4005]),
-     tensor([3.3585]),
-     tensor([3.4139]),
-     tensor([3.3854]),
-     tensor([3.4070]),
-     tensor([3.3916]),
-     tensor([3.3823]),
-     tensor([3.3984]),
-     tensor([3.4058]),
-     tensor([3.3818]),
-     tensor([3.4084]),
-     tensor([3.3786]),
-     tensor([3.3798]),
-     tensor([3.3991]),
-     tensor([3.3876]),
-     tensor([3.3987]),
-     tensor([3.4036]),
-     tensor([3.4024]),
-     tensor([3.3893]),
-     tensor([3.3973]),
-     tensor([3.3846]),
-     tensor([3.4137]),
-     tensor([3.3864]),
-     tensor([3.3943]),
-     tensor([3.3881]),
-     tensor([3.3978]),
-     tensor([3.4078]),
-     tensor([3.3929]),
-     tensor([3.3951]),
-     tensor([3.3995]),
-     tensor([3.4120]),
-     tensor([3.4318]),
-     tensor([3.3795]),
-     tensor([3.3785]),
-     tensor([3.3924]),
-     tensor([3.3759]),
-     tensor([3.3997]),
-     tensor([3.3840]),
-     tensor([3.4264]),
-     tensor([3.4175]),
-     tensor([3.3834]),
-     tensor([3.3861]),
-     tensor([3.3997]),
-     tensor([3.4206]),
-     tensor([3.3871]),
-     tensor([3.3845]),
-     tensor([3.4004]),
-     tensor([3.3881]),
-     tensor([3.3914]),
-     tensor([3.4153]),
-     tensor([3.3979]),
-     tensor([3.4035]),
-     tensor([3.3940]),
-     tensor([3.3738]),
-     tensor([3.3919]),
-     tensor([3.3889]),
-     tensor([3.3880]),
-     tensor([3.3940]),
-     tensor([3.4042]),
-     tensor([3.4017]),
-     tensor([3.4033]),
-     tensor([3.4213]),
-     tensor([3.3893]),
-     tensor([3.3788]),
-     tensor([3.3851]),
-     tensor([3.3969]),
-     tensor([3.3791]),
-     tensor([3.3855]),
-     tensor([3.3906]),
-     tensor([3.3865]),
-     tensor([3.3909]),
-     tensor([3.3916]),
-     tensor([3.3898]),
-     tensor([3.3884]),
-     tensor([3.3852]),
-     tensor([3.3982]),
-     tensor([3.4141]),
-     tensor([3.3893]),
-     tensor([3.4094]),
-     tensor([3.3684]),
-     tensor([3.4163]),
-     tensor([3.3763]),
-     tensor([3.3887]),
-     tensor([3.3932]),
-     tensor([3.3873]),
-     tensor([3.3944]),
-     tensor([3.3999]),
-     tensor([3.4012]),
-     tensor([3.3957]),
-     tensor([3.4031]),
-     tensor([3.3958]),
-     tensor([3.3873]),
-     tensor([3.3865]),
-     tensor([3.4221]),
-     tensor([3.4161]),
-     tensor([3.3898]),
-     tensor([3.3983]),
-     tensor([3.3923]),
-     tensor([3.4119]),
-     tensor([3.3873]),
-     tensor([3.3876]),
-     tensor([3.3926]),
-     tensor([3.3767]),
-     tensor([3.4065]),
-     tensor([3.3951]),
-     tensor([3.4100]),
-     tensor([3.3970]),
-     tensor([3.3796]),
-     tensor([3.4057]),
-     tensor([3.3976]),
-     tensor([3.3955]),
-     tensor([3.3911]),
-     tensor([3.3922]),
-     tensor([3.3937]),
-     tensor([3.3938]),
-     tensor([3.3969]),
-     tensor([3.3936]),
-     tensor([3.3967]),
-     tensor([3.3899]),
-     tensor([3.3775]),
-     tensor([3.4075]),
-     tensor([3.3957]),
-     tensor([3.3970]),
-     tensor([3.3836]),
-     tensor([3.4081]),
-     tensor([3.3845]),
-     tensor([3.3839]),
-     tensor([3.3944]),
-     tensor([3.3899]),
-     tensor([3.3913]),
-     tensor([3.4027]),
-     tensor([3.3920]),
-     tensor([3.3838]),
-     tensor([3.4055]),
-     tensor([3.4126]),
-     tensor([3.4025]),
-     tensor([3.3967]),
-     tensor([3.4007]),
-     tensor([3.3952]),
-     tensor([3.3953]),
-     tensor([3.4139]),
-     tensor([3.4124]),
-     tensor([3.3936]),
-     tensor([3.4005]),
-     tensor([3.4197]),
-     tensor([3.3932]),
-     tensor([3.3995]),
-     tensor([3.3759]),
-     tensor([3.3923]),
-     tensor([3.3989]),
-     tensor([3.3915]),
-     tensor([3.3882]),
-     tensor([3.4209]),
-     tensor([3.3956]),
-     tensor([3.3979]),
-     tensor([3.3857]),
-     tensor([3.4188]),
-     tensor([3.3918]),
-     tensor([3.4094]),
-     tensor([3.3897]),
-     tensor([3.3953]),
-     tensor([3.3892]),
-     tensor([3.3970]),
-     tensor([3.3870]),
-     tensor([3.3946]),
-     tensor([3.3978]),
-     tensor([3.3755]),
-     tensor([3.4047]),
-     tensor([3.4014]),
-     tensor([3.4015]),
-     tensor([3.3726]),
-     tensor([3.3975]),
-     tensor([3.4013]),
-     tensor([3.4140]),
-     tensor([3.3905]),
-     tensor([3.3780]),
-     tensor([3.3963]),
-     tensor([3.4032]),
-     tensor([3.3950]),
-     tensor([3.3960]),
-     tensor([3.3978]),
-     tensor([3.3896]),
-     tensor([3.4156]),
-     tensor([3.4089]),
-     tensor([3.3999]),
-     tensor([3.3753]),
-     tensor([3.3867]),
-     tensor([3.4000]),
-     tensor([3.4068]),
-     tensor([3.4117]),
-     tensor([3.4168]),
-     tensor([3.3935]),
-     tensor([3.4048]),
-     tensor([3.4027]),
-     tensor([3.3758]),
-     tensor([3.4010]),
-     tensor([3.4005]),
-     tensor([3.3967]),
-     tensor([3.4026]),
-     tensor([3.3929]),
-     tensor([3.3893]),
-     tensor([3.3895]),
-     tensor([3.4025]),
-     tensor([3.3774]),
-     tensor([3.3910]),
-     tensor([3.3889]),
-     tensor([3.4063]),
-     tensor([3.3899]),
-     tensor([3.3971]),
-     tensor([3.3923]),
-     tensor([3.4122]),
-     tensor([3.3859]),
-     tensor([3.3962]),
-     tensor([3.3989]),
-     tensor([3.3804]),
-     tensor([3.4029]),
-     tensor([3.3983]),
-     tensor([3.3745]),
-     tensor([3.4155]),
-     tensor([3.3889]),
-     tensor([3.3940]),
-     tensor([3.3936]),
-     tensor([3.3784]),
-     tensor([3.4200]),
-     tensor([3.3796]),
-     tensor([3.3854]),
-     tensor([3.3860]),
-     tensor([3.4193]),
-     tensor([3.4039]),
-     tensor([3.4040]),
-     tensor([3.4007]),
-     tensor([3.3829]),
-     tensor([3.3982]),
-     tensor([3.3808]),
-     tensor([3.4081]),
-     tensor([3.3952]),
-     tensor([3.4156]),
-     tensor([3.4112]),
-     tensor([3.4128]),
-     tensor([3.4121]),
-     tensor([3.3957]),
-     tensor([3.3943]),
-     tensor([3.3799]),
-     tensor([3.3915]),
-     tensor([3.4176]),
-     tensor([3.3785]),
-     tensor([3.3834]),
-     tensor([3.4043]),
-     tensor([3.3938]),
-     tensor([3.3826]),
-     tensor([3.4024]),
-     tensor([3.3841]),
-     tensor([3.3795]),
-     tensor([3.3810]),
-     tensor([3.3850]),
-     tensor([3.3951]),
-     tensor([3.3959]),
-     tensor([3.3843]),
-     tensor([3.3688]),
-     tensor([3.3970]),
-     tensor([3.4021]),
-     tensor([3.3768]),
-     tensor([3.4121]),
-     tensor([3.3758]),
-     tensor([3.3795]),
-     tensor([3.3867]),
-     tensor([3.3911]),
-     tensor([3.4070]),
-     tensor([3.3904]),
-     tensor([3.4122]),
-     tensor([3.4100]),
-     tensor([3.3890]),
-     tensor([3.4108]),
-     tensor([3.3873]),
-     tensor([3.3842]),
-     tensor([3.3999]),
-     tensor([3.4127]),
-     tensor([3.3960]),
-     tensor([3.4027]),
-     tensor([3.3887]),
-     tensor([3.4074]),
-     tensor([3.3842]),
-     tensor([3.3875]),
-     tensor([3.3933]),
-     tensor([3.3945]),
-     tensor([3.3959]),
-     tensor([3.3963]),
-     tensor([3.3896]),
-     tensor([3.4010]),
-     tensor([3.3924]),
-     tensor([3.4082]),
-     tensor([3.3833]),
-     tensor([3.3936]),
-     tensor([3.3899]),
-     tensor([3.3990]),
-     tensor([3.3942]),
-     tensor([3.3891]),
-     tensor([3.3880]),
-     tensor([3.4155]),
-     tensor([3.3919]),
-     tensor([3.3955]),
-     tensor([3.3861]),
-     tensor([3.4238]),
-     tensor([3.3786]),
-     tensor([3.4097]),
-     tensor([3.4214]),
-     tensor([3.3743]),
-     tensor([3.3897]),
-     tensor([3.4080]),
-     tensor([3.4082]),
-     tensor([3.3964]),
-     tensor([3.3845]),
-     tensor([3.4070]),
-     tensor([3.3896]),
-     tensor([3.4056]),
-     tensor([3.3756]),
-     tensor([3.3853]),
-     tensor([3.4129]),
-     tensor([3.4044]),
-     tensor([3.3836]),
-     tensor([3.3902]),
-     tensor([3.3959]),
-     tensor([3.3827]),
-     tensor([3.4051]),
-     tensor([3.3900]),
+    [tensor([-0.2127]),
+     tensor([-0.0477]),
+     tensor([-0.1609]),
+     tensor([-0.1269]),
+     tensor([-0.1909]),
+     tensor([-0.1667]),
+     tensor([-0.2182]),
+     tensor([-0.2330]),
+     tensor([-0.2138]),
+     tensor([-0.1298]),
+     tensor([-0.2620]),
+     tensor([-0.0983]),
+     tensor([-0.1618]),
+     tensor([-0.1909]),
+     tensor([-0.1667]),
+     tensor([-0.1917]),
+     tensor([-0.1002]),
+     tensor([-0.1618]),
+     tensor([-0.0907]),
+     tensor([-0.2054]),
+     tensor([-0.0621]),
+     tensor([-0.0999]),
+     tensor([-0.1571]),
+     tensor([-0.0900]),
+     tensor([-0.1526]),
+     tensor([-0.1472]),
+     tensor([-0.0359]),
+     tensor([-0.2769]),
+     tensor([-0.2004]),
+     tensor([-0.1007]),
+     tensor([-0.0914]),
+     tensor([-0.2074]),
+     tensor([-0.1197]),
+     tensor([-0.0566]),
+     tensor([-0.0941]),
+     tensor([-0.0092]),
+     tensor([-0.1733]),
+     tensor([-0.1429]),
+     tensor([-0.1621]),
+     tensor([-0.0307]),
+     tensor([-0.0528]),
+     tensor([-0.2584]),
+     tensor([-0.1461]),
+     tensor([-0.1884]),
+     tensor([-0.0604]),
+     tensor([-0.1951]),
+     tensor([-0.1595]),
+     tensor([-0.2809]),
+     tensor([-0.2254]),
+     tensor([-0.1168]),
+     tensor([-0.3140]),
+     tensor([-0.1856]),
+     tensor([-0.1477]),
+     tensor([-0.1551]),
+     tensor([-0.1312]),
+     tensor([-0.1699]),
+     tensor([-0.2011]),
+     tensor([-0.1280]),
+     tensor([-0.0805]),
+     tensor([-0.0522]),
+     tensor([-0.1997]),
+     tensor([-0.0024]),
+     tensor([-0.1609]),
+     tensor([-0.1561]),
+     tensor([-0.2258]),
+     tensor([-0.1416]),
+     tensor([-0.2286]),
+     tensor([-0.1494]),
+     tensor([-0.1822]),
+     tensor([-0.1046]),
+     tensor([-0.0605]),
+     tensor([-0.2355]),
+     tensor([-0.0680]),
+     tensor([-0.0521]),
+     tensor([-0.0371]),
+     tensor([-0.1811]),
+     tensor([-0.1611]),
+     tensor([-0.1196]),
+     tensor([-0.1782]),
+     tensor([-0.1197]),
+     tensor([-0.1408]),
+     tensor([-0.1717]),
+     tensor([-0.2065]),
+     tensor([-0.0982]),
+     tensor([-0.0024]),
+     tensor([-0.2176]),
+     tensor([-0.1245]),
+     tensor([-0.1741]),
+     tensor([-0.1603]),
+     tensor([-0.1167]),
+     tensor([-0.2755]),
+     tensor([-0.1702]),
+     tensor([-0.0378]),
+     tensor([-0.1729]),
+     tensor([-0.1213]),
+     tensor([-0.2606]),
+     tensor([-0.1024]),
+     tensor([-0.1451]),
+     tensor([-0.1140]),
+     tensor([-0.0993]),
+     tensor([-0.0644]),
+     tensor([-0.1849]),
+     tensor([-0.1381]),
+     tensor([-0.1182]),
+     tensor([-0.2791]),
+     tensor([-0.2344]),
+     tensor([-0.1461]),
+     tensor([-0.0821]),
+     tensor([-0.0456]),
+     tensor([-0.1833]),
+     tensor([-0.1372]),
+     tensor([-0.1515]),
+     tensor([-0.1519]),
+     tensor([-0.0909]),
+     tensor([-0.2727]),
+     tensor([-0.0271]),
+     tensor([-0.0205]),
+     tensor([-0.2096]),
+     tensor([-0.1157]),
+     tensor([-0.1714]),
+     tensor([-0.0623]),
+     tensor([-0.1544]),
+     tensor([-0.2104]),
+     tensor([-0.1424]),
+     tensor([-0.1922]),
+     tensor([-0.1229]),
+     tensor([-0.2438]),
+     tensor([-0.1253]),
+     tensor([-0.1133]),
+     tensor([-0.0817]),
+     tensor([-0.0187]),
+     tensor([-0.0866]),
+     tensor([-0.1755]),
+     tensor([-0.0394]),
+     tensor([-0.0735]),
+     tensor([-0.1023]),
+     tensor([-0.1335]),
+     tensor([-0.0841]),
+     tensor([-0.1668]),
+     tensor([-0.1182]),
+     tensor([-0.0516]),
+     tensor([-0.2238]),
+     tensor([-0.1737]),
+     tensor([-0.0930]),
+     tensor([-0.2468]),
+     tensor([-0.2073]),
+     tensor([-0.1186]),
+     tensor([-0.1423]),
+     tensor([-0.1477]),
+     tensor([-0.1184]),
+     tensor([-0.1657]),
+     tensor([-0.1744]),
+     tensor([-0.0431]),
+     tensor([-0.2033]),
+     tensor([-0.1019]),
+     tensor([-0.2257]),
+     tensor([-0.2233]),
+     tensor([-0.2118]),
+     tensor([-0.2100]),
+     tensor([-0.1427]),
+     tensor([-0.1087]),
+     tensor([-0.1554]),
+     tensor([-0.1500]),
+     tensor([-0.1060]),
+     tensor([-0.0965]),
+     tensor([-0.1929]),
+     tensor([-0.1108]),
+     tensor([-0.2517]),
+     tensor([-0.2180]),
+     tensor([-0.1163]),
+     tensor([-0.0920]),
+     tensor([-0.2298]),
+     tensor([-0.1440]),
+     tensor([-0.1822]),
+     tensor([-0.1191]),
+     tensor([-0.1512]),
+     tensor([-0.0826]),
+     tensor([-0.2158]),
+     tensor([-0.2562]),
+     tensor([-0.1805]),
+     tensor([-0.1763]),
+     tensor([-0.2769]),
+     tensor([-0.1759]),
+     tensor([-0.1153]),
+     tensor([-0.1710]),
+     tensor([-0.1401]),
+     tensor([0.0002]),
+     tensor([-0.2454]),
+     tensor([-0.1370]),
+     tensor([-0.2208]),
+     tensor([-0.1038]),
+     tensor([-0.0699]),
+     tensor([-0.1276]),
+     tensor([-0.1605]),
+     tensor([-0.1983]),
+     tensor([-0.1071]),
+     tensor([-0.1228]),
+     tensor([-0.1746]),
+     tensor([-0.1009]),
+     tensor([-0.1880]),
+     tensor([-0.1882]),
+     tensor([-0.2028]),
+     tensor([-0.0896]),
+     tensor([-0.1716]),
+     tensor([-0.1865]),
+     tensor([-0.0976]),
+     tensor([-0.1166]),
+     tensor([-0.1207]),
+     tensor([-0.0622]),
+     tensor([-0.0666]),
+     tensor([-0.2405]),
+     tensor([-0.1281]),
+     tensor([-0.1640]),
+     tensor([-0.1295]),
+     tensor([-0.2654]),
+     tensor([-0.1415]),
+     tensor([-0.0899]),
+     tensor([-0.1238]),
+     tensor([-0.1664]),
+     tensor([-0.1289]),
+     tensor([-0.1062]),
+     tensor([-0.0926]),
+     tensor([-0.1393]),
+     tensor([-0.1396]),
+     tensor([-0.2144]),
+     tensor([-0.2326]),
+     tensor([-0.0635]),
+     tensor([-0.1975]),
+     tensor([-0.1486]),
+     tensor([-0.1948]),
+     tensor([-0.1604]),
+     tensor([-0.0810]),
+     tensor([-0.1338]),
+     tensor([0.0275]),
+     tensor([-0.0775]),
+     tensor([-0.1271]),
+     tensor([-0.1248]),
+     tensor([-0.0494]),
+     tensor([-0.2868]),
+     tensor([-0.0687]),
+     tensor([-0.1481]),
+     tensor([-0.1365]),
+     tensor([-0.0853]),
+     tensor([-0.1636]),
+     tensor([-0.1817]),
+     tensor([-0.1492]),
+     tensor([-0.1991]),
+     tensor([-0.1556]),
+     tensor([-0.2380]),
+     tensor([-0.1761]),
+     tensor([-0.2368]),
+     tensor([-0.1702]),
+     tensor([-0.1091]),
+     tensor([-0.1628]),
+     tensor([-0.0145]),
+     tensor([-0.1817]),
+     tensor([-0.0238]),
+     tensor([-0.1382]),
+     tensor([-0.0205]),
+     tensor([-0.1784]),
+     tensor([-0.3076]),
+     tensor([-0.2343]),
+     tensor([-0.1369]),
+     tensor([-0.1630]),
+     tensor([-0.2276]),
+     tensor([-0.0478]),
+     tensor([-0.2550]),
+     tensor([-0.2243]),
+     tensor([-0.1274]),
+     tensor([-0.0714]),
+     tensor([0.0261]),
+     tensor([-0.2129]),
+     tensor([-0.1833]),
+     tensor([-0.1950]),
+     tensor([-0.1634]),
+     tensor([-0.0515]),
+     tensor([-0.0797]),
+     tensor([-0.0966]),
+     tensor([-0.1885]),
+     tensor([-0.2603]),
+     tensor([-0.1182]),
+     tensor([-0.1534]),
+     tensor([-0.0965]),
+     tensor([-0.0843]),
+     tensor([-0.0922]),
+     tensor([-0.1213]),
+     tensor([-0.0940]),
+     tensor([-0.1566]),
+     tensor([-0.0925]),
+     tensor([-0.1342]),
+     tensor([-0.1258]),
+     tensor([-0.0771]),
+     tensor([-0.1096]),
+     tensor([-0.2606]),
+     tensor([-0.0255]),
+     tensor([-0.1528]),
+     tensor([-0.2333]),
+     tensor([0.0040]),
+     tensor([-0.1306]),
+     tensor([-0.0633]),
+     tensor([0.0011]),
+     tensor([-0.1580]),
+     tensor([-0.0756]),
+     tensor([-0.1576]),
+     tensor([-0.1540]),
+     tensor([-0.1856]),
+     tensor([-0.0053]),
+     tensor([-0.1082]),
+     tensor([-0.1433]),
+     tensor([-0.1144]),
+     tensor([-0.1190]),
+     tensor([-0.1395]),
+     tensor([-0.1978]),
+     tensor([-0.1345]),
+     tensor([-0.0688]),
+     tensor([-0.3219]),
+     tensor([-0.1360]),
+     tensor([-0.1908]),
+     tensor([-0.1561]),
+     tensor([-0.1149]),
+     tensor([-0.0945]),
+     tensor([-0.0707]),
+     tensor([-0.2258]),
+     tensor([-0.1461]),
+     tensor([-0.0427]),
+     tensor([-0.1933]),
+     tensor([-0.1581]),
+     tensor([-0.0819]),
+     tensor([-0.2360]),
+     tensor([-0.1973]),
+     tensor([-0.1499]),
+     tensor([-0.2204]),
+     tensor([-0.0966]),
+     tensor([-0.1925]),
+     tensor([-0.1684]),
+     tensor([-0.1445]),
+     tensor([-0.0712]),
+     tensor([-0.1289]),
+     tensor([-0.1386]),
+     tensor([-0.1236]),
+     tensor([-0.2462]),
+     tensor([-0.0503]),
+     tensor([-0.1303]),
+     tensor([-0.0147]),
+     tensor([-0.1785]),
+     tensor([-0.1706]),
+     tensor([-0.1771]),
+     tensor([-0.1949]),
+     tensor([-0.1247]),
+     tensor([-0.0967]),
+     tensor([-0.0386]),
+     tensor([-0.2043]),
+     tensor([-0.0024]),
+     tensor([-0.2396]),
+     tensor([-0.1351]),
+     tensor([-0.1579]),
+     tensor([-0.2927]),
+     tensor([-0.2028]),
+     tensor([-0.1362]),
+     tensor([-0.2754]),
+     tensor([-0.1226]),
+     tensor([-0.1897]),
+     tensor([-0.3025]),
+     tensor([-0.1722]),
+     tensor([-0.1366]),
+     tensor([-0.0093]),
+     tensor([-0.0893]),
+     tensor([-0.1728]),
+     tensor([-0.1187]),
+     tensor([-0.1225]),
+     tensor([-0.0695]),
+     tensor([-0.1563]),
+     tensor([-0.1324]),
+     tensor([-0.0682]),
+     tensor([-0.1422]),
+     tensor([-0.1299]),
+     tensor([-0.1754]),
+     tensor([-0.1522]),
+     tensor([-0.2283]),
+     tensor([-0.1590]),
+     tensor([-0.2436]),
+     tensor([-0.1234]),
+     tensor([-0.0982]),
+     tensor([-0.0484]),
+     tensor([-0.0644]),
+     tensor([-0.1942]),
+     tensor([-0.2100]),
+     tensor([-0.1891]),
+     tensor([-0.0429]),
+     tensor([-0.1021]),
+     tensor([-0.1443]),
+     tensor([-0.0663]),
+     tensor([-0.1990]),
+     tensor([-0.1163]),
+     tensor([-0.0154]),
+     tensor([-0.1974]),
+     tensor([-0.2098]),
+     tensor([-0.1516]),
+     tensor([0.0134]),
+     tensor([-0.0324]),
+     tensor([-0.0530]),
+     tensor([-0.2352]),
+     tensor([-0.0857]),
+     tensor([-0.0521]),
+     tensor([-0.1094]),
+     tensor([-0.1562]),
+     tensor([-0.1657]),
+     tensor([-0.1744]),
+     tensor([-0.1005]),
+     tensor([0.0121]),
+     tensor([-0.1601]),
+     tensor([-0.0875]),
+     tensor([-0.1541]),
+     tensor([-0.1342]),
+     tensor([-0.1235]),
+     tensor([-0.0492]),
+     tensor([-0.1680]),
+     tensor([0.0344]),
+     tensor([-0.1597]),
+     tensor([-0.1343]),
+     tensor([-0.1912]),
+     tensor([-0.0916]),
+     tensor([-0.1593]),
+     tensor([-0.2570]),
+     tensor([-0.1111]),
+     tensor([-0.2561]),
+     tensor([-0.1078]),
+     tensor([-0.0665]),
+     tensor([-0.1824]),
+     tensor([-0.1593]),
+     tensor([-0.1444]),
+     tensor([-0.1756]),
+     tensor([-0.1953]),
+     tensor([-0.1853]),
+     tensor([-0.2533]),
+     tensor([-0.2425]),
+     tensor([-0.1707]),
+     tensor([-0.0808]),
+     tensor([-0.2532]),
+     tensor([-0.1063]),
+     tensor([-0.1397]),
+     tensor([-0.0560]),
+     tensor([-0.1805]),
+     tensor([-0.1874]),
+     tensor([-0.1123]),
+     tensor([-0.1577]),
+     tensor([-0.0989]),
+     tensor([-0.1666]),
+     tensor([-0.1300]),
+     tensor([-0.0028]),
+     tensor([-0.2084]),
+     tensor([-0.0056]),
+     tensor([-0.1809]),
+     tensor([-0.0136]),
+     tensor([-0.1520]),
+     tensor([-0.2657]),
+     tensor([-0.1801]),
+     tensor([-0.1701]),
+     tensor([-0.0196]),
+     tensor([-0.0924]),
+     tensor([-0.2173]),
+     tensor([-0.1315]),
+     tensor([-0.1005]),
+     tensor([-0.1662]),
+     tensor([-0.2219]),
+     tensor([-0.0877]),
+     tensor([-0.2312]),
+     tensor([-0.1287]),
+     tensor([-0.1451]),
+     tensor([-0.2703]),
+     tensor([-0.2023]),
+     tensor([-0.1786]),
+     tensor([-0.1957]),
+     tensor([-0.1571]),
+     tensor([-0.1571]),
+     tensor([-0.1354]),
+     tensor([-0.0624]),
+     tensor([-0.1682]),
+     tensor([-0.1690]),
+     tensor([-0.1579]),
+     tensor([-0.1683]),
+     tensor([-0.0963]),
+     tensor([-0.2430]),
+     tensor([-0.1079]),
+     tensor([-0.2376]),
+     tensor([-0.1708]),
+     tensor([-0.1032]),
+     tensor([-0.2063]),
+     tensor([-0.0883]),
+     tensor([-0.0855]),
+     tensor([-0.1381]),
+     tensor([-0.2445]),
+     tensor([-0.1707]),
+     tensor([-0.2541]),
+     tensor([-0.1699]),
+     tensor([-0.2370]),
+     tensor([-0.1419]),
+     tensor([-0.2460]),
+     tensor([-0.1667]),
+     tensor([-0.1174]),
+     tensor([-0.1555]),
+     tensor([-0.1758]),
+     tensor([-0.0659]),
+     tensor([-0.2598]),
+     tensor([-0.1754]),
+     tensor([0.0034]),
+     tensor([-0.0778]),
+     tensor([-0.1455]),
+     tensor([-0.0098]),
+     tensor([-0.0690]),
+     tensor([-0.2418]),
+     tensor([-0.0668]),
+     tensor([-0.2252]),
+     tensor([-0.1180]),
+     tensor([-0.3583]),
+     tensor([-0.1807]),
+     tensor([-0.0943]),
+     tensor([-0.0936]),
+     tensor([-0.2305]),
+     tensor([-0.2236]),
+     tensor([-0.0380]),
+     tensor([-0.2988]),
+     tensor([-0.1559]),
+     tensor([-0.1244]),
+     tensor([-0.1278]),
+     tensor([-0.0922]),
+     tensor([-0.0208]),
+     tensor([-0.0494]),
+     tensor([-0.1601]),
+     tensor([-0.1546]),
+     tensor([-0.1495]),
+     tensor([-0.1572]),
+     tensor([-0.1340]),
+     tensor([-0.2577]),
+     tensor([-0.2547]),
+     tensor([-0.0791]),
+     tensor([-0.0457]),
+     tensor([-0.2032]),
+     tensor([-0.2178]),
+     tensor([-0.1905]),
+     tensor([-0.1569]),
+     tensor([-0.1710]),
+     tensor([-0.1999]),
+     tensor([-0.1789]),
+     tensor([-0.2026]),
+     tensor([-0.0777]),
+     tensor([-0.1484]),
+     tensor([-0.1475]),
+     tensor([-0.1223]),
+     tensor([-0.1979]),
+     tensor([-0.1490]),
+     tensor([-0.2013]),
+     tensor([-0.1551]),
+     tensor([-0.1055]),
+     tensor([-0.1027]),
+     tensor([-0.1678]),
+     tensor([-0.0726]),
+     tensor([-0.0747]),
+     tensor([-0.1622]),
+     tensor([-0.1496]),
+     tensor([-0.1506]),
+     tensor([-0.1222]),
+     tensor([-0.2377]),
+     tensor([-0.0409]),
+     tensor([-0.1389]),
+     tensor([-0.0950]),
+     tensor([-0.2040]),
+     tensor([-0.0684]),
+     tensor([-0.1659]),
+     tensor([-0.1222]),
+     tensor([-0.1615]),
+     tensor([-0.0933]),
+     tensor([-0.1767]),
+     tensor([-0.0088]),
+     tensor([-0.2152]),
+     tensor([-0.0758]),
+     tensor([-0.0821]),
+     tensor([-0.2702]),
+     tensor([-0.2167]),
+     tensor([-0.2180]),
+     tensor([-0.1280]),
+     tensor([-0.0795]),
+     tensor([-0.2142]),
+     tensor([-0.2020]),
+     tensor([-0.1337]),
+     tensor([-0.1740]),
+     tensor([-0.0719]),
+     tensor([-0.1373]),
+     tensor([-0.1545]),
+     tensor([-0.2161]),
+     tensor([-0.1398]),
+     tensor([-0.1692]),
+     tensor([-0.1738]),
+     tensor([-0.2052]),
+     tensor([-0.2276]),
+     tensor([-0.1914]),
+     tensor([-0.1619]),
+     tensor([-0.1918]),
+     tensor([-0.1489]),
+     tensor([-0.0870]),
+     tensor([-0.0632]),
+     tensor([0.0159]),
+     tensor([-0.1366]),
+     tensor([-0.1512]),
+     tensor([-0.1986]),
+     tensor([-0.2491]),
+     tensor([-0.0806]),
+     tensor([-0.2148]),
+     tensor([-0.2727]),
+     tensor([-0.1177]),
+     tensor([-0.1665]),
+     tensor([-0.1969]),
+     tensor([-0.1978]),
+     tensor([-0.1956]),
+     tensor([-0.0736]),
+     tensor([-0.1842]),
+     tensor([-0.1521]),
+     tensor([-0.1454]),
+     tensor([-0.0565]),
+     tensor([-0.2396]),
+     tensor([-0.0517]),
+     tensor([-0.1781]),
+     tensor([-0.1828]),
+     tensor([-0.1324]),
+     tensor([-0.1390]),
+     tensor([-0.3119]),
+     tensor([-0.2345]),
+     tensor([-0.0206]),
+     tensor([-0.0430]),
+     tensor([-0.0555]),
+     tensor([-0.2079]),
+     tensor([-0.1280]),
+     tensor([-0.2659]),
+     tensor([-0.2303]),
+     tensor([-0.0745]),
+     tensor([-0.1655]),
+     tensor([-0.0992]),
+     tensor([-0.1701]),
+     tensor([-0.0992]),
+     tensor([-0.1644]),
+     tensor([-0.1241]),
+     tensor([-0.1140]),
+     tensor([-0.1596]),
+     tensor([-0.2375]),
+     tensor([-0.1840]),
+     tensor([-0.1280]),
+     tensor([-0.0761]),
+     tensor([-0.0038]),
+     tensor([-0.1433]),
+     tensor([-0.1780]),
+     tensor([-0.1500]),
+     tensor([-0.1640]),
+     tensor([-0.0459]),
+     tensor([-0.2439]),
+     tensor([-0.0850]),
+     tensor([-0.2467]),
+     tensor([-0.1663]),
+     tensor([-0.0935]),
+     tensor([-0.1019]),
+     tensor([-0.1726]),
+     tensor([-0.1276]),
+     tensor([-0.1203]),
+     tensor([-0.2796]),
+     tensor([-0.1322]),
+     tensor([-0.1138]),
+     tensor([-0.0892]),
+     tensor([-0.1372]),
+     tensor([-0.1077]),
+     tensor([-0.0538]),
+     tensor([-0.1365]),
+     tensor([-0.1239]),
+     tensor([-0.0818]),
+     tensor([-0.0924]),
+     tensor([-0.1687]),
+     tensor([-0.1057]),
+     tensor([-0.0331]),
+     tensor([-0.2368]),
+     tensor([-0.0966]),
+     tensor([-0.0027]),
+     tensor([-0.0624]),
+     tensor([-0.0528]),
+     tensor([-0.1154]),
+     tensor([-0.1682]),
+     tensor([-0.2264]),
+     tensor([-0.1073]),
+     tensor([-0.1998]),
+     tensor([0.0266]),
+     tensor([-0.1117]),
+     tensor([-0.2003]),
+     tensor([-0.1361]),
+     tensor([-0.1731]),
+     tensor([-0.0152]),
+     tensor([-0.0520]),
+     tensor([-0.2625]),
+     tensor([-0.0991]),
+     tensor([0.0111]),
+     tensor([-0.1199]),
+     tensor([-0.1101]),
+     tensor([-0.1120]),
+     tensor([-0.2278]),
+     tensor([-0.1128]),
+     tensor([-0.2671]),
+     tensor([-0.1222]),
+     tensor([-0.2296]),
+     tensor([-0.2253]),
+     tensor([-0.2052]),
+     tensor([-0.1313]),
+     tensor([-0.1390]),
+     tensor([-0.1014]),
+     tensor([-0.2790]),
+     tensor([-0.0841]),
+     tensor([-0.1855]),
+     tensor([-0.1677]),
+     tensor([-0.2101]),
+     tensor([-0.0557]),
+     tensor([-0.2607]),
+     tensor([-0.2249]),
+     tensor([-0.0891]),
+     tensor([-0.0409]),
+     tensor([-0.1879]),
+     tensor([-0.1409]),
+     tensor([-0.1525]),
+     tensor([-0.1755]),
+     tensor([-0.1311]),
+     tensor([-0.1594]),
+     tensor([-0.0217]),
+     tensor([-0.1538]),
+     tensor([-0.1757]),
+     tensor([-0.2347]),
+     tensor([-0.1250]),
+     tensor([-0.1247]),
+     tensor([-0.1740]),
+     tensor([-0.1417]),
+     tensor([-0.1124]),
+     tensor([-0.1986]),
+     tensor([-0.1281]),
+     tensor([-0.1470]),
+     tensor([-0.1119]),
+     tensor([-0.1194]),
+     tensor([-0.0843]),
+     tensor([-0.2134]),
+     tensor([-0.2265]),
+     tensor([-0.0174]),
+     tensor([-0.1098]),
+     tensor([-0.2008]),
+     tensor([-0.2104]),
+     tensor([0.0144]),
+     tensor([-0.1705]),
+     tensor([-0.1292]),
+     tensor([-0.2574]),
+     tensor([-0.2260]),
+     tensor([-0.0491]),
+     tensor([-0.0815]),
+     tensor([-0.1157]),
+     tensor([-0.2017]),
+     tensor([-0.0848]),
+     tensor([-0.0396]),
+     tensor([-0.2852]),
+     tensor([-0.1545]),
+     tensor([-0.1879]),
+     tensor([-0.1846]),
+     tensor([-0.1535]),
+     tensor([-0.0966]),
+     tensor([-0.1508]),
+     tensor([-0.1855]),
+     tensor([-0.1517]),
+     tensor([-0.1315]),
+     tensor([-0.1306]),
+     tensor([-0.2044]),
+     tensor([-0.1066]),
+     tensor([-0.1701]),
+     tensor([-0.0938]),
+     tensor([-0.0911]),
+     tensor([-0.1199]),
+     tensor([-0.1272]),
+     tensor([-0.1298]),
+     tensor([-0.1588]),
+     tensor([-0.1918]),
+     tensor([-0.2673]),
+     tensor([-0.0753]),
+     tensor([-0.0350]),
+     tensor([-0.1125]),
+     tensor([-0.0852]),
+     tensor([-0.0794]),
+     tensor([-0.3585]),
+     tensor([-0.0794]),
+     tensor([-0.2489]),
+     tensor([-0.0800]),
+     tensor([-0.1548]),
+     tensor([-0.1351]),
+     tensor([-0.1242]),
+     tensor([-0.1186]),
+     tensor([-0.1315]),
+     tensor([-0.1478]),
+     tensor([-0.1826]),
+     tensor([-0.2000]),
+     tensor([-0.1526]),
+     tensor([-0.2146]),
+     tensor([-0.2480]),
+     tensor([-0.1491]),
+     tensor([-0.1443]),
+     tensor([-0.1429]),
+     tensor([-0.1549]),
+     tensor([-0.2128]),
+     tensor([-0.0264]),
+     tensor([-0.1987]),
+     tensor([-0.0993]),
+     tensor([-0.2049]),
+     tensor([-0.0481]),
+     tensor([-0.2155]),
+     tensor([-0.1124]),
+     tensor([-0.2108]),
+     tensor([-0.3414]),
+     tensor([-0.1803]),
+     tensor([-0.2355]),
+     tensor([-0.1428]),
+     tensor([-0.0763]),
+     tensor([-0.1437]),
+     tensor([-0.2510]),
+     tensor([-0.1694]),
+     tensor([-0.0563]),
+     tensor([-0.2010]),
+     tensor([-0.1790]),
+     tensor([-0.1698]),
+     tensor([-0.1503]),
+     tensor([-0.1088]),
+     tensor([-0.0873]),
+     tensor([-0.1341]),
+     tensor([-0.0218]),
+     tensor([-0.1844]),
+     tensor([-0.1979]),
+     tensor([-0.0879]),
+     tensor([-0.0590]),
+     tensor([-0.0564]),
+     tensor([-0.0763]),
+     tensor([-0.1104]),
+     tensor([-0.1623]),
+     tensor([-0.0705]),
+     tensor([-0.2061]),
+     tensor([-0.2687]),
+     tensor([-0.2252]),
+     tensor([-0.2269]),
+     tensor([-0.1117]),
+     tensor([-0.0785]),
+     tensor([-0.2209]),
+     tensor([-0.1621]),
+     tensor([-0.1071]),
+     tensor([-0.0763]),
+     tensor([-0.0570]),
+     tensor([-0.0844]),
+     tensor([-0.1015]),
+     tensor([-0.1939]),
+     tensor([-0.0524]),
+     tensor([-0.0417]),
+     tensor([-0.0983]),
+     tensor([0.0062]),
+     tensor([-0.1632]),
+     tensor([-0.1431]),
+     tensor([-0.1934]),
+     tensor([-0.0769]),
+     tensor([-0.2413]),
+     tensor([-0.0972]),
+     tensor([-0.2396]),
+     tensor([-0.2518]),
+     tensor([-0.2056]),
+     tensor([-0.1089]),
+     tensor([-0.1654]),
+     tensor([-0.0804]),
+     tensor([-0.2107]),
+     tensor([-0.1718]),
+     tensor([-0.0995]),
+     tensor([-0.2030]),
+     tensor([-0.0867]),
+     tensor([-0.0973]),
+     tensor([-0.1440]),
+     tensor([-0.0866]),
+     tensor([-0.0371]),
+     tensor([0.0041]),
+     tensor([-0.1006]),
+     tensor([-0.0604]),
+     tensor([-0.1809]),
+     tensor([-0.0389]),
+     tensor([-0.1448]),
+     tensor([-0.1588]),
+     tensor([-0.1108]),
+     tensor([-0.0823]),
+     tensor([-0.1401]),
+     tensor([-0.2627]),
+     tensor([-0.2265]),
+     tensor([-0.1489]),
+     tensor([-0.0670]),
+     tensor([-0.1796]),
+     tensor([-0.0728]),
+     tensor([-0.2445]),
+     tensor([-0.1099]),
+     tensor([-0.1335]),
+     tensor([-0.0731]),
+     tensor([-0.1342]),
+     tensor([-0.2181]),
+     tensor([-0.2247]),
+     tensor([-0.1274]),
+     tensor([-0.0629]),
+     tensor([-0.1708]),
+     tensor([-0.1100]),
+     tensor([-0.1735]),
+     tensor([-0.0504]),
+     tensor([-0.0995]),
+     tensor([-0.1829]),
+     tensor([-0.0804]),
+     tensor([-0.2055]),
+     tensor([-0.2258]),
+     tensor([-0.1563]),
+     tensor([-0.1475]),
+     tensor([-0.1196]),
+     tensor([-0.0253]),
+     tensor([-0.1014]),
+     tensor([-0.0763]),
+     tensor([-0.1563]),
+     tensor([-0.1714]),
+     tensor([-0.2447]),
+     tensor([-0.1278]),
+     tensor([-0.0352]),
+     tensor([-0.2221]),
+     tensor([-0.0369]),
+     tensor([-0.0821]),
+     tensor([-0.2002]),
+     tensor([-0.1795]),
+     tensor([-0.0971]),
+     tensor([-0.0686]),
+     tensor([-0.2179]),
+     tensor([-0.1158]),
+     tensor([-0.1371]),
+     tensor([-0.0793]),
+     tensor([-0.1273]),
+     tensor([-0.0954]),
+     tensor([-0.0216]),
+     tensor([-0.1543]),
+     tensor([-0.1311]),
+     tensor([-0.1543]),
+     tensor([-0.1420]),
+     tensor([-0.0626]),
+     tensor([-0.0910]),
+     tensor([-0.1850]),
+     tensor([-0.1595]),
+     tensor([-0.3082]),
+     tensor([-0.1959]),
+     tensor([-0.1599]),
+     tensor([-0.0555]),
+     tensor([-0.1675]),
+     tensor([-0.0901]),
+     tensor([-0.0675]),
+     tensor([-0.1597]),
+     tensor([-0.0402]),
+     tensor([-0.2372]),
+     tensor([-0.1551]),
+     tensor([-0.1357]),
+     tensor([-0.0991]),
+     tensor([-0.1487]),
+     tensor([-0.1555]),
+     tensor([-0.1728]),
+     tensor([-0.1709]),
+     tensor([-0.0469]),
+     tensor([-0.1253]),
+     tensor([-0.1176]),
+     tensor([-0.1689]),
+     tensor([-0.1679]),
+     tensor([-0.1875]),
+     tensor([-0.1443]),
+     tensor([-0.1461]),
+     tensor([-0.3130]),
+     tensor([-0.0199]),
+     tensor([-0.0839]),
+     tensor([-0.1276]),
+     tensor([-0.1692]),
+     tensor([-0.1323]),
+     tensor([-0.1016]),
+     tensor([-0.0979]),
+     tensor([-0.2104]),
+     tensor([-0.1885]),
+     tensor([-0.2139]),
+     tensor([-0.1308]),
+     tensor([-0.2210]),
+     tensor([-0.1384]),
+     tensor([-0.2552]),
+     tensor([-0.0966]),
+     tensor([-0.1885]),
+     tensor([-0.1493]),
+     tensor([-0.2295]),
+     tensor([-0.3119]),
+     tensor([-0.2106]),
+     tensor([-0.1673]),
+     tensor([-0.0943]),
+     tensor([-0.1314]),
+     tensor([-0.0952]),
+     tensor([-0.1721]),
+     tensor([-0.2361]),
+     tensor([-0.1351]),
+     tensor([-0.0304]),
+     tensor([-0.0993]),
+     tensor([-0.1015]),
      ...]
 
 
@@ -22711,19 +23194,6 @@ with torch.no_grad():
     y_hat = pretrained_alphafold2(features.to('cuda:0'))
 y_hat
 ```
-
-
-
-
-    tensor([[3.4124],
-            [3.3868],
-            [3.3909],
-            ...,
-            [3.4022],
-            [3.3898],
-            [3.3934]], device='cuda:0')
-
-
 
 #### 17.4.4.3. <a id='toc17_4_4_3_'></a>[提取权重后加载至纯PyTorch模型](#toc0_)
 从checkpoint中`提取模型的权重参数`，`修改相关格式`后再加载到纯PyTorch的模型中，就是普通又熟悉的PyTorch的预测方式了。
@@ -24129,9 +24599,9 @@ from functools import partial
 def add_fn(a, b):
     return a + b
 
-a_add = partial(add_fn, a=1)    # 固定了a的值
+a_add = partial(add_fn, a= 1)    # 固定了a的值
 
-a_add(b=2), a_add(b=3), a_add(b=5)
+a_add(b= 2), a_add(b= 3), a_add(b= 5)
 ```
 
 
@@ -24155,6 +24625,7 @@ a_add(b=2), a_add(b=3), a_add(b=5)
 ```python
 # 浅拷贝
 import copy 
+
 
 a = [1, 2, 3]
 b = a.copy()
@@ -24287,6 +24758,23 @@ with tqdm(total=100, desc="自定义进度") as pbar:
     自定义进度: 100%|██████████| 100/100 [00:05<00:00, 19.95it/s,  状态=第9次迭代]
 
 
+- `自动跟新（推荐）`
+
+
+```python
+from tqdm import tqdm 
+import time 
+
+
+with tqdm(range(100), desc= 'Simple demo', unit= "epoch") as pbar:
+    for epoch in pbar:
+        time.sleep(0.1)
+        pbar.set_postfix({'show1': epoch, "show2": epoch, "show3": epoch})
+```
+
+    Simple demo: 100%|██████████| 100/100 [00:10<00:00,  9.93epoch/s, show1=99, show2=99, show3=99]
+
+
 ## 27.3. <a id='toc27_3_'></a>[多进度条嵌套](#toc0_)
 
 - leave=False 确保内层进度条完成后自动消失
@@ -24298,12 +24786,12 @@ from tqdm import tqdm
 
 outer = tqdm(range(3), desc="外层循环")
 for i in outer:
-    inner = tqdm(range(5), desc="内层循环", leave=False)
+    inner = tqdm(range(5), desc="内层循环", leave= False)
     for j in inner:
-        time.sleep(0.1) 
+        time.sleep(0.51) 
 ```
 
-    外层循环: 100%|██████████| 3/3 [00:01<00:00,  1.97it/s]
+    外层循环: 100%|██████████| 3/3 [00:07<00:00,  2.56s/it]
 
 
 ## 27.4. <a id='toc27_4_'></a>[进阶功能与优化](#toc0_)
@@ -24319,7 +24807,7 @@ for i in bar:
         bar.colour  = 'red'  # 动态改变颜色（需tqdm>=4.62.0）
 ```
 
-     阶段 4: 100%|[31m███████████████████████████████████████████████████[0m| 50/50 [00:00<00:00, 24107.97it/s][0m
+     阶段 4: 100%|[31m███████████████████████████████████████████████████[0m| 50/50 [00:00<00:00, 19732.33it/s][0m
 
 
 ### 27.4.2. <a id='toc27_4_2_'></a>[与Pandas结合](#toc0_)
@@ -24333,9 +24821,10 @@ tqdm.pandas()   # 激活Pandas支持
 
 df = pd.DataFrame({'data': range(1000)})
 df['processed'] = df['data'].progress_apply(lambda x: x**2)  # 显示apply进度 
+
 ```
 
-    100%|██████████| 1000/1000 [00:00<00:00, 785450.19it/s]
+    100%|██████████| 1000/1000 [00:00<00:00, 676064.47it/s]
 
 
 ### 27.4.3. <a id='toc27_4_3_'></a>[Jupyter Notebook适配](#toc0_)
@@ -24346,8 +24835,9 @@ from tqdm.notebook  import tqdm  # 专用Jupyter版本
 import time 
 
 
-for i in tqdm(range(100), desc="Notebook进度"):
+for i in tqdm(range(100), desc="Notebook进度", disable= False):
     time.sleep(0.05) 
+    
 ```
 
 
@@ -24372,6 +24862,7 @@ data = [ i for i in range(1000)]
 
 with ThreadPoolExecutor() as pool:
     results = list(tqdm(pool.map(func,  data), total=len(data)))
+    
 ```
 
     100%|██████████| 1000/1000 [00:00<00:00, 461267.35it/s]
@@ -24382,7 +24873,7 @@ with ThreadPoolExecutor() as pool:
 
 ```python
 bar_format = '{l_bar}{bar:20}{r_bar}'  # 调整左右部分宽度 
-tqdm(range(100), bar_format=bar_format)
+tqdm(range(100), bar_format= bar_format)
 ```
 
       0%|                    | 0/100 [00:00<?, ?it/s]
@@ -24394,7 +24885,336 @@ tqdm(range(100), bar_format=bar_format)
 
 
 
-# 28. <a id='toc28_'></a>[转格式](#toc0_)
+# 28. <a id='toc28_'></a>[callback](#toc0_)
+
+回调（callback）：简单来说就是用函数标签：
+
+## 28.1. <a id='toc28_1_'></a>[基于getattr实现](#toc0_)
+
+利用getattr `显示` 获取类的 `方法` 和 `属性。`
+
+
+```python
+Help on built-in function getattr in module builtins:
+
+getattr(...)
+    getattr(object, name[, default]) -> value
+    
+    Get a named attribute from an object; getattr(x, 'y') is equivalent to x.y.
+    When a default argument is given, it is returned when the attribute doesn't
+    exist; without it, an exception is raised in that case.
+```
+
+
+```python
+class Test:
+    def __init__(self):
+        self.x = 10 
+
+    def on_train_begin(self, **kwargs):
+        print("on_train_begin_demo.")
+
+    def on_train_end(self, **kwargs):
+        pass 
+
+
+# test
+test = Test()
+
+
+print(getattr(test, "x"))   # 获取属性
+print(getattr(test, "xx", "No exist!"))   # 获取属性失败，返回"No exist!"
+
+# 同样，可以用于获取方法
+method = getattr(test,"on_train_begin", "No exist!")
+
+method()    # 等同于，test.on_train_begin()。于是基于此通过说明 方法名称 即可实现调用。
+
+```
+
+    10
+    No exist!
+    on_train_begin_demo.
+
+
+在相应位置插入标签：
+
+
+```python
+class Callback:
+    def on_train_begin(self, **kwargs):
+        print("on_train_begin ...")
+
+    def on_train_end(self, **kwargs):
+        print("on_train_end ...")
+
+callback = Callback()
+
+
+class Trainer:
+    def train(self, epochs):
+        for epoch in range(epochs):
+            getattr(callback, "on_train_begin", "No exist!")()  # 用()调用方法
+            print('++++++++++++++')
+            getattr(callback, "on_train_end", "No exist!")()
+            
+
+trainer = Trainer()
+
+trainer.train(epochs= 3)
+
+```
+
+    on_train_begin ...
+    ++++++++++++++
+    on_train_end ...
+    on_train_begin ...
+    ++++++++++++++
+    on_train_end ...
+    on_train_begin ...
+    ++++++++++++++
+    on_train_end ...
+
+
+高级用法：循环执行所有含有指定method_name的callback类。
+
+
+```python
+callbacks = [callback, callback, callback, callback, callback]
+
+class Trainer:
+    def train(self):
+        self._call_callback(callbacks, "on_train_begin")
+
+    def _call_callback(self, callbacks, method_name):
+        for callback in callbacks:
+            method = getattr(callback, method_name, "No exist!")
+            method()
+
+
+trainer = Trainer()
+
+trainer.train()
+
+```
+
+    on_train_begin ...
+    on_train_begin ...
+    on_train_begin ...
+    on_train_begin ...
+    on_train_begin ...
+
+
+# 29. <a id='toc29_'></a>[typing](#toc0_)
+
+typing 库是 Python 3.5+ 引入的类型注解支持工具，它允许开发者通过类型提示（Type Hints）来标注变量、函数参数和返回值的预期类型，从而提高代码的可读性、可维护性，并配合静态类型检查工具（如 mypy）进行类型验证。
+
+## 29.1. <a id='toc29_1_'></a>[基础类型注释](#toc0_)
+
+
+```python
+def greet(name: str, age: int) -> str:
+    return f"Hellow , {name}! You are {age} years old."
+
+
+# 类型检查会捕获错误
+greet("Alice", 30)
+```
+
+
+
+
+    'Hellow , Alice! You are 30 years old.'
+
+
+
+## 29.2. <a id='toc29_2_'></a>[复杂类型组合](#toc0_)
+
+Union: 表示“或”（如， Union[int, str]），等价于[int | str]。
+
+Optional: 等价于 Union[T, None]，可能为None。
+
+
+```python
+from typing import Union, Optional, List, Dict 
+
+
+def process_data(
+        data: Union[str, List[int]],                # 接受字符串或证书列表
+        config: Optional[Dict[str, int]] = None     # 可选字典
+) -> float:
+    if isinstance(data, str):
+        return len(data)
+    else:
+        return sum(data) / len(data)
+    
+
+process_data("hello")   # 5
+process_data([1, 2, 3], {'max': 10})    # 2.0
+```
+
+
+
+
+    2.0
+
+
+
+## 29.3. <a id='toc29_3_'></a>[函数类型注解](#toc0_)
+
+
+```python
+from typing import Callable
+
+
+def apply_operation(
+        func: Callable[ [int, int], float ],    # 接受两个int参数，返回float的函数
+        a: int, 
+        b: int,
+) -> float:
+    return func(a, b)
+
+
+# 合法的函数
+result = apply_operation(lambda x, y: x / y, 10, 2)
+
+result
+```
+
+
+
+
+    5.0
+
+
+
+# 30. <a id='toc30_'></a>[collections](#toc0_)
+
+该库提供8种增强型容器数据类型，针对基础数据结构的性能缺陷和功能缺失进行优化：
+
+- 解决元组可读性问题（namedtuple）
+- 优化列表的插入/删除效率（deque）
+- 扩展字典的键值处理逻辑（defaultdict/OrderedDict）
+- 提供专业的数据统计工具（Counter）
+- 实现复杂数据结构组合（ChainMap/UserDict）
+
+## 30.1. <a id='toc30_1_'></a>[namedtuple（具名元组）](#toc0_)
+
+应用场景：CSV数据解析、数据库记录处理、科学计算坐标存储。
+
+
+```python
+from collections import namedtuple 
+
+
+Vector3D = namedtuple("demo_namedtuple", ['x', 'y', 'z'], defaults= [0, 0, 0])
+
+print(Vector3D)
+print(Vector3D())
+```
+
+    <class '__main__.demo_namedtuple'>
+    demo_namedtuple(x=0, y=0, z=0)
+
+
+
+```python
+v = Vector3D(1.2, 2.2) # 默认z = 0
+print(v)
+print(v._asdict())
+print(v._replace(z= 5.6))
+```
+
+    demo_namedtuple(x=1.2, y=2.2, z=0)
+    {'x': 1.2, 'y': 2.2, 'z': 0}
+    demo_namedtuple(x=1.2, y=2.2, z=5.6)
+
+
+## 30.2. <a id='toc30_2_'></a>[deque（双端队列）](#toc0_)
+
+
+```python
+from collections import deque 
+ 
+
+# 创建带最大长度的队列 
+d = deque(maxlen= 3)
+d.extend([1,  2, 3])
+d.append(4)         # 自动弹出最左端元素 
+print(d)            # 输出：deque([2, 3, 4], maxlen=3)
+ 
+# 线程安全操作 
+d.appendleft(0)     # 输出：deque([0, 2, 3], maxlen=3)
+d.rotate(1)         # 循环右移：deque([3, 0, 2], maxlen=3)
+```
+
+    deque([2, 3, 4], maxlen=3)
+
+
+## 30.3. <a id='toc30_3_'></a>[ defaultdict（默认字典）](#toc0_)
+
+
+```python
+# 对应代码示例 
+from collections import defaultdict 
+ 
+
+library = defaultdict(list)  # 每个分类默认用列表装书 
+print(library)
+library['科幻'].append('三体')  # 自动创建'科幻'书架 
+print(library)
+```
+
+    defaultdict(<class 'list'>, {})
+    defaultdict(<class 'list'>, {'科幻': ['三体']})
+
+
+## 30.4. <a id='toc30_4_'></a>[ OrderedDict（有序字典）](#toc0_)
+
+
+```python
+from collections import OrderedDict 
+ 
+
+# 保持插入顺序 
+config = OrderedDict()
+config['batch_size'] = 32 
+config['learning_rate'] = 0.001 
+config.move_to_end('batch_size')   # 移动键位置 
+ 
+ 
+# 最近最少使用缓存 
+class LRUCache:
+    def __init__(self, capacity):
+        self.cache  = OrderedDict()
+        self.capacity  = capacity 
+```
+
+## 30.5. <a id='toc30_5_'></a>[Counter（计数器）](#toc0_)
+
+
+```python
+from collections import Counter 
+ 
+ 
+# 多维度统计分析 
+sales = Counter(apple=15, orange=10, banana=5)
+sales.update(['apple',  'pear'])  # 动态更新 
+ 
+print(sales.most_common(2))   # [('apple', 16), ('orange', 10)]
+print(sales.total())   # 33（总数量）
+ 
+# 集合运算演示 
+inventory = Counter(apple=20, orange=15)
+print(sales & inventory)  # 交集：apple:16 → 取较小值 
+```
+
+    [('apple', 16), ('orange', 10)]
+    32
+    Counter({'apple': 16, 'orange': 10})
+
+
+# 31. <a id='toc31_'></a>[转格式](#toc0_)
 
 
 ```bash
@@ -24410,8 +25230,8 @@ cp -rf Pytorch_Pictures ./Format/learn_PyTorch
 ```
 
     [NbConvertApp] Converting notebook learn_PyTorch.ipynb to html
-    [NbConvertApp] WARNING | Alternative text is missing on 46 image(s).
-    [NbConvertApp] Writing 4863973 bytes to Format/learn_PyTorch.html
+    [NbConvertApp] WARNING | Alternative text is missing on 47 image(s).
+    [NbConvertApp] Writing 5971238 bytes to Format/learn_PyTorch/learn_PyTorch.html
 
 
 
@@ -24420,9 +25240,7 @@ cp -rf Pytorch_Pictures ./Format/learn_PyTorch
 !jupyter nbconvert --to markdown learn_PyTorch.ipynb --output-dir=./Format/learn_PyTorch
 ```
 
-    [NbConvertApp] Making directory ./Format/learn_PyTorch
     [NbConvertApp] Converting notebook learn_PyTorch.ipynb to markdown
     [NbConvertApp] Support files will be in learn_PyTorch_files/
-    [NbConvertApp] Making directory ./Format/learn_PyTorch/learn_PyTorch_files
-    [NbConvertApp] Writing 1122810 bytes to Format/learn_PyTorch/learn_PyTorch.md
+    [NbConvertApp] Writing 1121023 bytes to Format/learn_PyTorch/learn_PyTorch.md
 

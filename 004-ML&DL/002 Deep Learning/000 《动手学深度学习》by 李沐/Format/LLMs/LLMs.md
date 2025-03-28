@@ -23,23 +23,37 @@
     - 9.1.4. [如何喂给大模型？-生成增强](#toc9_1_4_)    
   - 9.2. [多模态知识检索](#toc9_2_)    
   - 9.3. [应用](#toc9_3_)    
-- 10. [部署大模型](#toc10_)    
-  - 10.1. [下载模型](#toc10_1_)    
-  - 10.2. [ollama](#toc10_2_)    
-    - 10.2.1. [Install and run model](#toc10_2_1_)    
-    - 10.2.2. [API on web port](#toc10_2_2_)    
-    - 10.2.3. [Python ollama module](#toc10_2_3_)    
-      - 10.2.3.1. [demo：翻译中文为英文](#toc10_2_3_1_)    
-  - 10.3. [ktransformers](#toc10_3_)    
-    - 10.3.1. [Docker安装](#toc10_3_1_)    
-    - 10.3.2. [编译安装](#toc10_3_2_)    
-      - 10.3.2.1. [prepare](#toc10_3_2_1_)    
-      - 10.3.2.2. [方式一：pip3 install whl](#toc10_3_2_2_)    
-      - 10.3.2.3. [方式二：编译](#toc10_3_2_3_)    
-    - 10.3.3. [虚拟机中编译安装](#toc10_3_3_)    
-    - 10.3.4. [使用](#toc10_3_4_)    
-- 11. [启动子预测](#toc11_)    
-- 12. [转格式](#toc12_)    
+- 10. [调用大语言模型](#toc10_)    
+  - 10.1. [OpenAI Python SDK](#toc10_1_)    
+    - 10.1.1. [文本生成](#toc10_1_1_)    
+    - 10.1.2. [代码补全](#toc10_1_2_)    
+    - 10.1.3. [图像生成（DALL-E）](#toc10_1_3_)    
+    - 10.1.4. [图像识别](#toc10_1_4_)    
+    - 10.1.5. [语音转文本（Whisper）](#toc10_1_5_)    
+    - 10.1.6. [错误处理与最佳实践](#toc10_1_6_)    
+    - 10.1.7. [openai库的高级用法](#toc10_1_7_)    
+      - 10.1.7.1. [异步支持](#toc10_1_7_1_)    
+      - 10.1.7.2. [微调（Fine-tuning）：](#toc10_1_7_2_)    
+      - 10.1.7.3. [流式响应：](#toc10_1_7_3_)    
+  - 10.2. [deepseek-ai的SDK](#toc10_2_)    
+  - 10.3. [curl接口](#toc10_3_)    
+- 11. [部署大模型](#toc11_)    
+  - 11.1. [下载模型](#toc11_1_)    
+  - 11.2. [ollama](#toc11_2_)    
+    - 11.2.1. [Install and run model](#toc11_2_1_)    
+    - 11.2.2. [API on web port](#toc11_2_2_)    
+    - 11.2.3. [Python ollama module](#toc11_2_3_)    
+      - 11.2.3.1. [demo：翻译中文为英文](#toc11_2_3_1_)    
+  - 11.3. [ktransformers](#toc11_3_)    
+    - 11.3.1. [Docker安装](#toc11_3_1_)    
+    - 11.3.2. [编译安装](#toc11_3_2_)    
+      - 11.3.2.1. [prepare](#toc11_3_2_1_)    
+      - 11.3.2.2. [方式一：pip3 install whl](#toc11_3_2_2_)    
+      - 11.3.2.3. [方式二：编译](#toc11_3_2_3_)    
+    - 11.3.3. [虚拟机中编译安装](#toc11_3_3_)    
+    - 11.3.4. [使用](#toc11_3_4_)    
+- 12. [启动子预测](#toc12_)    
+- 13. [转格式](#toc13_)    
 
 <!-- vscode-jupyter-toc-config
 	numbering=true
@@ -667,10 +681,392 @@ RAG增强比较：
 ## 9.3. <a id='toc9_3_'></a>[应用](#toc0_)
 对话机器人、知识库文答...
 
-# 10. <a id='toc10_'></a>[部署大模型](#toc0_)
+# 10. <a id='toc10_'></a>[调用大语言模型](#toc0_)
+
+## 10.1. <a id='toc10_1_'></a>[OpenAI Python SDK](#toc0_)
+
+### 10.1.1. <a id='toc10_1_1_'></a>[文本生成](#toc0_)
 
 
-## 10.1. <a id='toc10_1_'></a>[下载模型](#toc0_)
+```python
+# Please install OpenAI SDK first: `pip3 install openai`
+
+import os
+import openai 
+
+
+client = openai.OpenAI(
+    api_key = os.getenv("OPENAI_API_KEY"), 
+    base_url = "https://api.deepseek.com/v1"
+)
+
+response = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": "Hello"},
+    ],
+    stream=False, 
+    max_tokens=2048,
+)
+
+print(response.choices[0].message.content)
+
+# # stream=True的时候，启用流示返回
+# for chunk in response:
+#     print(chunk.choices[0].delta.content, end="", flush=True)
+```
+
+
+    ---------------------------------------------------------------------------
+
+    OpenAIError                               Traceback (most recent call last)
+
+    Cell In[5], line 7
+          3 import os
+          4 import openai 
+    ----> 7 client = openai.OpenAI(
+          8     api_key = os.getenv("OPENAI_API_KEY"), 
+          9     base_url = "https://api.deepseek.com/v1"
+         10 )
+         12 response = client.chat.completions.create(
+         13     model="deepseek-chat",
+         14     messages=[
+       (...)
+         18     stream=False
+         19 )
+         21 print(response.choices[0].message.content)
+
+
+    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/openai/_client.py:110, in OpenAI.__init__(self, api_key, organization, project, base_url, websocket_base_url, timeout, max_retries, default_headers, default_query, http_client, _strict_response_validation)
+        108     api_key = os.environ.get("OPENAI_API_KEY")
+        109 if api_key is None:
+    --> 110     raise OpenAIError(
+        111         "The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable"
+        112     )
+        113 self.api_key = api_key
+        115 if organization is None:
+
+
+    OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+
+
+### 10.1.2. <a id='toc10_1_2_'></a>[代码补全](#toc0_)
+
+
+```python
+response = client.chat.completions.create(
+    messages = [
+        {'role': 'user', 'content': "1 + 1"},
+    ],
+    model = "gpt-3.5-turbo", 
+    stream = False, 
+    max_tokens = 2048,
+)
+
+print(response.choices[0].message.content)
+```
+
+### 10.1.3. <a id='toc10_1_3_'></a>[图像生成（DALL-E）](#toc0_)
+
+调用images.generate生成图像：
+
+
+```python
+response = client.images.generate(
+    prompt="一只穿着宇航服的猫",
+    n=1,
+    size="1024x1024"
+)
+
+print(response.data.url)
+
+```
+
+### 10.1.4. <a id='toc10_1_4_'></a>[图像识别](#toc0_)
+
+
+```python
+response = client.chat.completions.create(
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {
+                    "text": "这是什么？",
+                    "type": "text"
+                },
+                {
+                    "image_url": {
+                        "url": "data:image/png;base64,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"
+                    },
+                    "type": "image_url"
+                }
+            ]
+        }
+    ],
+    model='gpt-4o-2024-05-13',
+    stream=False,
+    max_tokens=200
+)
+
+print(response.choices[0].message.content)
+```
+
+### 10.1.5. <a id='toc10_1_5_'></a>[语音转文本（Whisper）](#toc0_)
+
+使用audio.transcriptions处理音频文件：
+
+
+```python
+audio_file = open("speech.mp3", "rb")
+transcript = client.audio.transcriptions.create(
+    model="whisper-1",
+    file=audio_file
+)
+
+print(transcript.text)
+
+```
+
+### 10.1.6. <a id='toc10_1_6_'></a>[错误处理与最佳实践](#toc0_)
+
+异常捕获：处理API请求中的常见错误（如认证失败、超时）：
+
+
+```python
+from openai import APIError
+try:
+    response = client.chat.completions.create(...)
+except APIError as e:
+    print(f"API请求失败: {e}")
+
+```
+
+### 10.1.7. <a id='toc10_1_7_'></a>[openai库的高级用法](#toc0_)
+
+#### 10.1.7.1. <a id='toc10_1_7_1_'></a>[异步支持](#toc0_)
+
+SDK提供了异步客户端AsyncOpenAI,使用方法与同步客户端类似,只需在API调用前加上await:
+
+
+```python
+
+```
+
+#### 10.1.7.2. <a id='toc10_1_7_2_'></a>[微调（Fine-tuning）：](#toc0_)
+
+支持对基础模型进行定制化训练，需准备数据集并调用fine_tuning.jobs.create
+
+#### 10.1.7.3. <a id='toc10_1_7_3_'></a>[流式响应：](#toc0_)
+
+通过stream=True实现逐词实时输出，适用于交互式场景：
+
+
+```python
+stream = client.chat.completions.create(
+    model="gpt-4",
+    messages=[...],
+    stream=True
+)
+
+for chunk in stream:
+    print(chunk.choices.delta.content or "", end="")
+
+```
+
+## 10.2. <a id='toc10_2_'></a>[deepseek-ai的SDK](#toc0_)
+
+- Temperature 设置，参数默认为 1.0。
+
+|场景	|温度|
+|-|-|
+|代码生成/数学解题   	|0.0|
+|数据抽取/分析	|1.0|
+|通用对话	|1.3|
+|翻译	|1.3|
+|创意类写作/诗歌创作	|1.5|
+
+
+```python
+# Please install OpenAI SDK first: `pip3 install openai`
+
+import os 
+from openai import OpenAI 
+
+
+client = OpenAI(
+    api_key = "sk-eb45f6f0191d432686061f66e3eb4f29", 
+    base_url = "https://api.deepseek.com/v1",            # 出于与 OpenAI 兼容考虑，此处 v1 与模型版本无关。
+)
+
+```
+
+
+```python
+print(client.models.list())
+```
+
+    SyncPage[Model](data=[Model(id='deepseek-chat', created=None, object='model', owned_by='deepseek'), Model(id='deepseek-reasoner', created=None, object='model', owned_by='deepseek')], object='list')
+
+
+
+```python
+
+
+response = client.chat.completions.create(
+    # model="deepseek-chat",        # DeepSeek-V3
+    model = "deepseek-reasoner",    # DeepSeek 最新推出的推理模型 DeepSeek-R1
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": "Hello"},
+    ],
+    stream=False
+)
+
+print(response.choices[0].message.content)
+```
+
+
+    ---------------------------------------------------------------------------
+
+    APIStatusError                            Traceback (most recent call last)
+
+    Cell In[15], line 1
+    ----> 1 response = client.chat.completions.create(
+          2     # model="deepseek-chat",        # DeepSeek-V3
+          3     model = "deepseek-reasoner",    # DeepSeek 最新推出的推理模型 DeepSeek-R1
+          4     messages=[
+          5         {"role": "system", "content": "You are a helpful assistant"},
+          6         {"role": "user", "content": "Hello"},
+          7     ],
+          8     stream=False
+          9 )
+         11 print(response.choices[0].message.content)
+
+
+    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/openai/_utils/_utils.py:279, in required_args.<locals>.inner.<locals>.wrapper(*args, **kwargs)
+        277             msg = f"Missing required argument: {quote(missing[0])}"
+        278     raise TypeError(msg)
+    --> 279 return func(*args, **kwargs)
+
+
+    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/openai/resources/chat/completions.py:863, in Completions.create(self, messages, model, audio, frequency_penalty, function_call, functions, logit_bias, logprobs, max_completion_tokens, max_tokens, metadata, modalities, n, parallel_tool_calls, prediction, presence_penalty, reasoning_effort, response_format, seed, service_tier, stop, store, stream, stream_options, temperature, tool_choice, tools, top_logprobs, top_p, user, extra_headers, extra_query, extra_body, timeout)
+        821 @required_args(["messages", "model"], ["messages", "model", "stream"])
+        822 def create(
+        823     self,
+       (...)
+        860     timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        861 ) -> ChatCompletion | Stream[ChatCompletionChunk]:
+        862     validate_response_format(response_format)
+    --> 863     return self._post(
+        864         "/chat/completions",
+        865         body=maybe_transform(
+        866             {
+        867                 "messages": messages,
+        868                 "model": model,
+        869                 "audio": audio,
+        870                 "frequency_penalty": frequency_penalty,
+        871                 "function_call": function_call,
+        872                 "functions": functions,
+        873                 "logit_bias": logit_bias,
+        874                 "logprobs": logprobs,
+        875                 "max_completion_tokens": max_completion_tokens,
+        876                 "max_tokens": max_tokens,
+        877                 "metadata": metadata,
+        878                 "modalities": modalities,
+        879                 "n": n,
+        880                 "parallel_tool_calls": parallel_tool_calls,
+        881                 "prediction": prediction,
+        882                 "presence_penalty": presence_penalty,
+        883                 "reasoning_effort": reasoning_effort,
+        884                 "response_format": response_format,
+        885                 "seed": seed,
+        886                 "service_tier": service_tier,
+        887                 "stop": stop,
+        888                 "store": store,
+        889                 "stream": stream,
+        890                 "stream_options": stream_options,
+        891                 "temperature": temperature,
+        892                 "tool_choice": tool_choice,
+        893                 "tools": tools,
+        894                 "top_logprobs": top_logprobs,
+        895                 "top_p": top_p,
+        896                 "user": user,
+        897             },
+        898             completion_create_params.CompletionCreateParams,
+        899         ),
+        900         options=make_request_options(
+        901             extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+        902         ),
+        903         cast_to=ChatCompletion,
+        904         stream=stream or False,
+        905         stream_cls=Stream[ChatCompletionChunk],
+        906     )
+
+
+    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/openai/_base_client.py:1283, in SyncAPIClient.post(self, path, cast_to, body, options, files, stream, stream_cls)
+       1269 def post(
+       1270     self,
+       1271     path: str,
+       (...)
+       1278     stream_cls: type[_StreamT] | None = None,
+       1279 ) -> ResponseT | _StreamT:
+       1280     opts = FinalRequestOptions.construct(
+       1281         method="post", url=path, json_data=body, files=to_httpx_files(files), **options
+       1282     )
+    -> 1283     return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+
+
+    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/openai/_base_client.py:960, in SyncAPIClient.request(self, cast_to, options, remaining_retries, stream, stream_cls)
+        957 else:
+        958     retries_taken = 0
+    --> 960 return self._request(
+        961     cast_to=cast_to,
+        962     options=options,
+        963     stream=stream,
+        964     stream_cls=stream_cls,
+        965     retries_taken=retries_taken,
+        966 )
+
+
+    File ~/miniconda3/envs/pytorch/lib/python3.12/site-packages/openai/_base_client.py:1064, in SyncAPIClient._request(self, cast_to, options, retries_taken, stream, stream_cls)
+       1061         err.response.read()
+       1063     log.debug("Re-raising status error")
+    -> 1064     raise self._make_status_error_from_response(err.response) from None
+       1066 return self._process_response(
+       1067     cast_to=cast_to,
+       1068     options=options,
+       (...)
+       1072     retries_taken=retries_taken,
+       1073 )
+
+
+    APIStatusError: Error code: 402 - {'error': {'message': 'Insufficient Balance', 'type': 'unknown_error', 'param': None, 'code': 'invalid_request_error'}}
+
+
+## 10.3. <a id='toc10_3_'></a>[curl接口](#toc0_)
+
+
+```bash
+%%bash 
+curl https://api.deepseek.com/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <DeepSeek API Key>" \
+  -d '{
+        "model": "deepseek-chat",
+        "messages": [
+          {"role": "system", "content": "You are a helpful assistant."},
+          {"role": "user", "content": "Hello!"}
+        ],
+        "stream": false
+      }'
+```
+
+# 11. <a id='toc11_'></a>[部署大模型](#toc0_)
+
+
+## 11.1. <a id='toc11_1_'></a>[下载模型](#toc0_)
 
 
 ```python
@@ -682,8 +1078,8 @@ hfd.sh unsloth/DeepSeek-R1-GGUF -x 10 -j 10 --include DeepSeek-R1-Q8_0
 
 ```
 
-## 10.2. <a id='toc10_2_'></a>[ollama](#toc0_)
-### 10.2.1. <a id='toc10_2_1_'></a>[Install and run model](#toc0_)
+## 11.2. <a id='toc11_2_'></a>[ollama](#toc0_)
+### 11.2.1. <a id='toc11_2_1_'></a>[Install and run model](#toc0_)
 
 
 ```python
@@ -697,7 +1093,7 @@ ollama list
 ollama run model_card
 ```
 
-### 10.2.2. <a id='toc10_2_2_'></a>[API on web port](#toc0_)
+### 11.2.2. <a id='toc11_2_2_'></a>[API on web port](#toc0_)
 communicatation with local model via web port.
 
 `generate` and `chat`.
@@ -742,7 +1138,7 @@ curl http://localhost:11434/api/chat -d '{
 
     {"model":"deepseek-r1:7b","created_at":"2025-02-18T02:49:26.56791501Z","message":{"role":"assistant","content":"\u003cthink\u003e\nOkay, so I just read that \"Why is the sky blue?\" and now I'm trying to figure it out myself. Let me think through this step by step.\n\nFirst off, when you look at the sky on a clear day, it's usually blue, especially during the day when the sun is out. But sometimes I've seen it turn other colors too, like red in the evening or during sunrise. So why is it mostly blue?\n\nI know that light travels through the atmosphere, but how does it get colored? I remember learning about something called Rayleigh scattering from my science class. Let me try to recall what that was about. Rayleigh scattering involves light interacting with particles much smaller than the wavelength of light itself. When sunlight enters the Earth's atmosphere, it reaches tiny molecules in the air, like nitrogen and oxygen.\n\nWait, so these small particles scatter the sunlight in all directions. But why does this result in a blue sky? I think it has something to do with the wavelengths of light. Visible light ranges from violet to red, right? And I remember that violet light has a shorter wavelength than blue. So maybe the shorter wavelengths are scattered more.\n\nBut if blue is scattered more, wouldn't it be easier to see at night when there's less atmosphere overhead? Hmm, but then why does the sky turn red in the evening or during sunrise?\n\nOh right! During sunrise and sunset, the light has to pass through a much thicker layer of atmosphere. That makes sense because we're looking at the light after it's been scattered through more particles. The longer path means that all the shorter wavelengths (like violet) are scattered out, leaving red to dominate because it has a longer wavelength.\n\nSo during the day, when the sun is directly overhead, blue and green wavelengths get scattered away by Rayleigh scattering, making the sky appear blue. But in the early morning or late afternoon, as the sun is near the horizon, the light has to pass through more atmosphere, so red comes through because it's not scattered as much.\n\nWait, but isn't there also something called Mie scattering? I think that happens when particles are larger than the wavelength of light. Does that affect the color of the sky too?\n\nI believe Mie scattering is more significant for larger particles, like dust or droplets in clouds. So it might cause some effects we see during sunrise and sunset, but not as much as Rayleigh does for small molecules.\n\nSo to summarize: The sky appears blue on a clear day because blue light scatters more in the atmosphere due to Rayleigh scattering by tiny gas molecules. During sunrise and sunset, the longer path allows red light to dominate, giving the sky its reddish hues.\n\nBut wait, what about when we see other colors? I mean, sometimes during the day it's not just blue; I've seen green or yellow in some places. Is that because of Rayleigh scattering changing as the atmosphere gets thicker?\n\nOr maybe it's due to other factors like pollution or particles in the air affecting light differently. That might complicate things.\n\nAlso, does humidity play a role? Sometimes when it's humid, does the sky appear clearer instead of blue? I think higher humidity can affect how light scatters because more water vapor means more molecules to scatter off.\n\nSo maybe on days with high humidity, the Rayleigh scattering is less effective, making the sky look different. But that's probably a secondary effect compared to the basic reason for the color being blue.\n\nIn any case, I think the primary reason is Rayleigh scattering by nitrogen and oxygen in the atmosphere causing shorter wavelengths like blue to scatter more, resulting in a blue sky during clear days.\n\u003c/think\u003e\n\nThe sky appears blue primarily due to a phenomenon known as Rayleigh scattering. When sunlight enters Earth's atmosphere, it interacts with tiny molecules of nitrogen and oxygen. These particles scatter shorter wavelengths of light, such as blue and violet, which have shorter wavelengths than red or orange. This scattering is more effective for shorter wavelengths, causing the sky to appear blue during the day.\n\nDuring sunrise and sunset, the light passes through a thicker layer of atmosphere, where all shorter wavelengths are scattered away, leaving longer wavelengths like red to dominate, resulting in the reddish hues observed at these times.\n\nOther factors such as humidity, pollution, or atmospheric particles can influence how light scatters, but the primary reason for the sky's blue color remains Rayleigh scattering by nitrogen and oxygen molecules."},"done_reason":"stop","done":true,"total_duration":15024265818,"load_duration":22057058,"prompt_eval_count":9,"prompt_eval_duration":7000000,"eval_count":901,"eval_duration":14993000000}
 
-### 10.2.3. <a id='toc10_2_3_'></a>[Python ollama module](#toc0_)
+### 11.2.3. <a id='toc11_2_3_'></a>[Python ollama module](#toc0_)
 
 
 ```python
@@ -771,7 +1167,7 @@ for chunk in outputs:
         print(f'{chunk['response']}', end='', flush=True)
 ```
 
-#### 10.2.3.1. <a id='toc10_2_3_1_'></a>[demo：翻译中文为英文](#toc0_)
+#### 11.2.3.1. <a id='toc11_2_3_1_'></a>[demo：翻译中文为英文](#toc0_)
 
 
 ```python
@@ -850,10 +1246,10 @@ translater.translate('通过宏基因组研究微生物与植物相互作用的�
     Through metagenomics research on the mechanisms of interaction between microorganisms and plants.⚡
 
 
-## 10.3. <a id='toc10_3_'></a>[ktransformers](#toc0_)
+## 11.3. <a id='toc11_3_'></a>[ktransformers](#toc0_)
 
 
-### 10.3.1. <a id='toc10_3_1_'></a>[Docker安装](#toc0_)
+### 11.3.1. <a id='toc11_3_1_'></a>[Docker安装](#toc0_)
 
 [https://github.com/kvcache-ai/ktransformers-private/blob/main/doc/en/Docker.md](https://github.com/kvcache-ai/ktransformers-private/blob/main/doc/en/Docker.md)
 
@@ -907,11 +1303,11 @@ QA:
     bash install.sh
     ```
 
-### 10.3.2. <a id='toc10_3_2_'></a>[编译安装](#toc0_)
+### 11.3.2. <a id='toc11_3_2_'></a>[编译安装](#toc0_)
 
 [https://kvcache-ai.github.io/ktransformers/en/install.html](https://kvcache-ai.github.io/ktransformers/en/install.html)
 
-#### 10.3.2.1. <a id='toc10_3_2_1_'></a>[prepare](#toc0_)
+#### 11.3.2.1. <a id='toc11_3_2_1_'></a>[prepare](#toc0_)
 
 
 ```python
@@ -940,7 +1336,7 @@ conda install conda-forge::ninja conda-forge::packaging anaconda::numpy -y
 
 ```
 
-#### 10.3.2.2. <a id='toc10_3_2_2_'></a>[方式一：pip3 install whl](#toc0_)
+#### 11.3.2.2. <a id='toc11_3_2_2_'></a>[方式一：pip3 install whl](#toc0_)
 
 
 ```python
@@ -957,7 +1353,7 @@ python -c "import torch; print(torch.cuda.get_device_capability())"
 export TORCH_CUDA_ARCH_LIST="8.0"
 ```
 
-#### 10.3.2.3. <a id='toc10_3_2_3_'></a>[方式二：编译](#toc0_)
+#### 11.3.2.3. <a id='toc11_3_2_3_'></a>[方式二：编译](#toc0_)
 
 
 ```python
@@ -966,7 +1362,7 @@ export USE_NUMA=1
 bash install.sh # or `make dev_install`
 ```
 
-### 10.3.3. <a id='toc10_3_3_'></a>[虚拟机中编译安装](#toc0_)
+### 11.3.3. <a id='toc11_3_3_'></a>[虚拟机中编译安装](#toc0_)
 
 由于`GLIBCxxx`报错，改用虚拟机中ubuntu安装ktransformers
 
@@ -992,7 +1388,7 @@ wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py39_4.9
 docker exec --gpus all -it ubuntu:20.04 /bin/bash
 ```
 
-### 10.3.4. <a id='toc10_3_4_'></a>[使用](#toc0_)
+### 11.3.4. <a id='toc11_3_4_'></a>[使用](#toc0_)
 
 
 ```python
@@ -1094,14 +1490,14 @@ curl -X 'POST' \
 }"
 ```
 
-# 11. <a id='toc11_'></a>[启动子预测](#toc0_)
+# 12. <a id='toc12_'></a>[启动子预测](#toc0_)
 
 
 ```python
 
 ```
 
-# 12. <a id='toc12_'></a>[转格式](#toc0_)
+# 13. <a id='toc13_'></a>[转格式](#toc0_)
 
 
 ```bash
@@ -1116,8 +1512,9 @@ cp -rf Pytorch_Pictures ./Format/LLMs/
 # browse translate html to pdf
 ```
 
+    [NbConvertApp] Making directory ./Format/LLMs
     [NbConvertApp] Converting notebook LLMs.ipynb to html
-    [NbConvertApp] Writing 405891 bytes to Format/LLMs/LLMs.html
+    [NbConvertApp] Writing 405847 bytes to Format/LLMs/LLMs.html
 
 
 
@@ -1127,5 +1524,5 @@ cp -rf Pytorch_Pictures ./Format/LLMs/
 ```
 
     [NbConvertApp] Converting notebook LLMs.ipynb to markdown
-    [NbConvertApp] Writing 39952 bytes to Format/LLMs/LLMs.md
+    [NbConvertApp] Writing 40263 bytes to Format/LLMs/LLMs.md
 
