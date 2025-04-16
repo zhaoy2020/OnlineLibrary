@@ -1,0 +1,14 @@
+Metadata-Version: 2.2
+Name: bmp
+Version: 0.1.0
+Summary: A simple tools for Deep Learning
+Author: Yu Zhao
+Author-email: zhao_sy@126.com
+Description-Content-Type: text/markdown
+Dynamic: author
+Dynamic: author-email
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: summary
+
+A simple tool for Deep Learning with PyTorch.

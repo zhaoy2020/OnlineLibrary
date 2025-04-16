@@ -12,7 +12,7 @@
     - 3.4.2. [gpu计时器](#toc3_4_2_)    
   - 3.5. [Callback](#toc3_5_)    
   - 3.6. [Trainer](#toc3_6_)    
-  - 3.7. [ParametersNumbers](#toc3_7_)    
+  - 3.7. [ParametersSize](#toc3_7_)    
   - 3.8. [numpy和pytorch计算速度比较](#toc3_8_)    
 - 4. [安装GPU驱动](#toc4_)    
   - 4.1. [安装策略](#toc4_1_)    
@@ -72,7 +72,7 @@
   - 7.3. [Tensors操作](#toc7_3_)    
     - 7.3.1. [索引和切片](#toc7_3_1_)    
     - 7.3.2. [修改维度](#toc7_3_2_)    
-      - 7.3.2.1. [[: None], [None, :]               ](#toc7_3_2_1_)    
+      - 7.3.2.1. [[: None], [None, :]                 ](#toc7_3_2_1_)    
       - 7.3.2.2. [reshape函数](#toc7_3_2_2_)    
       - 7.3.2.3. [view函数](#toc7_3_2_3_)    
       - 7.3.2.4. [transpose函数](#toc7_3_2_4_)    
@@ -459,7 +459,16 @@
   - 30.3. [ defaultdict（默认字典）](#toc30_3_)    
   - 30.4. [ OrderedDict（有序字典）](#toc30_4_)    
   - 30.5. [Counter（计数器）](#toc30_5_)    
-- 31. [转格式](#toc31_)    
+- 31. [包装成pip安装包](#toc31_)    
+  - 31.1. [README.md](#toc31_1_)    
+  - 31.2. [setup.py](#toc31_2_)    
+  - 31.3. [方式一：本地安装（开发模式）](#toc31_3_)    
+  - 31.4. [方式二：打包为分发文件，再安装](#toc31_4_)    
+  - 31.5. [上传到 PyPI（可选）](#toc31_5_)    
+  - 31.6. [维护与更新](#toc31_6_)    
+    - 31.6.1. [依赖更新](#toc31_6_1_)    
+    - 31.6.2. [卸载旧版](#toc31_6_2_)    
+- 32. [转格式](#toc32_)    
 
 <!-- vscode-jupyter-toc-config
 	numbering=true
@@ -668,6 +677,7 @@ class MetricTracker:
     def get_history(self):
         """获取所有历史记录（用于可视化）"""
         return self._history
+    
 ```
 
 ### 3.2.2. <a id='toc3_2_2_'></a>[可视化](#toc0_)
@@ -951,7 +961,7 @@ timer_on_cpu()
      0.0 d 
      0.0 h 
      0.0 m 
-     0.030246496200561523 s
+     0.030302762985229492 s
 
 
 ### 3.4.2. <a id='toc3_4_2_'></a>[gpu计时器](#toc0_)
@@ -988,7 +998,7 @@ timer_on_gpu()
 ```
 
     ⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡ 
-    GPU time: 0.00070s
+    GPU time: 0.00110s
 
 
 ## 3.5. <a id='toc3_5_'></a>[Callback](#toc0_)
@@ -1111,7 +1121,7 @@ class Trainer:
                 # update show progress bar or visualization
                 pbar.set_postfix({**train_logs, **val_logs})
                 if self._disable_visualization():
-                    visualization.refresh_plot(history= self.metrics_tracker.get_history())
+                    self.visualization.refresh_plot(history= self.metrics_tracker.get_history())
 
         self._call_callbacks(method_name= "on_train_end", **kwargs)
 
@@ -1183,7 +1193,7 @@ class Trainer:
 
 ```
 
-## 3.7. <a id='toc3_7_'></a>[ParametersNumbers](#toc0_)
+## 3.7. <a id='toc3_7_'></a>[ParametersSize](#toc0_)
 PyTorch 在进行深度学习训练的时候，有 4 大部分的显存开销：
   - `模型参数(parameters)` ；
   - `模型参数的梯度(gradients)` ；
@@ -1292,7 +1302,7 @@ bt_gpu = torch.Tensor(b).to('cuda:0')
 %timeit a + b   # On cpu via numpy
 ```
 
-    1.51 ms ± 71.6 μs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
+    1.64 ms ± 38 μs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
 
 
 
@@ -1300,7 +1310,7 @@ bt_gpu = torch.Tensor(b).to('cuda:0')
 %timeit at + bt # On cpu via PyTorch
 ```
 
-    27 μs ± 617 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+    31.8 μs ± 292 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
 
 
 
@@ -1317,7 +1327,7 @@ torch.cuda.synchronize()
 print(f'Time: {0.001 * start.elapsed_time(stop)} s')
 ```
 
-    Time: 0.0005188480019569397 s
+    Time: 0.00035078400373458863 s
 
 
 # 4. <a id='toc4_'></a>[安装GPU驱动](#toc0_)
@@ -1576,7 +1586,7 @@ transforms = torchvision.transforms.Compose([torchvision.transforms.ToTensor(), 
 
 train_dataset = torchvision.datasets.MNIST(root= dbs, train= True, download= True, transform= transforms)
 test_dataset = torchvision.datasets.MNIST(root= dbs, train= False, download= True, transform= transforms)
-# 迭代型数据方式
+## 迭代型数据方式
 train_iter = data.DataLoader(dataset= train_dataset, batch_size= 128, shuffle= True)    # train需要shuffle
 test_iter = data.DataLoader(dataset= test_dataset, batch_size= 128)                     # test不需要shuffle训练
 
@@ -1702,7 +1712,7 @@ import torch
 
 # 数据加载
 from torch.utils import data                                             # from torch.utils import data
-from torch.utils.data import Dataset, TensorDataset, DataLoader     # data.Dataset, data.TensorDataset, data.DataLoader
+from torch.utils.data import Dataset, TensorDataset, DataLoader          # data.Dataset, data.TensorDataset, data.DataLoader
 
 # 神经网络结构
 from torch import nn 
@@ -1745,7 +1755,7 @@ import torchvision
 
 
 # 数据集下载路径
-dbs = './Pytorch_datasets/'
+dbs = './data/'
 
 trans = torchvision.transforms.Compose([
     torchvision.transforms.ToTensor(),                  # PIL转换为tensor格式
@@ -1772,6 +1782,12 @@ test_dataset = torchvision.datasets.FashionMNIST(
 type(train_dataset), type(test_dataset)
 ```
 
+    100%|██████████| 26.4M/26.4M [00:04<00:00, 6.19MB/s]
+    100%|██████████| 29.5k/29.5k [00:00<00:00, 1.14MB/s]
+    100%|██████████| 4.42M/4.42M [00:05<00:00, 790kB/s]
+    100%|██████████| 5.15k/5.15k [00:00<00:00, 19.8MB/s]
+
+
 
 
 
@@ -1791,7 +1807,7 @@ train_dataset, test_dataset
 
     (Dataset FashionMNIST
          Number of datapoints: 60000
-         Root location: ./Pytorch_datasets/
+         Root location: ./data/
          Split: Train
          StandardTransform
      Transform: Compose(
@@ -1800,7 +1816,7 @@ train_dataset, test_dataset
                 ),
      Dataset FashionMNIST
          Number of datapoints: 10000
-         Root location: ./Pytorch_datasets/
+         Root location: ./data/
          Split: Test
          StandardTransform
      Transform: Compose(
@@ -2126,9 +2142,11 @@ class RandomDataset(IterableDataset):
         while True:
             yield random.random()  # 无限生成随机数
 
+
 # 创建数据集和 DataLoader
 dataset = RandomDataset()
 dataloader = DataLoader(dataset, batch_size=5)
+
 
 # 仅读取两批数据
 for i, batch in enumerate(dataloader):
@@ -3212,7 +3230,7 @@ x[0:3, 0] # 1-3行，1列
         ```
     
 
-#### 7.3.2.1. <a id='toc7_3_2_1_'></a>[[: None], [None, :]](#toc0_)                [&#8593;](#toc0_)
+#### 7.3.2.1. <a id='toc7_3_2_1_'></a>[[: None], [None, :]](#toc0_)                  [&#8593;](#toc0_)
 含义：[None, :] 是利用 Python 的`切片语法`为张量增加一个新维度。
 - None：相当于在第 0 维增加一个新维度。
 - :：表示保留张量原本的所有元素。
@@ -6155,6 +6173,7 @@ model1 = nn.Sequential(
     nn.Linear(20, 1)
 )
 
+
 # ModuleList 实现
 class ModelWithModuleList(nn.Module):
     def __init__(self):
@@ -6171,6 +6190,7 @@ class ModelWithModuleList(nn.Module):
         return x
 
 model2 = ModelWithModuleList()
+
 
 # ModuleDict 实现
 class ModelWithModuleDict(nn.Module):
@@ -6189,6 +6209,7 @@ class ModelWithModuleDict(nn.Module):
         return x
 
 model3 = ModelWithModuleDict()
+
 
 print('model1:', model1, sep='\n')
 print('model2:', model2, sep='\n')
@@ -6256,6 +6277,7 @@ class Net(nn.Module):
     def forward(self, X):
         '''正向传播'''
         return self.out(F.relu(self.hidden(X)))
+
 
 net = Net()
 ```
@@ -6447,6 +6469,7 @@ class NetDel(nn.Module):
     def forward(self, X):
         return self.netdel(X)
 
+
 netdel = NetDel()
 # netdel
 list(netdel.children())
@@ -6582,6 +6605,7 @@ net = nn.Sequential(
     nn.ReLU(), 
     nn.Linear(8, 1)
 )
+
 
 X = torch.rand(size=(2, 4))
 
@@ -6931,7 +6955,9 @@ net = nn.Sequential(
     nn.Linear(8, 1)
 )
 
+
 net(X)
+
 
 # 检查参数是否相同
 print(net[2].weight.data[0] == net[4].weight.data[0])
@@ -6972,6 +6998,7 @@ class CenteredLayer(nn.Module):
     def forward(self, X):
         return X - X.mean()
     
+    
 layer = CenteredLayer()
 layer(torch.FloatTensor([1, 2, 3]))
 ```
@@ -6990,6 +7017,7 @@ net = nn.Sequential(
     nn.Linear(8, 128), 
     CenteredLayer()
 )
+
 
 Y = net(torch.rand(4, 8))
 Y.mean()
@@ -7017,6 +7045,7 @@ class MyLinear(nn.Module):
     def forward(self, X):
         linear = torch.matmul(X, self.weight.data) + self.bias.data
         return F.relu(linear)
+  
     
 linear = MyLinear(5, 3)
 # linear.weight
@@ -7039,6 +7068,7 @@ net = nn.Sequential(
     MyLinear(64, 8), 
     MyLinear(8, 1)
 )
+
 
 net(torch.rand(2, 64))
 ```
@@ -7598,7 +7628,7 @@ from torch.utils import data
 import torchvision
 
 
-dbs = './Pytorch_datasets/'
+dbs = './data/'
 train_dataset = torchvision.datasets.MNIST(
     root=dbs, 
     train=True, 
@@ -7803,6 +7833,7 @@ import matplotlib.pyplot as plt
 import IPython.display as display
 import os
 
+
 def training_step(
         epochs, 
         train_dataset, 
@@ -7947,9 +7978,14 @@ def training_step(
 from torch.utils import data 
 
 
+callbacks = [
+    DemoCallback(), 
+]
+
+
 net = Net()
 loss_fn = nn.CrossEntropyLoss()
-opt = torch.optim.SGD(params=net.parameters(), lr=0.01)
+opt = torch.optim.SGD(params= net.parameters(), lr= 0.01)
 
 trainer= Trainer(
     device= 'auto', 
@@ -7958,10 +7994,12 @@ trainer= Trainer(
     model= net, 
     loss_fn= loss_fn, 
     optimizer= opt, 
-    is_tqdm= False
+    is_tqdm= False, 
+    callbacks= callbacks,
 )
 
 trainer.train(epochs= 5)
+
 ```
 
 
@@ -7992,6 +8030,7 @@ trainer= Trainer(
 )
 
 trainer.train(epochs= 5)
+
 ```
 
 
@@ -8036,6 +8075,7 @@ trainer= Trainer(
 )
 
 trainer.train(epochs= 5)
+
 ```
 
 
@@ -8096,6 +8136,7 @@ trainer= Trainer(
 )
 
 trainer.train(epochs= 5)
+
 ```
 
 
@@ -8105,7 +8146,8 @@ trainer.train(epochs= 5)
 
 
 ### 8.8.3. <a id='toc8_8_3_'></a>[K折交叉验证](#toc0_)
-- 简述：把数据分成K份，分别只取1份做Test_data，（K-1）做Train_data，做K次，计算Test_acc的平均值
+
+简述：把数据分成K份，分别只取1份做Test_data，（K-1）做Train_data，做K次，计算Test_acc的平均值
 
 
 ```python
@@ -8126,6 +8168,7 @@ def get_k_fold_data(k, i, X, y):
             X_train = torch.cat([X_train, X_part], 0)
             y_train = torch.cat([y_train, y_part], 0)
     return X_train, y_train, X_valid, y_valid
+
 ```
 
 
@@ -8218,6 +8261,7 @@ for epoch in range(50):
         dl_plot(x, y)
 stop = time.time()
 print(f"打印图片耗时： {stop - start} seconds")
+
 ```
 
     打印图片耗时： 3.3102283477783203 seconds
@@ -8240,6 +8284,7 @@ for epoch in range(10):
     
 stop = time.time()
 print(f"打印数值耗时： {stop - start} seconds")
+
 ```
 
     1/10: 	 train_loss=0.8999999761581421 	 train_acc=0.7833268642425537
@@ -8296,7 +8341,8 @@ device
 
 ```python
 # 是否有可用的GPU
-torch.cuda.is_available()           
+torch.cuda.is_available()      
+     
 # True, False
 ```
 
@@ -8310,7 +8356,8 @@ torch.cuda.is_available()
 
 ```python
 # 可用的GPU数量
-torch.cuda.device_count()     
+torch.cuda.device_count()  
+   
 # 1
 ```
 
@@ -8325,6 +8372,7 @@ torch.cuda.device_count()
 ```python
 # 返回gpu名字，设备索引默认从0开始；
 torch.cuda.get_device_name(0)
+
 # "Tesla T4"
 ```
 
@@ -8339,6 +8387,7 @@ torch.cuda.get_device_name(0)
 ```python
 # 返回当前设备索引；
 torch.cuda.current_device()
+
 # 0, 1, 2
 ```
 
@@ -8537,7 +8586,7 @@ import time
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # 数据准备
-dbs = './Pytorch_datasets/'
+dbs = './data/'
 train_dataset = torchvision.datasets.MNIST(
     root=dbs, 
     train=True, 
@@ -8666,18 +8715,18 @@ train_steps(
     ==================================================================================================== 
      Runing on cuda:0 
      ====================================================================================================
-    epoch 1/10: train_loss=1.5717055797576904, train_acc=90.85833740234375, test_acc=90.91999816894531
-    epoch 2/10: train_loss=1.5450035333633423, train_acc=92.63500213623047, test_acc=92.77999877929688
-    epoch 3/10: train_loss=1.5318394899368286, train_acc=93.75666809082031, test_acc=93.83999633789062
-    epoch 4/10: train_loss=1.5233505964279175, train_acc=94.5, test_acc=94.18000030517578
-    epoch 5/10: train_loss=1.5167455673217773, train_acc=95.13500213623047, test_acc=94.83999633789062
-    epoch 6/10: train_loss=1.5123507976531982, train_acc=95.55833435058594, test_acc=95.25
-    epoch 7/10: train_loss=1.5058631896972656, train_acc=96.14500427246094, test_acc=95.44000244140625
-    epoch 8/10: train_loss=1.502568006515503, train_acc=96.41999816894531, test_acc=95.80000305175781
-    epoch 9/10: train_loss=1.4993404150009155, train_acc=96.69999694824219, test_acc=96.18000030517578
-    epoch 10/10: train_loss=1.4963492155075073, train_acc=97.02667236328125, test_acc=96.30000305175781
+    epoch 1/10: train_loss=1.5863994359970093, train_acc=89.7800064086914, test_acc=90.12999725341797
+    epoch 2/10: train_loss=1.5477360486984253, train_acc=92.49666595458984, test_acc=92.44999694824219
+    epoch 3/10: train_loss=1.5309624671936035, train_acc=93.94000244140625, test_acc=93.7199935913086
+    epoch 4/10: train_loss=1.5233601331710815, train_acc=94.63333129882812, test_acc=94.23999786376953
+    epoch 5/10: train_loss=1.5148640871047974, train_acc=95.34666442871094, test_acc=94.79999542236328
+    epoch 6/10: train_loss=1.510080337524414, train_acc=95.7800064086914, test_acc=95.25
+    epoch 7/10: train_loss=1.5044132471084595, train_acc=96.2750015258789, test_acc=95.7699966430664
+    epoch 8/10: train_loss=1.50199556350708, train_acc=96.5616683959961, test_acc=95.90999603271484
+    epoch 9/10: train_loss=1.4976271390914917, train_acc=96.913330078125, test_acc=96.15999603271484
+    epoch 10/10: train_loss=1.4948465824127197, train_acc=97.18000030517578, test_acc=96.51000213623047
     ==================================================================================================== 
-     Total：0.0 d/ 0.0 h/ 1.0 m/ 5.24815821647644 s
+     Total：0.0 d/ 0.0 h/ 1.0 m/ 8.271410703659058 s
 
 
 ### 9.3.2. <a id='toc9_3_2_'></a>[DDP](#toc0_)
@@ -25214,7 +25263,119 @@ print(sales & inventory)  # 交集：apple:16 → 取较小值
     Counter({'apple': 16, 'orange': 10})
 
 
-# 31. <a id='toc31_'></a>[转格式](#toc0_)
+# 31. <a id='toc31_'></a>[打包pip安装包](#toc0_)
+
+```python
+my_package/                  # 项目根目录
+├── my_package/              # 主包目录（名字与项目同名）
+│   ├── __init__.py          # 必须存在（可为空文件）
+│   ├── core.py              # 你的主要代码
+│   └── utils.py             # 辅助工具
+├── tests/                   # 单元测试（可选）
+│   └── test_core.py
+├── setup.py                 # 打包配置文件（核心）
+├── pyproject.toml           # 构建系统要求（Python 3.10+）
+├── README.md                # 项目说明
+└── requirements.txt         # 依赖列表（可选）
+```
+
+## 31.1. <a id='toc31_1_'></a>[README.md](#toc0_)
+
+A simple tool for Deep Learning.
+
+## 31.2. <a id='toc31_2_'></a>[setup.py](#toc0_)
+
+这是打包的核心配置文件：
+
+
+```python
+from setuptools import setup, find_packages
+
+
+setup(
+    name="bmp",        # 包名（PyPI唯一标识）
+    version="0.1.0",         # 版本号（遵循语义化版本）
+    author="Yu Zhao",
+    author_email="zhao_sy@126.com",
+    description="A simple tools for Deep Learning",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
+    packages=find_packages(), # 自动发现所有包
+)
+```
+
+## 31.3. <a id='toc31_3_'></a>[方式一：本地安装（开发模式）](#toc0_)
+
+在项目根目录运行：
+
+- -e 表示可编辑模式，代码修改实时生效
+
+- 安装后可通过 import my_package 调用
+
+`pip install -e . `这种安装方式会在Python环境中创建到源代码目录的符号链接，而非传统的复制文件到site-packages目录。特别适合在开发阶段使用，因为任何代码修改都会立即生效，无需重新安装包。
+
+相比普通的`pip install . `命令，`-e`模式不会将包文件复制到Python的site-packages目录，而是保留源代码在原位置。这样既保持了开发环境的整洁，又允许版本控制系统正常追踪代码变更。当需要最终发布时，仍应使用常规安装方式打包。
+
+
+```python
+# !pip install .
+
+# !pip install -e .
+```
+
+## 31.4. <a id='toc31_4_'></a>[方式二：打包为分发文件，再安装](#toc0_)
+
+
+生成可用于分发的 .whl 和 .tar.gz 文件：
+
+生成文件位于 dist/ 目录：
+
+```python
+dist/
+├── my_package-0.1.0-py3-none-any.whl
+└── my_package-0.1.0.tar.gz
+```
+
+
+```python
+# !pip install wheel          # 确保wheel已安装
+
+# !python setup.py sdist bdist_wheel
+```
+
+
+```python
+# 本地测试安装
+# !pip install dist/bmp-0.1.0-py3-none-any.whl
+```
+
+## 31.5. <a id='toc31_5_'></a>[上传到 PyPI（可选）](#toc0_)
+
+注册 PyPI 账号：[https://pypi.org/](https://pypi.org/)
+
+创建账号并获取 API Token
+
+安装上传工具: ```pip install twine```
+
+上传到 PyPI：```twine upload dist/*```
+
+## 31.6. <a id='toc31_6_'></a>[维护与更新](#toc0_)
+
+### 31.6.1. <a id='toc31_6_1_'></a>[依赖更新](#toc0_)
+
+
+```python
+# !pip install -U .  # 更新本地安装
+```
+
+### 31.6.2. <a id='toc31_6_2_'></a>[卸载旧版](#toc0_)
+
+
+```python
+# pip uninstall bmp
+```
+
+# 32. <a id='toc32_'></a>[转格式](#toc0_)
 
 
 ```bash
@@ -25231,7 +25392,7 @@ cp -rf Pytorch_Pictures ./Format/learn_PyTorch
 
     [NbConvertApp] Converting notebook learn_PyTorch.ipynb to html
     [NbConvertApp] WARNING | Alternative text is missing on 47 image(s).
-    [NbConvertApp] Writing 5971238 bytes to Format/learn_PyTorch/learn_PyTorch.html
+    [NbConvertApp] Writing 5893488 bytes to Format/learn_PyTorch/learn_PyTorch.html
 
 
 
@@ -25242,5 +25403,5 @@ cp -rf Pytorch_Pictures ./Format/learn_PyTorch
 
     [NbConvertApp] Converting notebook learn_PyTorch.ipynb to markdown
     [NbConvertApp] Support files will be in learn_PyTorch_files/
-    [NbConvertApp] Writing 1121023 bytes to Format/learn_PyTorch/learn_PyTorch.md
+    [NbConvertApp] Writing 1120976 bytes to Format/learn_PyTorch/learn_PyTorch.md
 
