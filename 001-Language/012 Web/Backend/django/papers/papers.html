@@ -1,0 +1,9 @@
+<h2>发表论文</h2>
+{% for p in papers %}
+  <div class="paper">
+    <h3>{{ p.title }} ({{ p.year }})</h3>
+    <p>作者：{{ p.authors }}</p>
+    <a href="{{ p.pdf.url }}">下载 PDF</a> |
+    {% if p.code %}<a href="{{ p.code.url }}">代码</a>{% endif %}
+  </div>
+{% endfor %}

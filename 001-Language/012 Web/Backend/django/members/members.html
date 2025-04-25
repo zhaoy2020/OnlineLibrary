@@ -1,0 +1,9 @@
+<h2>实验室成员</h2>
+{% for m in members %}
+  <div class="member">
+    <img src="{{ m.photo.url }}" />
+    <h3>{{ m.name }}</h3>
+    <p>{{ m.title }}</p>
+    <p>{{ m.bio }}</p>
+  </div>
+{% endfor %}
