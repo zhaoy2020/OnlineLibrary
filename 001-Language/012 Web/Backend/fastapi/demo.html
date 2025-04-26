@@ -1,6 +1,4 @@
-<form method="POST" action="/submit">
-    <input type="text" name="name" placeholder="请输入姓名">
-    <input type="email" name="email" placeholder="请输入邮箱">
-    <button type="submit">提交</button>
-  </form>
-  
+<form action="/predict" method="post" enctype="multipart/form-data">
+  <input type="file" name="image" />
+  <button type="submit">提交</button>
+</form>
