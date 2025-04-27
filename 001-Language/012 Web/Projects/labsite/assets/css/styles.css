@@ -1,0 +1,59 @@
+html {
+    scroll-behavior: smooth;
+    /* font-family: 'Arial', sans-serif; 设置全局字体 */
+    font-family: "Times New Roman", Times, serif; /* 设置全局字体 */
+}
+
+
+/* nav ======================================================== */
+.navbar {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    height: 40px;
+    display: flex;
+    justify-content: center; /* nav-content居中 */
+    align-items: center;
+    z-index: 1000; /* 确保导航栏在最上层 */
+    background-color:#523D96;
+}
+
+.nav-content {
+    width: 960px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-content a:hover {
+    color: #007acc;
+  }
+  
+
+.nav-left a, .nav-right a {
+    text-decoration: none; /* 去掉下划线 */
+    color: white; /* 设置字体颜色 */
+    margin: 0 0px;
+    flex:1;
+}
+
+
+/* body ========================================================== */
+.main-content {
+    display:flex;
+    flex-direction: column;
+    margin:0 auto;
+    width: 960px;
+}
+
+
+
+
+/* footer =======================================================*/
+footer {
+    display: flex;
+    justify-content: center;        /* 水平方向居中 */
+    align-items: center;            /* 垂直方向居中（如果有高度的话） */
+    height: 100px;                  /* 给个高度，方便垂直居中 */
+}
+  
