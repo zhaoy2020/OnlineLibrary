@@ -1,0 +1,13 @@
+README.md
+setup.py
+deepspore/__init__.py
+deepspore/ddp_trainer.py
+deepspore/ddp_trainer_demo.py
+deepspore/ipynb2py.py
+deepspore/matplotlib_config.py
+deepspore/training.py
+deepspore/utils.py
+deepspore.egg-info/PKG-INFO
+deepspore.egg-info/SOURCES.txt
+deepspore.egg-info/dependency_links.txt
+deepspore.egg-info/top_level.txt

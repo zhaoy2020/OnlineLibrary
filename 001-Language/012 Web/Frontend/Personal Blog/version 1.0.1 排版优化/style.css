@@ -1,0 +1,116 @@
+html {
+  scroll-behavior: smooth; /* 平滑滚动效果 */
+}
+
+body {
+  font-family: sans-serif; /* 设置字体为无衬线字体 */
+}
+
+/* 导航栏 */
+nav {
+  position: fixed; /* 固定在页面顶部 */
+  top: 0; /*贴着屏幕顶端,距离顶部0px */
+  width: 100%; /* 占满整个页面宽度。 */
+  background-color: #4b2e83;
+  z-index: 1000; /* 确保导航栏显示在最前面。 */
+}
+
+.nav-container {
+  max-width: 1000px; /* 设置最大宽度，避免在大屏幕上过于宽 */
+  margin: 0 auto; /* 让导航栏内容居中。 */
+  padding: 0 auto; /* 导航内容左右边距，防止贴边。 */
+  height: 40px;
+  display: flex; /* 启用弹性布局。 */
+  justify-content: space-between; /* 让左边和右边的内容分散对齐。 */
+  align-items: center; /* 垂直居中对齐。 */
+}
+
+.nav-left {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+}
+
+.nav-right a {
+  margin-left: 2rem;
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+.nav-right a:hover {
+  color: #007acc;
+}
+
+/* 点击导航链接会跳转到对应的位置（如 <section id="home">），但由于导航栏是固定的，容易遮住内容。
+这个属性让跳转时，内容停靠的位置提前一点，避免遮挡。 */
+.section {
+  scroll-margin-top: 50px;
+}
+
+
+/* 等宽水平排列 */
+.information {
+  display: flex;
+  flex-direction: row; /* 水平排列 */
+  justify-content: space-between; /* 两端对齐，左右两边的元素分散对齐。 */
+  align-items:flex-start; /* 垂直方向上顶部对齐。 */
+
+}
+/* 等宽水平排列 */
+.information div {
+  flex: 1
+}
+
+.picture {
+  width: 270px;
+  height: 300px;
+  /* border-radius: 10px 10px 10px 10px/10px 10px 10px 10px;  */
+  border-radius: 0px; 
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  padding-top: 40px; /* 留出顶部导航的空间 */
+}
+
+.filter-group {
+  margin-bottom: 1.5rem;
+}
+
+.filter-tag {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #eee;
+  border-radius: 20px;
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+
+.filter-tag.active {
+  background: #4b2e83;
+  color: white;
+}
+
+.papers {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.paper {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 1rem;
+}
+
+.paper img {
+  width: 300px;
+  height: auto;
+}
+
+.paper-info {
+  flex: 1;
+}

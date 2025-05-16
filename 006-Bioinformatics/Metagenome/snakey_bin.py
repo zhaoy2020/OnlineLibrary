@@ -1,6 +1,7 @@
 import pandas as pd
 from pysankey import sankey
 
+
 pd.options.display.max_rows = 8
 df = pd.read_csv(
     'pysankey/fruits.txt', sep=' ', names=['true', 'predicted']
