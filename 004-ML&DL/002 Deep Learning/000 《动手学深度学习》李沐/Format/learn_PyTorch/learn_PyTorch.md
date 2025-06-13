@@ -2,18 +2,20 @@
 - 1. [概述](#toc1_)    
 - 2. [环境配置](#toc2_)    
 - 3. [utils](#toc3_)    
-  - 3.1. [实验可重复性](#toc3_1_)    
-  - 3.2. [Metrics和Visualization](#toc3_2_)    
-    - 3.2.1. [Metrics tracker](#toc3_2_1_)    
-    - 3.2.2. [可视化](#toc3_2_2_)    
-  - 3.3. [GPU](#toc3_3_)    
-  - 3.4. [Timer](#toc3_4_)    
-    - 3.4.1. [cpu计时器](#toc3_4_1_)    
-    - 3.4.2. [gpu计时器](#toc3_4_2_)    
-  - 3.5. [Callback](#toc3_5_)    
-  - 3.6. [Trainer](#toc3_6_)    
-  - 3.7. [ParametersSize](#toc3_7_)    
-  - 3.8. [numpy和pytorch计算速度比较](#toc3_8_)    
+  - 3.1. [save to utils.py](#toc3_1_)    
+  - 3.2. [DeepSpore](#toc3_2_)    
+  - 3.3. [实验可重复性](#toc3_3_)    
+  - 3.4. [Metrics和Visualization](#toc3_4_)    
+    - 3.4.1. [Metrics tracker](#toc3_4_1_)    
+    - 3.4.2. [可视化](#toc3_4_2_)    
+  - 3.5. [GPU](#toc3_5_)    
+  - 3.6. [Timer](#toc3_6_)    
+    - 3.6.1. [cpu计时器](#toc3_6_1_)    
+    - 3.6.2. [gpu计时器](#toc3_6_2_)    
+  - 3.7. [Callback](#toc3_7_)    
+  - 3.8. [Trainer](#toc3_8_)    
+  - 3.9. [ParametersSize](#toc3_9_)    
+  - 3.10. [numpy和pytorch计算速度比较](#toc3_10_)    
 - 4. [安装GPU驱动](#toc4_)    
   - 4.1. [安装策略](#toc4_1_)    
   - 4.2. [首先确认内核版本和发行版本，再确认显卡型号](#toc4_2_)    
@@ -37,7 +39,7 @@
   - 5.1. [导入模块](#toc5_1_)    
 - 6. [数据封装和加载](#toc6_)    
   - 6.1. [torchvison.datasets获得Dataset](#toc6_1_)    
-  - 6.2. [自定义数据集获得Dataset](#toc6_2_)    
+  - 6.2. [Dataset](#toc6_2_)    
     - 6.2.1. [TensorDataset()](#toc6_2_1_)    
     - 6.2.2. [重载Dataset类](#toc6_2_2_)    
     - 6.2.3. [Pytoch.utils.data.Dataset类分析和总结](#toc6_2_3_)    
@@ -50,7 +52,7 @@
       - 6.2.7.3. [无限数据流](#toc6_2_7_3_)    
       - 6.2.7.4. [多线程数据加载与分布式支持](#toc6_2_7_4_)    
       - 6.2.7.5. [使用注意事项](#toc6_2_7_5_)    
-  - 6.3. [数据加载-DataLoader()](#toc6_3_)    
+  - 6.3. [DataLoader](#toc6_3_)    
     - 6.3.1. [估计数据加载时间](#toc6_3_1_)    
     - 6.3.2. [collate_fn处理不等长tensor](#toc6_3_2_)    
     - 6.3.3. [重载DataLoader](#toc6_3_3_)    
@@ -72,7 +74,7 @@
   - 7.3. [Tensors操作](#toc7_3_)    
     - 7.3.1. [索引和切片](#toc7_3_1_)    
     - 7.3.2. [修改维度](#toc7_3_2_)    
-      - 7.3.2.1. [[: None], [None, :]                 ](#toc7_3_2_1_)    
+      - 7.3.2.1. [[: None], [None, :]                        ](#toc7_3_2_1_)    
       - 7.3.2.2. [reshape函数](#toc7_3_2_2_)    
       - 7.3.2.3. [view函数](#toc7_3_2_3_)    
       - 7.3.2.4. [transpose函数](#toc7_3_2_4_)    
@@ -328,8 +330,9 @@
   - 11.12. [BART](#toc11_12_)    
   - 11.13. [mBART](#toc11_13_)    
   - 11.14. [MoE](#toc11_14_)    
+    - 11.14.1. [基于Transformer实现MoE](#toc11_14_1_)    
+    - 11.14.2. [小项目](#toc11_14_2_)    
   - 11.15. [Mamba](#toc11_15_)    
-  - 11.16. [图神经网络 (GNN, Graph Neural Networks)](#toc11_16_)    
 - 12. [==============](#toc12_)    
 - 13. [炼丹心得](#toc13_)    
   - 13.1. [关于调参](#toc13_1_)    
@@ -418,48 +421,68 @@
     - 18.1.3. [模型加载权重](#toc18_1_3_)    
     - 18.1.4. [总结](#toc18_1_4_)    
   - 18.2. [Dataset](#toc18_2_)    
-- 19. [Hugging face](#toc19_)    
-- 20. [PyTorch hub](#toc20_)    
-- 21. [机器学习分类](#toc21_)    
-- 22. [多模态 (ML, MultiModal Learning)](#toc22_)    
-  - 22.1. [特征融合](#toc22_1_)    
-    - 22.1.1. [concatenate融合](#toc22_1_1_)    
-    - 22.1.2. [加权融合](#toc22_1_2_)    
-    - 22.1.3. [元素级融合](#toc22_1_3_)    
-    - 22.1.4. [张量融合](#toc22_1_4_)    
-    - 22.1.5. [注意力机制融合](#toc22_1_5_)    
-    - 22.1.6. [高阶融合](#toc22_1_6_)    
-  - 22.2. [简单示例](#toc22_2_)    
-- 23. [argparse](#toc23_)    
-- 24. [ml_collections](#toc24_)    
-- 25. [functools](#toc25_)    
-  - 25.1. [partial](#toc25_1_)    
-- 26. [copy](#toc26_)    
-  - 26.1. [列表类型的拷贝](#toc26_1_)    
-  - 26.2. [字典类型的拷贝](#toc26_2_)    
-- 27. [tqdm](#toc27_)    
-  - 27.1. [基础循环封装](#toc27_1_)    
-  - 27.2. [手动控制进度](#toc27_2_)    
-  - 27.3. [多进度条嵌套](#toc27_3_)    
-  - 27.4. [进阶功能与优化](#toc27_4_)    
-    - 27.4.1. [动态调整参数](#toc27_4_1_)    
-    - 27.4.2. [与Pandas结合](#toc27_4_2_)    
-    - 27.4.3. [Jupyter Notebook适配](#toc27_4_3_)    
-    - 27.4.4. [多线程/多进程支持](#toc27_4_4_)    
-    - 27.4.5. [自定义进度条格式](#toc27_4_5_)    
-- 28. [callback](#toc28_)    
-  - 28.1. [基于getattr实现](#toc28_1_)    
-- 29. [typing](#toc29_)    
-  - 29.1. [基础类型注释](#toc29_1_)    
-  - 29.2. [复杂类型组合](#toc29_2_)    
-  - 29.3. [函数类型注解](#toc29_3_)    
-- 30. [collections](#toc30_)    
-  - 30.1. [namedtuple（具名元组）](#toc30_1_)    
-  - 30.2. [deque（双端队列）](#toc30_2_)    
-  - 30.3. [ defaultdict（默认字典）](#toc30_3_)    
-  - 30.4. [ OrderedDict（有序字典）](#toc30_4_)    
-  - 30.5. [Counter（计数器）](#toc30_5_)    
-- 31. [包装成pip安装包](#toc31_)    
+- 19. [多模态 (ML, MultiModal Learning)](#toc19_)    
+  - 19.1. [特征融合](#toc19_1_)    
+    - 19.1.1. [concatenate融合](#toc19_1_1_)    
+    - 19.1.2. [加权融合](#toc19_1_2_)    
+    - 19.1.3. [元素级融合](#toc19_1_3_)    
+    - 19.1.4. [张量融合](#toc19_1_4_)    
+    - 19.1.5. [注意力机制融合](#toc19_1_5_)    
+    - 19.1.6. [高阶融合](#toc19_1_6_)    
+  - 19.2. [简单示例](#toc19_2_)    
+- 20. [Few-shot learning](#toc20_)    
+  - 20.1. [Siamese Network](#toc20_1_)    
+- 21. [matplotlib](#toc21_)    
+  - 21.1. [字体](#toc21_1_)    
+  - 21.2. [显示中文](#toc21_2_)    
+- 22. [argparse](#toc22_)    
+- 23. [ml_collections](#toc23_)    
+  - 23.1. [概述](#toc23_1_)    
+  - 23.2. [详细使用](#toc23_2_)    
+- 24. [functools](#toc24_)    
+  - 24.1. [partial](#toc24_1_)    
+- 25. [copy](#toc25_)    
+  - 25.1. [列表类型的拷贝](#toc25_1_)    
+  - 25.2. [字典类型的拷贝](#toc25_2_)    
+- 26. [tqdm](#toc26_)    
+  - 26.1. [基础循环封装](#toc26_1_)    
+  - 26.2. [手动控制进度](#toc26_2_)    
+  - 26.3. [多进度条嵌套](#toc26_3_)    
+  - 26.4. [进阶功能与优化](#toc26_4_)    
+    - 26.4.1. [动态调整参数](#toc26_4_1_)    
+    - 26.4.2. [与Pandas结合](#toc26_4_2_)    
+    - 26.4.3. [Jupyter Notebook适配](#toc26_4_3_)    
+    - 26.4.4. [多线程/多进程支持](#toc26_4_4_)    
+    - 26.4.5. [自定义进度条格式](#toc26_4_5_)    
+- 27. [callback](#toc27_)    
+  - 27.1. [基于getattr实现](#toc27_1_)    
+- 28. [typing](#toc28_)    
+  - 28.1. [基础类型注释](#toc28_1_)    
+    - 28.1.1. [变量注解](#toc28_1_1_)    
+    - 28.1.2. [函数注解](#toc28_1_2_)    
+  - 28.2. [容器类型注解](#toc28_2_)    
+    - 28.2.1. [标准容器](#toc28_2_1_)    
+    - 28.2.2. [嵌套容器](#toc28_2_2_)    
+  - 28.3. [高级类型](#toc28_3_)    
+    - 28.3.1. [泛型与类型变量](#toc28_3_1_)    
+    - 28.3.2. [回调函数类型](#toc28_3_2_)    
+  - 28.4. [结构化类型](#toc28_4_)    
+    - 28.4.1. [类型别名](#toc28_4_1_)    
+- 29. [collections](#toc29_)    
+  - 29.1. [namedtuple（具名元组）](#toc29_1_)    
+  - 29.2. [deque（双端队列）](#toc29_2_)    
+  - 29.3. [ defaultdict（默认字典）](#toc29_3_)    
+  - 29.4. [ OrderedDict（有序字典）](#toc29_4_)    
+  - 29.5. [Counter（计数器）](#toc29_5_)    
+- 30. [multiprocessing](#toc30_)    
+  - 30.1. [map and map_async](#toc30_1_)    
+  - 30.2. [starmap and starmap_async](#toc30_2_)    
+    - 30.2.1. [starmap（同步阻塞）](#toc30_2_1_)    
+    - 30.2.2. [starmap_async（异步非阻塞）](#toc30_2_2_)    
+  - 30.3. [apply and apply_aysnc](#toc30_3_)    
+    - 30.3.1. [apply](#toc30_3_1_)    
+    - 30.3.2. [apply_async](#toc30_3_2_)    
+- 31. [pip打包](#toc31_)    
   - 31.1. [README.md](#toc31_1_)    
   - 31.2. [setup.py](#toc31_2_)    
   - 31.3. [方式一：本地安装（开发模式）](#toc31_3_)    
@@ -485,6 +508,17 @@
 - d2l EN (及时更新): [https://d2l.ai/index.html](https://d2l.ai/index.html)
 
 - d2l ZH: [https://zh-v2.d2l.ai/](https://zh-v2.d2l.ai/)
+
+
+机器学习分类：
+- 监督学习
+- 半监督学习：少量样本
+- 自监督学习
+- 强化学习
+- 生成数据
+  - 对抗模型
+  - 扩散模型
+- 无监督学习
 
 # 2. <a id='toc2_'></a>[环境配置](#toc0_)
 
@@ -548,7 +582,87 @@ conda install -y \
 # 3. <a id='toc3_'></a>[utils](#toc0_)
 
 
-## 3.1. <a id='toc3_1_'></a>[实验可重复性](#toc0_)
+## 3.1. <a id='toc3_1_'></a>[save to utils.py](#toc0_)
+
+保存代码值utils.py模块中。
+
+
+```python
+#@save 
+import json
+
+
+def extract_save_blocks(ipynb_path:str, output_py_path:str):
+    with open(ipynb_path, 'r', encoding='utf-8') as f:
+        notebook = json.load(f)
+
+    saved_code_blocks = []
+
+    for cell in notebook.get('cells', []):
+        if cell.get('cell_type') == 'code':
+            source_lines = cell.get('source', [])
+            if source_lines and source_lines[0].lstrip().startswith('#@save'):
+                code_block = ''.join(source_lines)
+                saved_code_blocks.append(code_block)
+
+    if saved_code_blocks:
+        with open(output_py_path, 'w', encoding='utf-8') as f_out:
+            f_out.write("# This file is generated from saved notebook code blocks\n\n")
+            f_out.write("\n\n".join(saved_code_blocks))
+        print(f"Saved {len(saved_code_blocks)} block(s) to {output_py_path}")
+    else:
+        print("No #@save blocks found.")
+```
+
+
+```python
+# 用法示例
+# extract_save_blocks('learn_PyTorch.ipynb', 'utils/utils.py')
+```
+
+    Saved 12 block(s) to utils/utils.py
+
+
+
+```python
+from deepspore import collect_ipynb2py
+
+
+help(collect_ipynb2py.extract_save_blocks)
+```
+
+    Help on function extract_save_blocks in module deepspore.collect_ipynb2py:
+    
+    extract_save_blocks(ipynb_path: str, output_py_path: str)
+        将开头标记为 #@save 所在的代码块，收集并保存到utils.py文件中，以便后续统一调用。
+        Args:
+            ipynb_path: str
+            output_py_path: str
+        
+        # 用法示例
+        >>> extract_save_blocks('learn_PyTorch.ipynb', 'utils/utils.py')
+    
+
+
+## 3.2. <a id='toc3_2_'></a>[DeepSpore](#toc0_)
+
+deepspore工具包的使用。
+
+
+```python
+import deepspore
+from deepspore.matplotlib_config import set_plt_default, set_plt_rcParams
+
+
+print(deepspore.__version__)
+print(deepspore.__author__)
+```
+
+    0.1.2
+    Yu Zhao
+
+
+## 3.3. <a id='toc3_3_'></a>[实验可重复性](#toc0_)
 整个代码框架中很多地方使用到随机数的，为了实验的可重复性需要固定随机种子；  
 另外，有研究表明GPU中的CUDA变成也有很多地方对实验结果的稳定性很重要。
 
@@ -580,22 +694,21 @@ def set_seed(seed: int = 42)-> None:
     print(f"Set seed {seed} for reproducibility.")
 
     return None
-
-
-# Call the function to set random seed for reproducibility
-set_seed(42)
-
 ```
-
-    Set seed 42 for reproducibility.
-
-
-## 3.2. <a id='toc3_2_'></a>[Metrics和Visualization](#toc0_)
-
-### 3.2.1. <a id='toc3_2_1_'></a>[Metrics tracker](#toc0_)
 
 
 ```python
+# Call the function to set random seed for reproducibility
+set_seed(42)
+```
+
+## 3.4. <a id='toc3_4_'></a>[Metrics和Visualization](#toc0_)
+
+### 3.4.1. <a id='toc3_4_1_'></a>[Metrics tracker](#toc0_)
+
+
+```python
+#@save
 import torch
 from collections import defaultdict
 
@@ -680,11 +793,43 @@ class MetricTracker:
     
 ```
 
-### 3.2.2. <a id='toc3_2_2_'></a>[可视化](#toc0_)
+### 3.4.2. <a id='toc3_4_2_'></a>[可视化](#toc0_)
 
 
 ```python
-%config InlineBackend.figure_format = 'svg'
+#@save
+import matplotlib.pyplot as plt 
+
+
+def set_plt_default():
+    plt.rcdefaults()
+    
+
+def set_plt_rcParams(**kswargs):
+    # 设置字体栈（优先级从高到低）
+    plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['font.sans-serif'] = [
+        'Times New Roman',   # 英文优先使用
+        'SimSun',            # 中文宋体
+        # 'SimHei',            # 备用中文字体黑体
+        # 'Noto Sans CJK SC'   # 最后回退
+    ]
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+    plt.rcParams['pdf.fonttype'] = 42           # ai可编辑的字体格式
+    plt.rcParams['figure.figsize'] = (3, 3)     # figsize
+    plt.rcParams['savefig.format'] = "svg"      # svg格式
+    plt.rcParams['savefig.transparent'] = True  # 背景是否透明
+```
+
+
+```python
+# set_plt_default()
+```
+
+
+```python
+#@save
+# %config InlineBackend.figure_format = 'svg'
 
 from IPython import display
 import matplotlib.pyplot as plt 
@@ -720,15 +865,15 @@ class Visualization:
         '''获得实验：train、val、test等，指标：loss、acc、f1等'''
         experiments = set()
         metrics = set()
-
-        for i in next(iter(history.values())).keys(): # 只去第一个值
+        for i in next(iter(history.values())).keys():           # 只取第一个值
             experiment_name, metrics_name, _ = i.split("_")
             experiments.add(experiment_name)
             metrics.add(metrics_name)
         return experiments, metrics
-    
-                     
-# test
+```
+
+
+```python
 # 示例输出结构
 history = {
     'epoch': {
@@ -745,17 +890,18 @@ history = {
     },
 }
 
+
 visualization = Visualization()
 visualization.refresh_plot(history= history)
 ```
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_12_0.svg)
+![png](learn_PyTorch_files/learn_PyTorch_23_0.png)
     
 
 
-## 3.3. <a id='toc3_3_'></a>[GPU](#toc0_)
+## 3.5. <a id='toc3_5_'></a>[GPU](#toc0_)
 
 
 ```python
@@ -887,10 +1033,14 @@ def evaluate_accuracy(net, data_iter):
 
 ```
 
-## 3.4. <a id='toc3_4_'></a>[Timer](#toc0_)
+## 3.6. <a id='toc3_6_'></a>[Timer](#toc0_)
 
 
 ```python
+#@save
+import time 
+
+
 class Timer:
     """Record multiple running times."""
     def __init__(self):
@@ -919,7 +1069,7 @@ class Timer:
         return np.array(self.times).cumsum().tolist()
 ```
 
-### 3.4.1. <a id='toc3_4_1_'></a>[cpu计时器](#toc0_)
+### 3.6.1. <a id='toc3_6_1_'></a>[cpu计时器](#toc0_)
 
 * 自定义的一些使用的脚本。
 ```sehll
@@ -961,10 +1111,10 @@ timer_on_cpu()
      0.0 d 
      0.0 h 
      0.0 m 
-     0.030302762985229492 s
+     0.03023982048034668 s
 
 
-### 3.4.2. <a id='toc3_4_2_'></a>[gpu计时器](#toc0_)
+### 3.6.2. <a id='toc3_6_2_'></a>[gpu计时器](#toc0_)
 
 
 ```python
@@ -998,14 +1148,18 @@ timer_on_gpu()
 ```
 
     ⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡ 
-    GPU time: 0.00110s
+    GPU time: 0.00075s
 
 
-## 3.5. <a id='toc3_5_'></a>[Callback](#toc0_)
+## 3.7. <a id='toc3_7_'></a>[Callback](#toc0_)
 
 
 ```python
-class Callback:
+#@save
+from abc import ABC 
+
+
+class Callback(ABC):
     '''callback template'''
 
     def on_train_begin(self, **kwargs):
@@ -1025,18 +1179,20 @@ class Callback:
     
     def on_step_end(self, **kwargs):
         pass
-
-
-class DemoCallback(Callback):
-    def on_train_begin(self, **kwargs):
-        print("Runing on_train_begin ...")
-
 ```
-
-## 3.6. <a id='toc3_6_'></a>[Trainer](#toc0_)
 
 
 ```python
+class DemoCallback(Callback):
+    def on_train_begin(self, **kwargs):
+        print("Runing on_train_begin ...")
+```
+
+## 3.8. <a id='toc3_8_'></a>[Trainer](#toc0_)
+
+
+```python
+#@save
 import torch 
 from tqdm import tqdm 
 import pickle 
@@ -1045,13 +1201,13 @@ import pickle
 class Trainer:
     def __init__(
             self, 
-            device = "auto",
-            train_dataloader = None, 
-            val_dataloader = None, 
-            model = None, 
-            loss_fn = None, 
-            optimizer = None, 
-            is_tqdm = True, 
+            device: str = "auto",
+            train_dataloader: torch.utils.data.DataLoader = None, 
+            val_dataloader: torch.utils.data.DataLoader = None, 
+            model: torch.nn.Module = None, 
+            loss_fn:torch.nn.modules.loss = None, 
+            optimizer: torch.optim.Optimizer = None, 
+            is_tqdm: bool = True, 
             callbacks: list = [],
     ):
         # basic sets
@@ -1072,7 +1228,7 @@ class Trainer:
         # visualization
         self.visualization = Visualization()
 
-    def _get_device(self, device):
+    def _get_device(self, device: str) -> torch.device:
         '''CPU or GPUs.'''
         if device == "auto":
             device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -1083,19 +1239,19 @@ class Trainer:
         print("=" * 100)
         return device
     
-    def _get_model(self, model):
+    def _get_model(self, model) -> torch.nn.Module:
         '''Move the mode to device.'''
         model = torch.nn.DataParallel(model).to(self.device)
         return model
     
-    def _disable_visualization(self):
+    def _disable_visualization(self) -> bool:
         '''Weather show tqdm.'''
         if self.is_tqdm:
             return False 
         else:
             return True
         
-    def _call_callbacks(self, method_name, **kwargs):
+    def _call_callbacks(self, method_name: str, **kwargs):
         '''Run the method of callback from callback dict with default order.'''
         for callback in self.callbacks:
             if hasattr(callback, method_name):
@@ -1125,7 +1281,7 @@ class Trainer:
 
         self._call_callbacks(method_name= "on_train_end", **kwargs)
 
-    def _train_step(self, **kwargs):
+    def _train_step(self, **kwargs) -> dict:
         '''On train step.'''
         self.model.train() 
         self.metrics_tracker.set_stage("train") ## for train
@@ -1147,7 +1303,7 @@ class Trainer:
         train_metrics = self.metrics_tracker.compute_epoch_metrics() ## on epoch level with train
         return train_metrics
 
-    def _validate_step(self):
+    def _validate_step(self) -> dict:
         '''On validate step.'''
         self.model.eval()
         self.metrics_tracker.set_stage("val") ## for val
@@ -1164,13 +1320,13 @@ class Trainer:
             val_metrics = self.metrics_tracker.compute_epoch_metrics() ## on epoch level with val
         return val_metrics
     
-    def save_metrics(self, file_path):
+    def save_metrics(self, file_path: str):
         '''Save the history with pickle format.'''
         history = self.metrics_tracker.get_history()
         with open(file_path, 'wb') as f:
             pickle.dump(history, f)
 
-    def save_checkpoint(self, file_path):
+    def save_checkpoint(self, file_path: str):
         '''Save checkpoint.'''
         checkpoint = {
             'model_state_dict': self.model.state_dict(),
@@ -1183,17 +1339,18 @@ class Trainer:
         checkpoint = torch.load(file_path)
         self.model.load_state_dict(state_dict= checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+```
 
 
+```python
 # trainer.metrics_tracker._history
 # trainer.metrics_tracker.get_history()
 # trainer.save_metrics(file_path= "./cache/metrics_tracker_history.pickle")
 # trainer.save_checkpoint(file_path= './cache/checkpoint.pt')
 # trainer.load_checkpoint(file_path= './cache/checkpoint.pt')
-
 ```
 
-## 3.7. <a id='toc3_7_'></a>[ParametersSize](#toc0_)
+## 3.9. <a id='toc3_9_'></a>[ParametersSize](#toc0_)
 PyTorch 在进行深度学习训练的时候，有 4 大部分的显存开销：
   - `模型参数(parameters)` ；
   - `模型参数的梯度(gradients)` ；
@@ -1202,6 +1359,7 @@ PyTorch 在进行深度学习训练的时候，有 4 大部分的显存开销：
 
 
 ```python
+#@save
 import torch 
 from torch import nn
 
@@ -1222,9 +1380,10 @@ class Model(nn.Module):
         x = self.encoder(x) # 编码
         x = self.decoder(x) # 解码
         return x
-    
+```
 
-# Test
+
+```python
 value = 32
 model = Model(d_model=value*64, nhead=value, dim_feedforward=1024, dropout=0.1, batch_first=True, num_layers=value)
 
@@ -1251,32 +1410,43 @@ print(f"模型大小: {size_all_mb:.2f} MB")
 
 
 ```python
+#@save 
 import torch 
 
 
 class ParameterSize:
-    def count_parameters(self, model):
+    def count_parameters(self, model: torch.nn.Module):
         return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    def get_parameter_size(self, model, dtype=torch.float32):
+    def get_parameter_size(self, model: torch.nn.Module, dtype= torch.float32):
         bytes_per_param = torch.tensor([], dtype=dtype).element_size()
         total_params = self.count_parameters(model)
         total_size = total_params * bytes_per_param
-        print(f'{total_params/1000000} M parameters')
-        print(f'{total_size/(1024*1024):.2f} MB')
-        # return total_params, total_size
+        parameter_number_M = total_params/1000000
+        parameter_size_MB = total_size/(1024*1024)
+        print(f'{parameter_number_M:.2f} M parameters')
+        print(f'{parameter_size_MB:.2f} MB')
+        return parameter_number_M, parameter_size_MB
+```
 
 
-# Test
+```python
 parameter_size = ParameterSize()
 parameter_size.get_parameter_size(model)
 ```
 
-    1880.686592 M parameters
+    1880.69 M parameters
     7174.25 MB
 
 
-## 3.8. <a id='toc3_8_'></a>[numpy和pytorch计算速度比较](#toc0_)
+
+
+
+    (1880.686592, 7174.25)
+
+
+
+## 3.10. <a id='toc3_10_'></a>[numpy和pytorch计算速度比较](#toc0_)
 
 
 ```python
@@ -1302,7 +1472,7 @@ bt_gpu = torch.Tensor(b).to('cuda:0')
 %timeit a + b   # On cpu via numpy
 ```
 
-    1.64 ms ± 38 μs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
+    1.31 ms ± 34.7 μs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
 
 
 
@@ -1310,7 +1480,7 @@ bt_gpu = torch.Tensor(b).to('cuda:0')
 %timeit at + bt # On cpu via PyTorch
 ```
 
-    31.8 μs ± 292 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+    29.6 μs ± 747 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
 
 
 
@@ -1327,7 +1497,7 @@ torch.cuda.synchronize()
 print(f'Time: {0.001 * start.elapsed_time(stop)} s')
 ```
 
-    Time: 0.00035078400373458863 s
+    Time: 0.01205686378479004 s
 
 
 # 4. <a id='toc4_'></a>[安装GPU驱动](#toc0_)
@@ -1564,7 +1734,30 @@ conda create -n pytorch-gpu && conda activate pytorch-gpu
 # conda install cudatoolkit
 # or 
 # conda install cuda-nvcc
-conda install nvidia/label/cuda-12.4.0::cuda -y  -c nvidia/label/cuda-12.4.0
+conda install cuda -y  -c nvidia/label/cuda-12.4.0
+```
+
+Or:
+
+```bash
+chmod +x cuda_12.4.0_550.54.14_linux.run
+
+# Install CudaToolkit as  Non-root user (the toolkitpath is not /usr/...)
+./cuda_12.4.0_550.54.14_linux.run  --toolkit --toolkitpath=$HOME/ProgramFiles/cuda-12.4 --defaultroot=$HOME/ProgramFiles/cuda-12.4
+
+
+
+# 方便切换版本
+ln -s $HOME/ProgramFiles/cuda-12.4 $HOME/ProgramFiles/cuda
+
+# 设置 CUDA_HOME
+export CUDA_HOME=$HOME/ProgramFiles/cuda
+
+# 添加到 PATH
+export PATH=$CUDA_HOME/bin:$PATH
+
+# 添加库路径
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
 ```
 
 ## 4.7. <a id='toc4_7_'></a>[GPU测试程序](#toc0_)
@@ -1611,6 +1804,7 @@ class PrintCallback(Callback):
     def on_train_begin(self, **kwargs):
         print("Runing on train begin ...")
 
+
 # lr 0.01 -> 0.5
 net = Net()  
 loss_fn = nn.CrossEntropyLoss()
@@ -1638,7 +1832,7 @@ trainer.train(epochs= 30)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_67_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_83_0.svg)
     
 
 
@@ -1826,7 +2020,7 @@ train_dataset, test_dataset
 
 
 
-## 6.2. <a id='toc6_2_'></a>[自定义数据集获得Dataset](#toc0_)
+## 6.2. <a id='toc6_2_'></a>[Dataset](#toc0_)
 ### 6.2.1. <a id='toc6_2_1_'></a>[TensorDataset()](#toc0_)
 
 - `TensorDataset`是一个现成的类，用于将数据表示为`张量列表`。
@@ -1853,7 +2047,7 @@ type(datasets), datasets
 
 
     (torch.utils.data.dataset.TensorDataset,
-     <torch.utils.data.dataset.TensorDataset at 0x7f56ec473610>)
+     <torch.utils.data.dataset.TensorDataset at 0x7f1795401e50>)
 
 
 
@@ -1897,7 +2091,7 @@ datasets.__len__()  # 数据对的个数
 
 ### 6.2.2. <a id='toc6_2_2_'></a>[重载Dataset类](#toc0_)
 
-- `torch.utils.data.Dataset`是一个抽象类，用于定义新类型的自定义数据集。如果你想创建自己的数据集，可以继承这个类并实现以下方法：
+- `torch.utils.data.Dataset`是一个抽象类，用于定义新类型的自定义数据集：
 
   - 重载`__init__(self, *args, **kwargs)`: 初始化方法，可以在其中加载你的数据；
 
@@ -1913,21 +2107,18 @@ from torch.utils.data import Dataset
 
 # 1. 重载Dataset类
 class MyData(Dataset):
-    def __init__(self, nums:int=15):
+    def __init__(self, nums:int= 15):
         '''初始化参数，耗时的操作初始化时候就完成。'''
-
         self.nums = nums
         self.features = torch.arange(self.nums)
         self.labels = torch.arange(self.nums)
 
     def __len__(self):
         '''返回数据集的总数目。'''
-
         return self.nums
     
     def __getitem__(self, index):
-        '''耗时的工作初始化时就一步完成，此处依据index或idx查找并返回对应的数据即可。'''
-        
+        '''耗时的工作初始化时就一步完成，此处依据index或idx查找并返回对应的数据即可。'''        
         return self.features[index], self.labels[index]
     
 
@@ -1939,7 +2130,7 @@ datasets, datasets[0], datasets[1], datasets.__getitem__(1), datasets[2], datase
 
 
 
-    (<__main__.MyData at 0x7f8026f60e30>,
+    (<__main__.MyData at 0x7f17953fb610>,
      (tensor(0), tensor(0)),
      (tensor(1), tensor(1)),
      (tensor(1), tensor(1)),
@@ -1961,21 +2152,22 @@ datasets, datasets[0], datasets[1], datasets.__getitem__(1), datasets[2], datase
   - 重载`Dataset`类
 
 ### 6.2.4. <a id='toc6_2_4_'></a>[Subset](#toc0_)
-用于从数据集中抽取子集。
+
+用于从数据集中`抽取`子集。
 
 
 ```python
 from torch.utils.data import Subset 
 
 
-subset = Subset(dataset= datasets, indices= [1, 2, 3])    # 从datasets中抽取indices=[1, 2, 3]的子集
+subset = Subset(dataset= datasets, indices= [1, 2, 3])     # 从datasets中抽取indices=[1, 2, 3]的子集
 
-print("子集大小:", len(subset))  # 输出: 3
-print("子集中的第一个样本:", subset[0])  # 输出: 1
+print("子集大小:", len(subset))                             # 输出: 3
+print("子集中的第一个样本:", subset[0])                      # 输出: 1
 ```
 
     子集大小: 3
-    子集中的第一个样本: (tensor(1), tensor(2))
+    子集中的第一个样本: (tensor(1), tensor(1))
 
 
 ### 6.2.5. <a id='toc6_2_5_'></a>[random_split](#toc0_)
@@ -1995,7 +2187,12 @@ from torch.utils.data import random_split
 
 
 # 使用 Generator 设置随机数种子
-train_dataset, validation_dataset, test_dataset = random_split(dataset= datasets, lengths= [10, 3, 2], generator= torch.Generator().manual_seed(42))
+train_dataset, validation_dataset, test_dataset = random_split(
+    dataset= datasets, 
+    lengths= [10, 3, 2], 
+    generator= torch.Generator().manual_seed(42)
+)
+
 
 print(f"训练集大小: {len(train_dataset)}")
 print(f"验证集大小: {len(validation_dataset)}")
@@ -2075,6 +2272,7 @@ class FileDataset(IterableDataset):
             for line in file:
                 yield line.strip()  # 每次返回一行数据
 
+
 # 创建数据集和 DataLoader
 file_path = 'example.txt'  # 假设文件内容非常大
 dataset = FileDataset(file_path)
@@ -2135,6 +2333,7 @@ for batch in dataloader:
 
 ```python
 import random
+from torch.utils.data import IterableDataset, DataLoader
 
 
 class RandomDataset(IterableDataset):
@@ -2145,7 +2344,7 @@ class RandomDataset(IterableDataset):
 
 # 创建数据集和 DataLoader
 dataset = RandomDataset()
-dataloader = DataLoader(dataset, batch_size=5)
+dataloader = DataLoader(dataset, batch_size= 5)
 
 
 # 仅读取两批数据
@@ -2156,8 +2355,8 @@ for i, batch in enumerate(dataloader):
 
 ```
 
-    随机数批次: tensor([0.2025, 0.9842, 0.9479, 0.4222, 0.9127], dtype=torch.float64)
-    随机数批次: tensor([0.4001, 0.0342, 0.3488, 0.5999, 0.5207], dtype=torch.float64)
+    随机数批次: tensor([0.6394, 0.0250, 0.2750, 0.2232, 0.7365], dtype=torch.float64)
+    随机数批次: tensor([0.6767, 0.8922, 0.0869, 0.4219, 0.0298], dtype=torch.float64)
 
 
 #### 6.2.7.4. <a id='toc6_2_7_4_'></a>[多线程数据加载与分布式支持](#toc0_)
@@ -2239,7 +2438,8 @@ for batch in dataloader:
 
   
 
-## 6.3. <a id='toc6_3_'></a>[数据加载-DataLoader()](#toc0_)
+## 6.3. <a id='toc6_3_'></a>[DataLoader](#toc0_)
+
 1. 先将自制的数据集利用data.TensorDataset生成`dataset`；
 
 2. 再用data.DataLoader加载到dataset成最终可用的带有batch_size的格式`DataLoader`，方便后续的训练
@@ -2273,7 +2473,7 @@ type(train_iter), train_iter        # 直接打印看不到内容
 
 
     (torch.utils.data.dataloader.DataLoader,
-     <torch.utils.data.dataloader.DataLoader at 0x7f4f30665b20>)
+     <torch.utils.data.dataloader.DataLoader at 0x7f18f0620810>)
 
 
 
@@ -2285,9 +2485,9 @@ for batch_idx, batch in enumerate(train_iter):  # 小批量的batch_size数据
     print('随机抽取:', batch_idx+1, batch)
 ```
 
-    随机抽取: 1 [tensor([ 6, 12,  0,  9, 11]), tensor([ 6, 12,  0,  9, 11])]
-    随机抽取: 2 [tensor([ 2, 14,  8,  5,  1]), tensor([ 2, 14,  8,  5,  1])]
-    随机抽取: 3 [tensor([ 4,  7, 10,  3, 13]), tensor([ 4,  7, 10,  3, 13])]
+    随机抽取: 1 [tensor([ 4, 10,  9, 14,  5]), tensor([ 4, 10,  9, 14,  5])]
+    随机抽取: 2 [tensor([ 1, 13,  3,  7,  6]), tensor([ 1, 13,  3,  7,  6])]
+    随机抽取: 3 [tensor([ 8, 11,  2,  0, 12]), tensor([ 8, 11,  2,  0, 12])]
 
 
 ### 6.3.1. <a id='toc6_3_1_'></a>[估计数据加载时间](#toc0_)
@@ -2308,7 +2508,7 @@ timer()
      0.0 d 
      0.0 h 
      0.0 m 
-     1.068415880203247 s
+     0.16623139381408691 s
 
 
 
@@ -2325,7 +2525,7 @@ timer()
      0.0 d 
      0.0 h 
      0.0 m 
-     1.0625123977661133 s
+     0.16842293739318848 s
 
 
 ### 6.3.2. <a id='toc6_3_2_'></a>[collate_fn处理不等长tensor](#toc0_)
@@ -2456,7 +2656,7 @@ PyTorch 的一大作用就是可以代替 Numpy 库，所以首先介绍 Tensors
 ```python
 # tensor()
 
-x = torch.tensor([1.0, 2.0, 3.0], dtype=torch.float32)
+x = torch.tensor([1.0, 2.0, 3.0], dtype= torch.float32)
 
 x
 ```
@@ -2474,7 +2674,7 @@ x
 ```python
 # asarray()
 
-x = torch.asarray([1.0, 2.0, 3.0], dtype=torch.float32)
+x = torch.asarray([1.0, 2.0, 3.0], dtype= torch.float32)
 
 x
 ```
@@ -2521,17 +2721,17 @@ x, torch.from_numpy(x)
 ```python
 # empty()
 
-torch.empty(size=(5, 3), dtype=torch.float32)
+torch.empty(size= (5, 3), dtype= torch.float32)
 ```
 
 
 
 
-    tensor([[6.7262e-44, 0.0000e+00, 6.7262e-44],
-            [0.0000e+00, 0.0000e+00, 0.0000e+00],
-            [0.0000e+00, 0.0000e+00, 1.4013e-45],
-            [0.0000e+00,        nan,        nan],
-            [1.3452e-43, 0.0000e+00, 6.7262e-44]])
+    tensor([[ 1.4684e-32,  3.0845e-41, -3.9247e+29],
+            [ 4.5593e-41,  1.4013e-45,  0.0000e+00],
+            [ 4.2039e-45,  0.0000e+00,  0.0000e+00],
+            [ 0.0000e+00,  0.0000e+00,  0.0000e+00],
+            [ 0.0000e+00,  0.0000e+00,  0.0000e+00]])
 
 
 
@@ -2541,7 +2741,7 @@ torch.empty(size=(5, 3), dtype=torch.float32)
 ```python
 # zeros()
 
-torch.zeros(size=(5, 3)) # 0
+torch.zeros(size= (5, 3)) # 0
 ```
 
 
@@ -2561,7 +2761,7 @@ torch.zeros(size=(5, 3)) # 0
 ```python
 # ones()
 
-torch.ones(size=(5, 3), dtype=torch.float32) # 1
+torch.ones(size= (5, 3), dtype= torch.float32) # 1
 ```
 
 
@@ -2584,7 +2784,7 @@ torch.ones(size=(5, 3), dtype=torch.float32) # 1
 import torch 
 
 
-torch.full(size=(2, 3), fill_value=torch.pi)
+torch.full(size= (2, 3), fill_value= torch.pi)
 ```
 
 
@@ -2601,17 +2801,17 @@ torch.full(size=(2, 3), fill_value=torch.pi)
 ```python
 # rand()
 
-torch.rand(size=(5, 3), dtype=torch.float32) # 随机数
+torch.rand(size= (5, 3), dtype= torch.float32) # 随机数
 ```
 
 
 
 
-    tensor([[0.9477, 0.2008, 0.9838],
-            [0.3268, 0.5974, 0.7255],
-            [0.3057, 0.7997, 0.4263],
-            [0.0774, 0.2863, 0.5388],
-            [0.0482, 0.8790, 0.8986]])
+    tensor([[0.8854, 0.5739, 0.2666],
+            [0.6274, 0.2696, 0.4414],
+            [0.2969, 0.8317, 0.1053],
+            [0.2695, 0.3588, 0.1994],
+            [0.5472, 0.0062, 0.9516]])
 
 
 
@@ -2621,15 +2821,15 @@ torch.rand(size=(5, 3), dtype=torch.float32) # 随机数
 ```python
 # randn()
 
-torch.randn(size=(3, 5), dtype=torch.float32) # 标准正态分布随机数
+torch.randn(size= (3, 5), dtype= torch.float32) # 标准正态分布随机数
 ```
 
 
 
 
-    tensor([[-1.3921, -0.4696,  1.1432, -0.6153, -1.3162],
-            [-1.3564, -0.4595, -1.1473, -0.8091, -0.4368],
-            [ 0.4175, -0.4860, -0.0468, -1.0885,  1.0387]])
+    tensor([[-1.1859, -0.8860, -0.7150,  0.1280, -0.1603],
+            [-2.2161, -0.6858, -0.3295, -0.2747, -1.2552],
+            [-0.7813,  0.2293, -1.2754, -1.9245,  0.4336]])
 
 
 
@@ -2637,15 +2837,15 @@ torch.randn(size=(3, 5), dtype=torch.float32) # 标准正态分布随机数
 
 
 ```python
-torch.normal(mean=0, std=1, size=(3, 5))
+torch.normal(mean= 0, std= 1, size= (3, 5))
 ```
 
 
 
 
-    tensor([[ 0.4510,  0.2798, -0.8032, -0.5851,  0.7675],
-            [ 2.0413,  1.1163, -0.1891,  0.9543,  0.6753],
-            [ 1.4002,  0.8864,  0.6356, -1.2399,  1.1891]])
+    tensor([[ 0.6641, -0.4337, -0.4201, -0.9500, -1.0014],
+            [-0.7719,  1.3434,  0.9560, -1.0110, -0.3568],
+            [ 0.7147, -0.2398,  0.2163,  0.5484, -0.4415]])
 
 
 
@@ -2671,7 +2871,7 @@ torch.arange(3) # 0, 1, 2
 ```python
 # reshape()
 
-torch.arange(start=0, end=15, step=1).reshape(5, 3) # reshape
+torch.arange(start= 0, end= 15, step= 1).reshape(5, 3) # reshape
 ```
 
 
@@ -2691,7 +2891,7 @@ torch.arange(start=0, end=15, step=1).reshape(5, 3) # reshape
 ```python
 # tensor转化为numpy
 
-x = torch.arange(start=0, end=15, step=1).reshape(5, 3)
+x = torch.arange(start= 0, end= 15, step= 1).reshape(5, 3)
 
 x, x.numpy()
 ```
@@ -2708,7 +2908,7 @@ x, x.numpy()
             [ 3,  4,  5],
             [ 6,  7,  8],
             [ 9, 10, 11],
-            [12, 13, 14]], dtype=int64))
+            [12, 13, 14]]))
 
 
 
@@ -2905,7 +3105,7 @@ dim 大于等于 2
 
 ```python
 x = torch.tensor([[ 0,  1,  2,  3,  4,  5],
-                  [ 6,  7,  8,  9, 10, 11]], dtype=torch.float32)
+                  [ 6,  7,  8,  9, 10, 11]], dtype= torch.float32)
 
 x, x.shape
 ```
@@ -3230,7 +3430,7 @@ x[0:3, 0] # 1-3行，1列
         ```
     
 
-#### 7.3.2.1. <a id='toc7_3_2_1_'></a>[[: None], [None, :]](#toc0_)                  [&#8593;](#toc0_)
+#### 7.3.2.1. <a id='toc7_3_2_1_'></a>[[: None], [None, :]](#toc0_)                         [&#8593;](#toc0_)
 含义：[None, :] 是利用 Python 的`切片语法`为张量增加一个新维度。
 - None：相当于在第 0 维增加一个新维度。
 - :：表示保留张量原本的所有元素。
@@ -4252,6 +4452,7 @@ PyTorch的运算很大一块是`线性代数运算-矩阵运算`，所以需要�
 - 自动做广播：
     - x, y的size维度对应的维度数值必须为`无 (不是0)`或`1`，才能被广播。
 
+
 |操作|函数|
 |:-|:-|
 |+|torch.add(X, Y)|
@@ -4475,8 +4676,8 @@ x, x * x, torch.dot(x, x) # 打印， 哈德玛积， 点积
 
 
 ```python
-A = torch.arange(12, dtype=torch.float32).reshape(3, 4)
-x = torch.ones(4, dtype=torch.float32)
+A = torch.arange(12, dtype= torch.float32).reshape(3, 4)
+x = torch.ones(4, dtype= torch.float32)
 
 A.shape, x.shape, torch.mv(A, x).shape
 ```
@@ -4575,7 +4776,7 @@ X.shape, Y.shape, torch.bmm(X, Y).shape
 
 
 ```python
-x = torch.arange(15, dtype=torch.float32)
+x = torch.arange(15, dtype= torch.float32)
 
 x
 ```
@@ -4896,8 +5097,8 @@ PyTorch中的广播机制允许开发人员使用更简洁的代码来处理不�
 
 
 ```python
-x1 = torch.ones(size=(3, 5), dtype=torch.float32, requires_grad=True)       # 自定义需要存储梯度
-x2 = torch.randn(size=(3, 5), dtype=torch.float32, requires_grad=True)      # 默认是不存储梯度
+x1 = torch.ones(size= (3, 5), dtype= torch.float32, requires_grad= True)       # 自定义需要存储梯度
+x2 = torch.randn(size= (3, 5), dtype= torch.float32, requires_grad= True)      # 默认是不存储梯度
 
 y = torch.add(x1**2, x2**3).sum()   # 应变量必须是标量
 
@@ -5011,10 +5212,10 @@ x1.grad, x2.grad, y.grad
 
 
 ```python
-x = torch.ones(size=(3, 3, 5), dtype=torch.float32, requires_grad=True) # 必须是float类型
+x = torch.ones(size= (3, 3, 5), dtype= torch.float32, requires_grad= True) # 必须是float类型
 y = (x**3).sum()
 
-torch.autograd.grad(outputs=y, inputs=x)
+torch.autograd.grad(outputs= y, inputs= x)
 ```
 
 
@@ -5577,7 +5778,7 @@ import matplotlib.pyplot as plt
 
 
 device = 'cpu'
-data = torch.normal(mean=0, std=1, size=(100,), dtype=torch.float32, device=device)
+data = torch.normal(mean= 0, std= 1, size= (100,), dtype= torch.float32, device= device)
 print(data)
 plt.figure()
 plt.plot(data)
@@ -5607,7 +5808,7 @@ plt.plot(data)
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_351_2.png)
+![png](learn_PyTorch_files/learn_PyTorch_367_2.png)
     
 
 
@@ -5632,13 +5833,15 @@ import random
 
 def synthetic_data(w, b, num_examples):  
     """生成y=Xw+b+噪声"""
-    X = torch.normal(mean=0, std=1, size=(num_examples, len(w)))
+    X = torch.normal(mean= 0, std= 1, size= (num_examples, len(w)))
     y = torch.matmul(X, w) + b
-    y += torch.normal(mean=0, std=0.01, size=y.shape)
+    y += torch.normal(mean= 0, std= 0.01, size= y.shape)
     return X, y.reshape((-1, 1))
+
 
 true_w = torch.tensor([2, -3.4])
 true_b = 4.2
+
 
 features, labels = synthetic_data(true_w, true_b, 1000)
 
@@ -5660,7 +5863,7 @@ d2l.plt.scatter(features[:, (1)].detach().numpy(),
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_356_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_372_0.svg)
     
 
 
@@ -5674,7 +5877,7 @@ d2l.plt.scatter(features[:, (0)].detach().numpy(),
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_357_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_373_0.svg)
     
 
 
@@ -5725,8 +5928,8 @@ for X, y in data_iter(batch_size, features, labels):
 
 
 ```python
-w = torch.normal(mean=0, std=0.01, size=(2,1), requires_grad=True)
-b = torch.zeros(size=(1,), requires_grad=True)
+w = torch.normal(mean= 0, std= 0.01, size= (2,1), requires_grad= True)
+b = torch.zeros(size= (1,), requires_grad= True)
 ```
 
 ### 8.1.4. <a id='toc8_1_4_'></a>[定义模型](#toc0_)
@@ -5962,8 +6165,8 @@ with torch.no_grad():
 import torch 
 
 
-x = torch.arange(3, dtype=torch.float32)
-x_softmax = torch.nn.functional.softmax(x, dim=0)
+x = torch.arange(3, dtype= torch.float32)
+x_softmax = torch.nn.functional.softmax(x, dim= 0)
 
 x, x_softmax, x_softmax.sum()
 ```
@@ -6006,7 +6209,7 @@ x, x_sf, x_sf.sum()
 
 ```python
 # x = torch.arange(3, dtype=torch.float32)
-y = torch.tensor([0, 2, 1], dtype=torch.float32)
+y = torch.tensor([0, 2, 1], dtype= torch.float32)
 
 y_hat = torch.tensor([0.1, 0.3, 0.6])
 
@@ -7197,7 +7400,7 @@ import torch
 import matplotlib.pyplot as plt 
 
 
-x = torch.arange(-1, 2, 0.01, dtype=torch.float32, requires_grad=True)
+x = torch.arange(-1, 2, 0.01, dtype= torch.float32, requires_grad= True)
 y = x * torch.cos(torch.pi * x)
 
 
@@ -7217,7 +7420,7 @@ plt.title('Function')
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_471_1.png)
+![svg](learn_PyTorch_files/learn_PyTorch_487_1.svg)
     
 
 
@@ -7227,13 +7430,14 @@ plt.title('Function')
 ```python
 def y(x):
     y_hat = x * torch.cos(torch.pi * x)
-    x_grad = torch.autograd.grad(outputs=y_hat, inputs=x)
+    x_grad = torch.autograd.grad(outputs= y_hat, inputs= x)
     return x_grad[0].detach().cpu().numpy()
 
 
 x_grads = [y(i) for i in x]
 
-plt.figure(figsize=(2,2))
+
+plt.figure(figsize= (2,2))
 plt.plot(x.detach().cpu().numpy(), x_grads)
 plt.xlabel('x')
 plt.ylabel('y`')
@@ -7249,7 +7453,7 @@ plt.title('grad')
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_473_1.png)
+![svg](learn_PyTorch_files/learn_PyTorch_489_1.svg)
     
 
 
@@ -7257,8 +7461,24 @@ plt.title('grad')
 
 
 ```python
+from IPython import display
+from matplotlib import pyplot as plt
+
+
+def refresh_plot(fig):
+    '''再jupyter中持续刷新展示图片'''
+    plt.close()                                 # close figure （推荐）
+    # plt.show()                                # 普通展示
+    display.display(fig)                        # 在jupyter中展示 （推荐）
+    display.clear_output(wait= True)             # 等待 （必须）
+```
+
+
+```python
 import torch
 import matplotlib.pyplot as plt
+from IPython import display 
+import time
 
 
 def f(x):
@@ -7268,8 +7488,8 @@ def gd(x, y=f, eta=0.01, iter:int=5):
     x_list = [x]    # 先存第一个数
     i = 1
     for _ in range(iter):
-        x_tensor = torch.tensor(x, dtype=torch.float32, requires_grad=True)
-        x_grad = torch.autograd.grad(outputs= f(x_tensor), inputs=x_tensor)
+        x_tensor = torch.tensor(x, dtype= torch.float32, requires_grad= True)
+        x_grad = torch.autograd.grad(outputs= f(x_tensor), inputs= x_tensor)
         x -= (eta * x_grad[0].item())
         x_list.append(x)
         i += 1
@@ -7277,122 +7497,154 @@ def gd(x, y=f, eta=0.01, iter:int=5):
 
 # 从x开始，迭代iter次
 def demo(x, y, eta, iter, c):
-    xx = gd(x=x, y=f, eta=eta, iter=iter )
+    xx = gd(x= x, y= f, eta= eta, iter= iter )
     yy = f(torch.tensor(xx))
     return xx, yy.detach().cpu().numpy(), c
 
 
-x = torch.arange(-1, 2, 0.01, dtype=torch.float32, requires_grad=True)
+x = torch.arange(-1, 2, 0.01, dtype= torch.float32, requires_grad= True)
 y = f(x)
 
-plt.figure(figsize=(2, 2))
-plt.plot(x.detach().cpu().numpy(), y.detach().cpu().numpy())
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('Function')
+eta = 0.01
+iter = 20
+c = 'red'
+xx, yy, c = demo(x= 2, y= f, eta= eta, iter= iter, c= c)    # lr很小就接近收敛
 
-x, y, c = demo(x=2, y=f, eta=0.01, iter=15, c='red')    # lr很小就接近收敛
-plt.scatter(x=x, y=y, c=c)
-plt.plot(x, y, c=c)
+for i in range(1, iter):
+    plt.close()
+
+    fig = plt.figure(figsize=(2, 2))
+    plt.plot(x.detach().cpu().numpy(), y.detach().cpu().numpy())
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Function')
+
+    plt.scatter(x= xx[0:i], y= yy[0:i], c= c)
+    plt.plot(xx[:i], yy[:i], c= c)
+    display.display(fig)
+    display.clear_output(wait= True)
+    time.sleep(0.5)
 ```
 
 
-
-
-    [<matplotlib.lines.Line2D at 0x7f4f800fba10>]
-
-
-
-
     
-![png](learn_PyTorch_files/learn_PyTorch_475_1.png)
+![svg](learn_PyTorch_files/learn_PyTorch_492_0.svg)
     
 
 
 
 ```python
-x = torch.arange(-1, 2, 0.01, dtype=torch.float32, requires_grad=True)
-y = f(x)
+eta = 0.1
+iter = 20
+c = 'blue'
+xx, yy, c = demo(x= 2, y= f, eta= eta, iter= iter, c= c)    # lr很大就很快收敛
 
-plt.figure(figsize=(2, 2))
-plt.plot(x.detach().cpu().numpy(), y.detach().cpu().numpy())
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('Function')
+for i in range(1, iter):
+    plt.close()
 
-x, y, c = demo(x=2, y=f, eta=0.1, iter=30, c='blue')    # lr很大就很快收敛
-plt.scatter(x=x, y=y, c=c)
-plt.plot(x, y, c=c)
+    fig = plt.figure(figsize=(2, 2))
+    plt.plot(x.detach().cpu().numpy(), y.detach().cpu().numpy())
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Function')
+
+    plt.scatter(x= xx[0:i], y= yy[0:i], c= c)
+    plt.plot(xx[:i], yy[:i], c= c)
+    display.display(fig)
+    display.clear_output(wait= True)
+    time.sleep(0.5)
 ```
 
 
-
-
-    [<matplotlib.lines.Line2D at 0x7f4f3041ec30>]
-
-
-
-
     
-![png](learn_PyTorch_files/learn_PyTorch_476_1.png)
+![svg](learn_PyTorch_files/learn_PyTorch_493_0.svg)
     
 
 
 
 ```python
-x = torch.arange(-1, 2, 0.01, dtype=torch.float32, requires_grad=True)
-y = f(x)
+eta = 0.2
+iter = 20
+c = 'blue'
+xx, yy, c = demo(x= -1, y= f, eta= eta, iter= iter, c= c)    # lr很大就很快收敛
 
-plt.figure(figsize=(2, 2))
-plt.plot(x.detach().cpu().numpy(), y.detach().cpu().numpy())
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('Function')
+for i in range(1, iter):
+    plt.close()
 
-x, y, c = demo(x=0, y=f, eta=0.1, iter=30, c='blue')    # 陷入0左侧附近的局部最小值点
-plt.scatter(x=x, y=y, c=c)
-plt.plot(x, y, c=c)
+    fig = plt.figure(figsize=(2, 2))
+    plt.plot(x.detach().cpu().numpy(), y.detach().cpu().numpy())
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Function')
+
+    plt.scatter(x= xx[0:i], y= yy[0:i], c= c)
+    plt.plot(xx[:i], yy[:i], c= c)
+    display.display(fig)
+    display.clear_output(wait= True)
+    time.sleep(0.5)
 ```
 
 
-
-
-    [<matplotlib.lines.Line2D at 0x7f4f3046f9b0>]
-
-
-
-
     
-![png](learn_PyTorch_files/learn_PyTorch_477_1.png)
+![svg](learn_PyTorch_files/learn_PyTorch_494_0.svg)
     
 
 
 
 ```python
-x = torch.arange(-1, 2, 0.01, dtype=torch.float32, requires_grad=True)
-y = f(x)
+eta = 0.5
+iter = 5
+c = 'blue'
+xx, yy, c = demo(x= 0, y= f, eta= eta, iter= iter, c= c)    # lr很大就很快收敛
 
-plt.figure(figsize=(2, 2))
-plt.plot(x.detach().cpu().numpy(), y.detach().cpu().numpy())
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('Function')
+for i in range(1, iter):
+    plt.close()
 
-x, y, c = demo(x=0, y=f, eta=0.5, iter=5, c='blue')   # lr太大就乱跳
-plt.scatter(x=x, y=y, c=c)
-plt.plot(x, y, c=c)
+    fig = plt.figure(figsize=(2, 2))
+    plt.plot(x.detach().cpu().numpy(), y.detach().cpu().numpy())
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Function')
+
+    plt.scatter(x= xx[0:i], y= yy[0:i], c= c)
+    plt.plot(xx[:i], yy[:i], c= c)
+    display.display(fig)
+    display.clear_output(wait= True)
+    time.sleep(0.5)
 ```
 
 
+    
+![svg](learn_PyTorch_files/learn_PyTorch_495_0.svg)
+    
 
 
-    [<matplotlib.lines.Line2D at 0x7f4f304dc860>]
 
+```python
+eta = 0.25
+iter = 15
+c = 'blue'
+xx, yy, c = demo(x= 2, y= f, eta= eta, iter= iter, c= c)    # lr很大就很快收敛
 
+for i in range(1, iter):
+    plt.close()
+
+    fig = plt.figure(figsize=(2, 2))
+    plt.plot(x.detach().cpu().numpy(), y.detach().cpu().numpy())
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Function')
+
+    plt.scatter(x= xx[0:i], y= yy[0:i], c= c)
+    plt.plot(xx[:i], yy[:i], c= c)
+    display.display(fig)
+    display.clear_output(wait= True)
+    time.sleep(0.5)
+```
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_478_1.png)
+![svg](learn_PyTorch_files/learn_PyTorch_496_0.svg)
     
 
 
@@ -7408,9 +7660,9 @@ import torch
 
 
 torch.optim.SGD(
-    params=net.parameters(), 
-    lr=0.01, 
-    momentum=0.99, 
+    params= net.parameters(), 
+    lr= 0.01, 
+    momentum= 0.99, 
     # weight_decay=
 )
 ```
@@ -7443,8 +7695,8 @@ import torch
 
 
 torch.optim.Adam(
-    params=net.parameters(), 
-    lr=0.01
+    params= net.parameters(), 
+    lr= 0.01
 )
 ```
 
@@ -7475,8 +7727,8 @@ import torch
 
 
 torch.optim.RMSprop(
-    params=net.parameters(), 
-    lr=0.01
+    params= net.parameters(), 
+    lr= 0.01
 )
 ```
 
@@ -7629,11 +7881,12 @@ import torchvision
 
 
 dbs = './data/'
+
 train_dataset = torchvision.datasets.MNIST(
-    root=dbs, 
-    train=True, 
-    download=True, 
-    transform=torchvision.transforms.Compose(
+    root= dbs, 
+    train= True, 
+    download= True, 
+    transform= torchvision.transforms.Compose(
         [
             torchvision.transforms.ToTensor(), 
             #  torchvision.transforms.Normalize((0.1307,), (0.3081,))
@@ -7642,10 +7895,10 @@ train_dataset = torchvision.datasets.MNIST(
 )
 
 test_dataset = torchvision.datasets.MNIST(
-    root=dbs, 
-    train=False, 
-    download=True, 
-    transform=torchvision.transforms.Compose(
+    root= dbs, 
+    train= False, 
+    download= True, 
+    transform= torchvision.transforms.Compose(
         [
             torchvision.transforms.ToTensor(), 
             #  torchvision.transforms.Normalize((0.1307,), (0.3081,))
@@ -7655,9 +7908,9 @@ test_dataset = torchvision.datasets.MNIST(
 
 # 迭代型数据方式
 train_iter = data.DataLoader(
-    dataset=train_dataset, 
-    batch_size=128, 
-    shuffle=True
+    dataset= train_dataset, 
+    batch_size= 128, 
+    shuffle= True
 )
 
 # test_iter = data.DataLoader(dataset=test_dataset) # test不需要batch训练
@@ -7990,7 +8243,7 @@ opt = torch.optim.SGD(params= net.parameters(), lr= 0.01)
 trainer= Trainer(
     device= 'auto', 
     train_dataloader= data.DataLoader(train_dataset, batch_size= 128, shuffle= True),
-    val_dataloader= data.DataLoader(test_dataset, batch_size= 128), 
+    val_dataloader= data.DataLoader(test_dataset, batch_size= 128, shuffle= False), 
     model= net, 
     loss_fn= loss_fn, 
     optimizer= opt, 
@@ -8004,7 +8257,7 @@ trainer.train(epochs= 5)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_507_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_525_0.svg)
     
 
 
@@ -8035,7 +8288,7 @@ trainer.train(epochs= 5)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_509_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_527_0.svg)
     
 
 
@@ -8080,7 +8333,7 @@ trainer.train(epochs= 5)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_511_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_529_0.svg)
     
 
 
@@ -8141,7 +8394,7 @@ trainer.train(epochs= 5)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_512_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_530_0.svg)
     
 
 
@@ -8269,7 +8522,7 @@ print(f"打印图片耗时： {stop - start} seconds")
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_518_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_536_1.svg)
     
 
 
@@ -8326,7 +8579,7 @@ print(f"打印数值耗时： {stop - start} seconds")
 
 
 ```python
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 device
 ```
@@ -8334,7 +8587,7 @@ device
 
 
 
-    device(type='cuda', index=0)
+    device(type='cuda')
 
 
 
@@ -8467,7 +8720,7 @@ x.device, y.device
 
 
 ```python
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 device
 ```
@@ -8475,7 +8728,7 @@ device
 
 
 
-    device(type='cuda', index=0)
+    device(type='cuda')
 
 
 
@@ -8583,38 +8836,20 @@ import torchvision
 import time 
 
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 # 数据准备
 dbs = './data/'
-train_dataset = torchvision.datasets.MNIST(
-    root=dbs, 
-    train=True, 
-    download=True, 
-    transform=torchvision.transforms.Compose(
-        [
+transforms = torchvision.transforms.Compose([torchvision.transforms.ToTensor(), ])
 
-            torchvision.transforms.ToTensor(), 
-            #  torchvision.transforms.Normalize((0.1307,), (0.3081,))
-        ]
-    )
-)
-
-test_dataset = torchvision.datasets.MNIST(
-    root=dbs, 
-    train=False, 
-    download=True, 
-    transform=torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(), 
-            #  torchvision.transforms.Normalize((0.1307,), (0.3081,))
-        ]
-    )
-)
+train_dataset = torchvision.datasets.MNIST(root= dbs, train= True, download= True, transform= transforms)
+test_dataset = torchvision.datasets.MNIST(root= dbs, train= False, download= True, transform= transforms )
 
 # 迭代型数据方式
-train_iter = data.DataLoader(dataset=train_dataset, batch_size=128,  shuffle=True)
-# test_iter = data.DataLoader(dataset=test_dataset) # test不需要batch训练
+train_iter = data.DataLoader(dataset= train_dataset, batch_size= 128,  shuffle= True)
+test_iter = data.DataLoader(dataset= test_dataset, batch_size= 128, shuffle= False) # test不需要batch训练
+
 
 # 网络结构
 class Net(nn.Module):
@@ -8629,6 +8864,7 @@ class Net(nn.Module):
     def forward(self, X):
         return self.network(X)
     
+
 # 训练过程封装
 def train_steps(epochs, train_dataset, train_iter, test_dataset, net, loss_fn, opt, device):
     '''
@@ -8647,9 +8883,10 @@ def train_steps(epochs, train_dataset, train_iter, test_dataset, net, loss_fn, o
     train_all_targets_gpu = train_dataset.targets.to(device)
     test_all_data_gpu = test_dataset.data.to(device)
     test_all_targets_gpu = test_dataset.targets.to(device)
-    net = nn.DataParallel(module=net)
-    # net = nn.DataParallel(module=net, device_ids=[0, 1], output_device=[0]) # 多GPU并行计算，等价于net = nn.DataParallel(module=net)
+
     net.to(device)
+    net = nn.DataParallel(module= net)
+    # net = nn.DataParallel(module=net, device_ids=[0, 1], output_device=[0]) # 多GPU并行计算，等价于net = nn.DataParallel(module=net)
 
     # 开始迭代
     start = time.time()
@@ -8690,43 +8927,46 @@ def train_steps(epochs, train_dataset, train_iter, test_dataset, net, loss_fn, o
         minutes = (seconds % 3600) // 60
         remaining_seconds = seconds % 60
         return days, hours, minutes, remaining_seconds
+    
     days, hours, minutes, remaining_seconds = convert_seconds(seconds)
     print('='*100, '\n', f"Total：{days} d/ {hours} h/ {minutes} m/ {remaining_seconds} s")
     # return (train_loss, train_acc, test_acc)
     return None
 
+
 # lr 0.01 -> 0.5
 # 结果表明还是会快一点收敛
 net = Net()  
 loss_fn = nn.CrossEntropyLoss()
-opt = torch.optim.SGD(params=net.parameters(), lr=0.5)   
+opt = torch.optim.SGD(params= net.parameters(), lr= 0.5)   
+
 train_steps(
-    epochs=10, 
-    train_dataset=train_dataset, 
-    train_iter=train_iter, 
-    test_dataset=test_dataset, 
-    net=net,                        
-    loss_fn=loss_fn, 
-    opt=opt, 
-    device=device 
+    epochs= 10, 
+    train_dataset= train_dataset, 
+    train_iter= train_iter, 
+    test_dataset= test_dataset, 
+    net= net,                        
+    loss_fn= loss_fn, 
+    opt= opt, 
+    device= device 
 ) 
 ```
 
     ==================================================================================================== 
-     Runing on cuda:0 
+     Runing on cuda 
      ====================================================================================================
-    epoch 1/10: train_loss=1.5863994359970093, train_acc=89.7800064086914, test_acc=90.12999725341797
-    epoch 2/10: train_loss=1.5477360486984253, train_acc=92.49666595458984, test_acc=92.44999694824219
-    epoch 3/10: train_loss=1.5309624671936035, train_acc=93.94000244140625, test_acc=93.7199935913086
-    epoch 4/10: train_loss=1.5233601331710815, train_acc=94.63333129882812, test_acc=94.23999786376953
-    epoch 5/10: train_loss=1.5148640871047974, train_acc=95.34666442871094, test_acc=94.79999542236328
-    epoch 6/10: train_loss=1.510080337524414, train_acc=95.7800064086914, test_acc=95.25
-    epoch 7/10: train_loss=1.5044132471084595, train_acc=96.2750015258789, test_acc=95.7699966430664
-    epoch 8/10: train_loss=1.50199556350708, train_acc=96.5616683959961, test_acc=95.90999603271484
-    epoch 9/10: train_loss=1.4976271390914917, train_acc=96.913330078125, test_acc=96.15999603271484
-    epoch 10/10: train_loss=1.4948465824127197, train_acc=97.18000030517578, test_acc=96.51000213623047
+    epoch 1/10: train_loss=1.6309014558792114, train_acc=84.05500030517578, test_acc=84.62999725341797
+    epoch 2/10: train_loss=1.5620430707931519, train_acc=91.41999816894531, test_acc=91.5199966430664
+    epoch 3/10: train_loss=1.5354968309402466, train_acc=93.49500274658203, test_acc=93.54999542236328
+    epoch 4/10: train_loss=1.5278639793395996, train_acc=94.12833404541016, test_acc=93.93000030517578
+    epoch 5/10: train_loss=1.518404245376587, train_acc=95.00666809082031, test_acc=94.61000061035156
+    epoch 6/10: train_loss=1.5110242366790771, train_acc=95.67833709716797, test_acc=95.20999908447266
+    epoch 7/10: train_loss=1.507236361503601, train_acc=96.06000518798828, test_acc=95.68000030517578
+    epoch 8/10: train_loss=1.5020065307617188, train_acc=96.47666931152344, test_acc=95.98999786376953
+    epoch 9/10: train_loss=1.4993703365325928, train_acc=96.80000305175781, test_acc=96.15999603271484
+    epoch 10/10: train_loss=1.4964629411697388, train_acc=97.03666687011719, test_acc=96.44999694824219
     ==================================================================================================== 
-     Total：0.0 d/ 0.0 h/ 1.0 m/ 8.271410703659058 s
+     Total：0.0 d/ 0.0 h/ 1.0 m/ 6.5389158725738525 s
 
 
 ### 9.3.2. <a id='toc9_3_2_'></a>[DDP](#toc0_)
@@ -9014,13 +9254,13 @@ x
 
 ```python
 # torch.save()
-torch.save(x, './Pytorch_params/tensor.pt')
+torch.save(x, './cache/tensor.pt')
 ```
 
 
 ```python
 # torch.load()
-x1 = torch.load('./Pytorch_params/tensor.pt', weights_only=True)
+x1 = torch.load('./cache/tensor.pt', weights_only=True)
 
 x1
 ```
@@ -9059,7 +9299,7 @@ class MLP(nn.Module):
 
 
 net = MLP()
-X = torch.randn(size=(2, 20))
+X = torch.randn(size= (2, 20))
 Y = net(X)
 ```
 
@@ -9067,7 +9307,7 @@ Y = net(X)
 ```python
 # torch.save()
 # 接下来，我们将模型的参数存储在一个叫做“mlp.params”的文件中。
-torch.save(net.state_dict(), './Pytorch_params/mlp.params')
+torch.save(net.state_dict(), './cache/mlp.params')
 ```
 
 
@@ -9075,7 +9315,7 @@ torch.save(net.state_dict(), './Pytorch_params/mlp.params')
 # torch.load()
 # 为了恢复模型，我们实例化了原始多层感知机模型的一个备份。 
 # 这里我们不需要随机初始化模型参数，而是直接读取文件中存储的参数。
-net_params = torch.load('./Pytorch_params/mlp.params', weights_only=True)
+net_params = torch.load('./cache/mlp.params', weights_only= True)
 clone = MLP()
 
 clone.load_state_dict(net_params)
@@ -9104,20 +9344,16 @@ torch.save(
         # 'opt_state_dict': opt.state_dict(), 
         'loss': 'loss'
     }, 
-    './Pytorch_params/ckpt.pt'
+    './cache/ckpt.pt'
 )
 
 # 重载
-check_point = torch.load('./Pytorch_params/ckpt.pt')
+check_point = torch.load('./cache/ckpt.pt')
 
 check_point['model_state_dict']
 check_point['loss']
 check_point['epoch']
 ```
-
-    /tmp/ipykernel_3885055/2144141008.py:13: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
-      check_point = torch.load('./Pytorch_params/ckpt.pt')
-
 
 
 
@@ -9132,7 +9368,6 @@ check_point['epoch']
 
 ```python
 import safetensors
-import torch 
 from torch import nn 
 
 
@@ -9149,7 +9384,7 @@ net = DemoModel()
 
 state_dicts1 = net.state_dict()
 
-safetensors.torch.save_file(state_dicts1, './Pytorch_params/demo.safetensors')
+safetensors.torch.save_file(state_dicts1, './cache/demo.safetensors')
 ```
 
 
@@ -9157,7 +9392,7 @@ safetensors.torch.save_file(state_dicts1, './Pytorch_params/demo.safetensors')
 import safetensors 
 
 
-state_dicts2 = safetensors.torch.load_file('./Pytorch_params/demo.safetensors')
+state_dicts2 = safetensors.torch.load_file('./cache/demo.safetensors')
 
 state_dicts2
 ```
@@ -10946,7 +11181,7 @@ train_ch8(net, train_iter, vocab, lr, num_epochs, d2l.try_gpu())
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_653_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_671_1.svg)
     
 
 
@@ -13988,7 +14223,7 @@ train_seq2seq(net, train_iter, lr, num_epochs, tgt_vocab, device)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_710_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_728_1.svg)
     
 
 
@@ -14121,7 +14356,7 @@ plt.legend()
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_717_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_735_1.svg)
     
 
 
@@ -14165,7 +14400,7 @@ plt.legend()
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_719_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_737_1.svg)
     
 
 
@@ -14240,7 +14475,7 @@ print(f'NW_PY: {t2 - t1} s, NW_PYT: {t3 - t2} s, NW_PYT_B: {t4 - t3} s')
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_721_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_739_1.svg)
     
 
 
@@ -14298,7 +14533,7 @@ plt.legend()
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_723_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_741_1.svg)
     
 
 
@@ -14317,7 +14552,7 @@ with torch.no_grad():
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_724_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_742_0.svg)
     
 
 
@@ -14610,13 +14845,13 @@ for batch in range(attention.attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_731_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_749_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_731_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_749_1.svg)
     
 
 
@@ -14788,13 +15023,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_736_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_754_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_736_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_754_1.svg)
     
 
 
@@ -14906,13 +15141,13 @@ for batch in range(weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_741_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_759_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_741_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_759_1.svg)
     
 
 
@@ -15023,13 +15258,13 @@ for batch in range(attention.attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_745_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_763_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_745_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_763_1.svg)
     
 
 
@@ -15136,13 +15371,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_749_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_767_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_749_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_767_1.svg)
     
 
 
@@ -15525,13 +15760,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_760_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_778_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_760_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_778_1.svg)
     
 
 
@@ -15772,13 +16007,13 @@ for batch in range(attention_weights.shape[0]):
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_764_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_782_0.svg)
     
 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_764_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_782_1.svg)
     
 
 
@@ -16055,7 +16290,7 @@ model_graph.visual_graph
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_769_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_787_0.svg)
     
 
 
@@ -16176,7 +16411,7 @@ d2l.train_seq2seq(net, train_iter, lr, num_epochs, tgt_vocab, device)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_773_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_791_1.svg)
     
 
 
@@ -16212,7 +16447,7 @@ d2l.show_heatmaps(attention_weights[:, :, :, :len(engs[-1].split()) + 1].cpu(), 
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_776_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_794_0.svg)
     
 
 
@@ -16459,7 +16694,7 @@ plt.legend()
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_784_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_802_1.svg)
     
 
 
@@ -17050,7 +17285,7 @@ d2l.train_seq2seq(net, train_iter, lr, num_epochs, tgt_vocab, device)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_801_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_819_1.svg)
     
 
 
@@ -17906,7 +18141,7 @@ train_bert(train_iter, net, loss, len(vocab), devices, 100)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_835_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_853_1.svg)
     
 
 
@@ -18050,7 +18285,7 @@ d2l.plt.hist([len(line) for line in train_tokens], bins=range(0, 1000, 50));
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_846_0.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_864_0.svg)
     
 
 
@@ -18333,7 +18568,7 @@ d2l.train_ch13(net, train_iter, test_iter, loss, trainer, num_epochs, devices)
 
 
     
-![svg](learn_PyTorch_files/learn_PyTorch_865_1.svg)
+![svg](learn_PyTorch_files/learn_PyTorch_883_1.svg)
     
 
 
@@ -18412,110 +18647,154 @@ GPT（Generative Pre-trained Transformer）是OpenAI提出的基于Transformer�
 
 
 ```python
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
+
+checkpoint = "facebook/mbart-large-50"
+
+# get tokenizer
+tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path= checkpoint)
+# get model
+model = AutoModelForSeq2SeqLM.from_pretrained(pretrained_model_name_or_path= checkpoint)
 ```
-
-## 11.14. <a id='toc11_14_'></a>[MoE](#toc0_)
-专家混合模型（Mixture of Experts, MoE）是一种用于处理大规模数据和模型的深度学习架构。MoE模型由多个专家网络和一个门控网络组成，专家网络负责处理不同的输入数据子集，门控网络负责动态地选择合适的专家网络。MoE模型能够有效地处理大规模数据和模型，提高模型的泛化能力和性能。
 
 
 ```python
-"""
-This module implements a Mixture of Experts (MoE) model using PyTorch.
+parameter_size.get_parameter_size(model= model)
+```
 
-Classes:
-    MoE: A PyTorch module implementing the Mixture of Experts model.
-
-MoE class:
-    __init__(self, input_dim, output_dim, num_experts, k=1):
-        Initializes the MoE model.
-        
-        Args:
-            input_dim (int): The dimension of the input features.
-            output_dim (int): The dimension of the output features.
-            num_experts (int): The number of expert networks.
-            k (int): The number of experts to use for each input. Default is 1.
-
-    forward(self, x):
-        Forward pass of the MoE model.
-        
-        Args:
-            x (torch.Tensor): The input tensor of shape (batch_size, input_dim).
-        
-        Returns:
-            torch.Tensor: The output tensor of shape (batch_size, output_dim).
-
-Example usage:
+    1880.69 M parameters
+    7174.25 MB
 
 
-"""
 
+
+
+    (1880.686592, 7174.25)
+
+
+
+## 11.14. <a id='toc11_14_'></a>[MoE](#toc0_)
+
+专家混合模型（Mixture of Experts, MoE）是一种用于处理大规模数据和模型的深度学习架构。MoE模型由多个专家网络和一个门控网络组成，专家网络负责处理不同的输入数据子集，门控网络负责动态地选择合适的专家网络。MoE模型能够有效地处理大规模数据和模型，提高模型的泛化能力和性能。
+
+### 11.14.1. <a id='toc11_14_1_'></a>[基于Transformer实现MoE](#toc0_)
+
+将Transformer中FFN层，改为MoE层即可。
+
+|名称|	作用|
+|-|-|
+|Expert	|专家模块，单独的前馈网络|
+|Gating Network	|根据输入决定调用哪些专家|
+|MoE	|聚合多个专家，只激活部分|
+|TransformerBlock	|用 MoE 替代原 FFN 层|
+
+
+```python
 import torch
-from torch import nn
+import torch.nn as nn
 import torch.nn.functional as F
 
 
+class Expert(nn.Module):
+    def __init__(self, input_dim, hidden_dim):
+        super().__init__()
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.act = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_dim, input_dim)
+
+    def forward(self, x):
+        return self.fc2(self.act(self.fc1(x)))
+    
+
+# 定义 MoE 层（带门控）
 class MoE(nn.Module):
-    def __init__(self, input_dim, output_dim, num_experts, k=1):
-        super(MoE, self).__init__()
+    def __init__(self, input_dim, hidden_dim, num_experts=4, k=2):
+        super().__init__()
         self.num_experts = num_experts
-        self.k = k  # Number of experts to use
-        self.experts = nn.ModuleList([nn.Linear(input_dim, output_dim) for _ in range(num_experts)])
+        self.k = k  # Top-k 激活的专家
+
+        # 初始化多个专家
+        self.experts = nn.ModuleList([Expert(input_dim, hidden_dim) for _ in range(num_experts)])
+
+        # 门控网络：根据输入选择专家
         self.gate = nn.Linear(input_dim, num_experts)
 
     def forward(self, x):
-        # Compute the gating values
-        gate_values = self.gate(x)
-        gate_values = F.softmax(gate_values, dim=1)
+        """
+        x: [batch_size, seq_len, input_dim]
+        """
+        batch_size, seq_len, input_dim = x.shape
+        x_flat = x.view(-1, input_dim)  # [B * S, D]
 
-        # Select top-k experts
-        topk_gate_values, topk_indices = torch.topk(gate_values, self.k, dim=1)
+        # 门控分数，softmax 后得到每个专家的概率
+        gate_scores = F.softmax(self.gate(x_flat), dim=-1)  # [B * S, num_experts]
 
-        # Compute the output of the selected experts
-        expert_outputs = torch.stack([self.experts[i](x) for i in range(self.num_experts)], dim=1)
-        topk_expert_outputs = torch.stack([expert_outputs[:, i, :] for i in topk_indices], dim=1)
+        # 选出 top-k 的专家索引和分数
+        topk_scores, topk_indices = torch.topk(gate_scores, self.k, dim=-1)  # [B*S, k]
 
-        # Compute the final output
-        output = torch.sum(topk_gate_values.unsqueeze(2) * topk_expert_outputs, dim=1)
-        return output
+        # 初始化输出
+        output = torch.zeros_like(x_flat)
+
+        for i in range(self.k):
+            expert_idx = topk_indices[:, i]  # 第 i 个专家索引
+            expert_weight = topk_scores[:, i].unsqueeze(1)  # [B*S, 1]
+
+            # 遍历每个专家
+            for eid in range(self.num_experts):
+                mask = (expert_idx == eid)  # [B*S] 哪些 token 被分配给该专家
+                if mask.sum() == 0:
+                    continue
+                selected_input = x_flat[mask]  # 挑出这部分输入
+                expert_output = self.experts[eid](selected_input)  # 喂给专家
+                output[mask] += expert_output * expert_weight[mask]  # 加权组合输出
+
+        return output.view(batch_size, seq_len, input_dim)
+
+    
+
+# 定义 Transformer Block（MoE 替代 FFN）
+class MoETransformerBlock(nn.Module):
+    def __init__(self, embed_dim, num_heads, hidden_dim, num_experts=4, top_k=2):
+        super().__init__()
+        self.attn = nn.MultiheadAttention(embed_dim, num_heads, batch_first=True)
+        self.norm1 = nn.LayerNorm(embed_dim)
+
+        self.moe = MoE(embed_dim, hidden_dim, num_experts, top_k)
+        self.norm2 = nn.LayerNorm(embed_dim)
+
+    def forward(self, x):
+        # Multi-head Self Attention
+        attn_output, _ = self.attn(x, x, x)
+        x = self.norm1(x + attn_output)
+
+        # MoE Feedforward
+        moe_output = self.moe(x)
+        x = self.norm2(x + moe_output)
+
+        return x
 
 
-# Example usage
-input_dim = 10
-output_dim = 5
-num_experts = 3
-k = 2
-batch_size = 4
+# Test 
+# 模拟一批输入：batch=2, seq_len=5, embedding_dim=32
+x = torch.randn(2, 5, 32)
 
-moe = MoE(input_dim, output_dim, num_experts, k)
-x = torch.randn(batch_size, input_dim)
-output = moe(x)
+# 构建 Transformer 块
+block = MoETransformerBlock(embed_dim=32, num_heads=4, hidden_dim=64, num_experts=6, top_k=2)
 
+# 前向传播
+out = block(x)
+print(out.shape)  # -> torch.Size([2, 5, 32])
 
-print("Input:", x)
-print("Output:", output)
 ```
 
-    Input: tensor([[-0.0381,  0.4410, -0.7415,  0.3620, -2.1130,  2.1410, -0.3452, -0.0634,
-              1.1645, -0.1166],
-            [-0.0759, -0.6683, -0.5295,  1.0997, -0.8732, -0.1896,  1.0365,  0.4766,
-              0.7138, -0.9861],
-            [ 0.9365,  0.9816,  0.2608,  1.5488, -0.0588,  0.8192,  1.6612, -0.2398,
-             -1.2459,  0.9110],
-            [-1.5711,  0.3687,  0.4566,  0.0758, -0.6371,  0.7672, -0.3137, -0.7219,
-              0.8281, -0.7226]])
-    Output: tensor([[[ 0.7310, -0.3433, -0.2191, -1.3951,  0.2693],
-             [ 0.2599, -0.1751, -0.8222,  0.1565,  0.5964]],
-    
-            [[-0.2887, -0.2024, -0.5201,  0.0410,  0.0775],
-             [ 0.3866, -1.1736,  0.1464, -0.1699, -0.1032]],
-    
-            [[-0.6651,  2.0439, -1.0015, -1.8628, -0.6435],
-             [-0.1378, -0.0972, -1.1791,  0.2492, -0.4329]],
-    
-            [[ 0.1109, -1.2097,  0.7902, -0.6808,  0.2590],
-             [ 0.3489, -0.0597,  0.5862,  0.0103,  0.2359]]],
-           grad_fn=<SumBackward1>)
+    torch.Size([2, 5, 32])
+
+
+### 11.14.2. <a id='toc11_14_2_'></a>[小项目](#toc0_)
+
+利用基于MoE架构的模型，研究细菌基因组特性。
+
 
 
 ## 11.15. <a id='toc11_15_'></a>[Mamba](#toc0_)
@@ -18632,17 +18911,6 @@ encoding = tokenizer.encode_plus(
 input_ids = encoding["input_ids"].to(device)
 with torch.inference_mode():
     outputs = model(input_ids=input_ids, output_hidden_states=True)
-
-```
-
-## 11.16. <a id='toc11_16_'></a>[图神经网络 (GNN, Graph Neural Networks)](#toc0_)
-
-
-```python
-import torch 
-import torch_geometric 
-
-
 
 ```
 
@@ -19465,10 +19733,13 @@ for epoch in range(10):
 
 
 ### 13.7.3. <a id='toc13_7_3_'></a>[梯度检查点（Gradient Checkpointing）](#toc0_)
+
 - 时间换空间：通过在前向传播过程中保存较少的中间激活值，AlphaFold2可以在反向传播时重新计算这些值，从而减少显存占用。  
 
 - 具体地来说，在前向传递中，传入的function将以torch.no_grad的方式运行，即不保存中间激活值。取而代之的是，前向传递保存了输入元组以及function参数。在反向传递中，保存下来的输入元组与function参数将会被重新取回，并且前向传递将会在function上重新计算，此时会追踪中间激活值，然后梯度将会根据这些中间激活值计算得到。
 
+
+函数说明：
 
 ```python
 torch.utils.checkpoint.checkpoint(function, *args, use_reentrant: Optional[bool] = None)
@@ -19514,8 +19785,13 @@ input_data.shape, output.shape
 
 
 ### 13.7.4. <a id='toc13_7_4_'></a>[分块计算 (Chunking)](#toc0_)
-AlphaFold2将计算过程分成多个较小的块来处理。这种方法可以减少一次性需要加载到显存中的数据量，从而降低显存的使用。  
+
+AlphaFold2将计算过程分成多个较小的块来处理。这种方法可以减少一次性需要加载到显存中的数据量，从而降低显存的使用。
+
 在 PyTorch 中，chunk 是一种用于将张量沿指定维度分割为多个小张量的操作。其主要功能是将一个大的张量分成多个`小块（chunk）`，以便于并行处理或其他需要分割数据的场景。
+
+
+函数说明：
 
 ```python
 torch.chunk(input, chunks, dim=0)
@@ -19627,6 +19903,7 @@ def chunked_attention(query, key, value, chunk_size):
 
     # 将所有块的输出拼接在一起
     return torch.cat(outputs, dim=0)
+
 
 # 示例输入
 seq_length = 1024
@@ -20915,7 +21192,7 @@ plt.show()
 
 
     
-![png](learn_PyTorch_files/learn_PyTorch_986_1.png)
+![png](learn_PyTorch_files/learn_PyTorch_1008_1.png)
     
 
 
@@ -21875,17 +22152,32 @@ if __name__ == "__main__":
 
 - PuTorch lightning给的`PyTorch code to PyTorchLightning`：[https://lightning.ai/docs/pytorch/stable/starter/converting.html](https://lightning.ai/docs/pytorch/stable/starter/converting.html)
 
-
-![Frame](./Pytorch_Pictures/PyTorch_lightning/Frame1.jpg)
+<!-- ![Frame](./Pytorch_Pictures/PyTorch_lightning/Frame1.jpg)
 ![Frame2](./Pytorch_Pictures/PyTorch_lightning/Frame2.jpg)
 ![Frame3](./Pytorch_Pictures/PyTorch_lightning/Frame3.jpg)
 ![Frame4](./Pytorch_Pictures/PyTorch_lightning/Frame4.jpg)
-![Frame5](./Pytorch_Pictures/PyTorch_lightning/Frame5.jpg)
-<!-- <img src="./Pytorch_Pictures/PyTorch_lightning/Frame1.jpg" width = 600 height = 600 /> -->
+![Frame5](./Pytorch_Pictures/PyTorch_lightning/Frame5.jpg) -->
+
+layout by html and CSS style, with display:flex
+<div style="display:flex;justify-content:center;gap:10px">
+    <img src="./Pytorch_Pictures/PyTorch_lightning/Frame1.jpg" alt="PyTorch lightning" width=800 height=600>
+    <img src="./Pytorch_Pictures/PyTorch_lightning/Frame2.jpg" alt="PyTorch lightning" width=800 height=600>
+</div>
+
+<div style="display:flex;justify-content:center;gap:10px">
+    <img src="./Pytorch_Pictures/PyTorch_lightning/Frame3.jpg" alt="PyTorch lightning" width=800 height=600>
+    <img src="./Pytorch_Pictures/PyTorch_lightning/Frame4.jpg" alt="PyTorch lightning" width=800 height=600>
+</div>
+
+<div style="display:flex;justify-content:center;gap:10px">
+    <img src="./Pytorch_Pictures/PyTorch_lightning/Frame5.jpg" alt="PyTorch lightning" width=800 height=600>
+    <div ></div>
+</div>
 
 
 ```python
 import pytorch_lightning as L
+
 
 print(f'Pytorch lightning version: {L.__version__}')
 ```
@@ -21943,7 +22235,7 @@ from torch.utils import data
 
 datasets = data.TensorDataset(features, labels)
 
-train_iter = data.DataLoader(dataset=datasets, shuffle= True, batch_size= 128, num_workers= 10)
+train_iter = data.DataLoader(dataset= datasets, shuffle= True, batch_size= 128, num_workers= 10)
 ```
 
 ## 17.3. <a id='toc17_3_'></a>[Model.py](#toc0_)
@@ -22091,8 +22383,10 @@ class AlphaFold2Wrapper(L.LightningModule):
         self.log('y_hat', y_hat)
         return y_hat
 
+
 ## 实例化一个对象
 alphafold2 = AlphaFold2Wrapper(learning_rate=0.01)
+
 
 trainer = L.Trainer(
     accelerator= "gpu",              # cpu, gpu, tpu, auto
@@ -22117,6 +22411,7 @@ trainer = L.Trainer(
 
     profiler=None,                  # simple, advanced, None: To profile individual steps during training and assist in identifying bottlenecks.
 )
+
 ```
 
     You are using the plain ModelCheckpoint callback. Consider using LitModelCheckpoint which with seamless uploading to Model registry.
@@ -22136,6 +22431,7 @@ trainer.fit(
     train_dataloaders= train_iter, 
     val_dataloaders= train_iter
 )
+
 ```
 
 ### 17.4.2. <a id='toc17_4_2_'></a>[Validation](#toc0_)
@@ -22144,6 +22440,7 @@ trainer.fit(
 
 ```python
 trainer.validate(model=alphafold2, dataloaders=train_iter)
+
 ```
 
     LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
@@ -22173,6 +22470,7 @@ trainer.validate(model=alphafold2, dataloaders=train_iter)
 
 ```python
 trainer.test(model=alphafold2, dataloaders=train_iter)
+
 ```
 
     LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
@@ -22201,7 +22499,8 @@ trainer.test(model=alphafold2, dataloaders=train_iter)
 
 进行预测。
 
-![Prediction summary](./Pytorch_Pictures/PyTorch_lightning/Frame4.jpg)
+<!-- ![Prediction summary](./Pytorch_Pictures/PyTorch_lightning/Frame4.jpg) -->
+<img src="./Pytorch_Pictures/PyTorch_lightning/Frame4.jpg" alt="Prediction" width=800 height=600>
 
 #### 17.4.4.1. <a id='toc17_4_4_1_'></a>[PyTorch lightning自身Trainer直接predict](#toc0_)
 调用PyTorch lightning自身Trainer的predict，程序会自动使用：  
@@ -23242,6 +23541,7 @@ pretrained_alphafold2.eval()
 with torch.no_grad():
     y_hat = pretrained_alphafold2(features.to('cuda:0'))
 y_hat
+
 ```
 
 #### 17.4.4.3. <a id='toc17_4_4_3_'></a>[提取权重后加载至纯PyTorch模型](#toc0_)
@@ -23252,6 +23552,7 @@ y_hat
 checkpoint_path = './lightning_logs/version_0/checkpoints/epoch=9-step=790.ckpt'
 checkpoint = torch.load(checkpoint_path)
 checkpoint  # checkpoint的贮存格式，其中 'state_dict'就是模型权重信息
+
 ```
 
     /tmp/ipykernel_268120/3329860571.py:2: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
@@ -23349,6 +23650,7 @@ checkpoint  # checkpoint的贮存格式，其中 'state_dict'就是模型权重�
 
 ```python
 alphafold2, checkpoint['state_dict']    # with AlphaFold2Wrapper, 多了demo_model.
+
 ```
 
 
@@ -23373,6 +23675,7 @@ alphafold2, checkpoint['state_dict']    # with AlphaFold2Wrapper, 多了demo_mod
 ```python
 for param in checkpoint['state_dict']:
     print(param)
+    
 ```
 
     demo_model.hidden.0.weight
@@ -23385,6 +23688,7 @@ for param in checkpoint['state_dict']:
 ```python
 alphafold_with_pure_pytorch = AlphaFold2()
 alphafold_with_pure_pytorch, alphafold_with_pure_pytorch.state_dict()
+
 ```
 
 
@@ -23753,7 +24057,7 @@ from torchvision import datasets
 from torchvision import transforms 
 
 
-dbs = './Pytorch_datasets/'
+dbs = './data/'
 
 trans = transforms.Compose([
     transforms.ToTensor(),                                  # PIL转换为tensor格式
@@ -23786,76 +24090,11 @@ type(train_datasets), type(test_datasets)
 
 
 
-# 19. <a id='toc19_'></a>[Hugging face](#toc0_)
-Hugging Face 是一个非常流行的自然语言处理（NLP）库，提供了大量预训练的模型和数据集，简化了 NLP 任务的实现。
+# 19. <a id='toc19_'></a>[多模态 (ML, MultiModal Learning)](#toc0_)
 
-Hugging Face 的 PyTorch 库提供了许多预训练的模型，包括用于文本分类、情感分析、命名实体识别、文本生成等任务的模型。这些模型通常具有良好的性能，并且可以轻松地在 PyTorch 中使用。
+## 19.1. <a id='toc19_1_'></a>[特征融合](#toc0_)
 
-Hugging Face 还提供了许多数据集，包括用于文本分类、情感分析、命名实体识别、文本生成等任务的数据集。这些数据集通常具有良好的性能，并且可以轻松地在 PyTorch 中使用。
-
-
-
-```python
-from transformers import pipeline
-
-
-classifier = pipeline("sentiment-analysis")
-res = classifier("Today is a nice day.")
-print(res)
-```
-
-
-```python
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import torch
-
-
-# 加载预训练的 BERT 模型和分词器
-model_name = "bert-base-uncased"  # 你也可以选择其他模型
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
-
-# 输入文本示例
-text = "I love Hugging Face!"
-inputs = tokenizer(text=text, return_tensors="pt")
-
-# 前向推理 (inference)
-with torch.no_grad():
-    outputs = model(**inputs)
-    logits = outputs.logits
-
-# 输出分类结果
-predicted_class = torch.argmax(logits, dim=1)
-print(f"Predicted class: {predicted_class}")
-```
-
-# 20. <a id='toc20_'></a>[PyTorch hub](#toc0_)
-
-
-```python
-import torch 
-
-
-# torch.hub.list()
-# torch.hub.load()
-# torch.hub.help()
-```
-
-# 21. <a id='toc21_'></a>[机器学习分类](#toc0_)
-- 监督学习
-- 半监督学习：少量样本
-- 自监督学习
-- 强化学习
-- 生成数据
-  - 对抗模型
-  - 扩散模型
-- 无监督学习
-
-# 22. <a id='toc22_'></a>[多模态 (ML, MultiModal Learning)](#toc0_)
-
-## 22.1. <a id='toc22_1_'></a>[特征融合](#toc0_)
-
-### 22.1.1. <a id='toc22_1_1_'></a>[concatenate融合](#toc0_)
+### 19.1.1. <a id='toc19_1_1_'></a>[concatenate融合](#toc0_)
 
 
 ```python
@@ -23917,7 +24156,7 @@ model(text, image)
 
 
 
-### 22.1.2. <a id='toc22_1_2_'></a>[加权融合](#toc0_)
+### 19.1.2. <a id='toc19_1_2_'></a>[加权融合](#toc0_)
 
 
 ```python
@@ -23969,7 +24208,7 @@ model(text, image)
 
 
 
-### 22.1.3. <a id='toc22_1_3_'></a>[元素级融合](#toc0_)
+### 19.1.3. <a id='toc19_1_3_'></a>[元素级融合](#toc0_)
 
 
 ```python
@@ -24019,7 +24258,7 @@ model(text, image)
 
 
 
-### 22.1.4. <a id='toc22_1_4_'></a>[张量融合](#toc0_)
+### 19.1.4. <a id='toc19_1_4_'></a>[张量融合](#toc0_)
 通过构建高纬度张量来表示不同模态之间的交互关系，捕捉多阶的特征交互信息。
 
 
@@ -24073,7 +24312,7 @@ model(text, image)
 
 
 
-### 22.1.5. <a id='toc22_1_5_'></a>[注意力机制融合](#toc0_)
+### 19.1.5. <a id='toc19_1_5_'></a>[注意力机制融合](#toc0_)
 
 
 ```python
@@ -24130,7 +24369,7 @@ model(text, image)
 
 
 
-### 22.1.6. <a id='toc22_1_6_'></a>[高阶融合](#toc0_)
+### 19.1.6. <a id='toc19_1_6_'></a>[高阶融合](#toc0_)
 
 
 ```python
@@ -24190,7 +24429,7 @@ model(text, image)
 
 
 
-## 22.2. <a id='toc22_2_'></a>[简单示例](#toc0_)
+## 19.2. <a id='toc19_2_'></a>[简单示例](#toc0_)
 
 
 ```python
@@ -24462,19 +24701,561 @@ test_model(model, test_loader)
     Accuracy: 49.5%
 
 
-# 23. <a id='toc23_'></a>[argparse](#toc0_)
+# 20. <a id='toc20_'></a>[Few-shot learning](#toc0_)
 
-- 使用演示：
+## 20.1. <a id='toc20_1_'></a>[Siamese Network](#toc0_)
 
-    ```python
-    import argparse
+孪生Network
 
-    parser = argparse.ArgumentParser(description='PyTorch Multi-Modal Learning')
-    parser.add_argument('--batch_size', type=int, default=32, help='batch size')
-    args = parser.parse_args()
 
-    args
-    ```
+
+# 21. <a id='toc21_'></a>[matplotlib](#toc0_)
+
+## 21.1. <a id='toc21_1_'></a>[字体](#toc0_)
+
+
+```python
+# 查询当前系统所有字体
+from matplotlib.font_manager import FontManager
+
+
+mpl_fonts = set(f.name for f in FontManager().ttflist)
+
+print('all font list get from matplotlib.font_manager:')
+for f in sorted(mpl_fonts):
+    print('\t' + f)
+```
+
+    all font list get from matplotlib.font_manager:
+    	Abyssinica SIL
+    	Adobe Arabic
+    	Adobe Caslon Pro
+    	Adobe Devanagari
+    	Adobe Fan Heiti Std
+    	Adobe Fangsong Std
+    	Adobe Garamond Pro
+    	Adobe Gothic Std
+    	Adobe Hebrew
+    	Adobe Heiti Std
+    	Adobe Kaiti Std
+    	Adobe Ming Std
+    	Adobe Myungjo Std
+    	Adobe Naskh
+    	Adobe Song Std
+    	Arial
+    	Bahnschrift
+    	Birch Std
+    	Blackoak Std
+    	Book Antiqua
+    	Bookman Old Style
+    	Bookshelf Symbol 7
+    	Bradley Hand ITC
+    	Brush Script Std
+    	C059
+    	Calibri
+    	Cambria
+    	Candara
+    	Cantarell
+    	Century
+    	Century Gothic
+    	Chaparral Pro
+    	Charlemagne Std
+    	Comic Sans MS
+    	Consolas
+    	Constantia
+    	Cooper Std
+    	Corbel
+    	Courier New
+    	D050000L
+    	DejaVu Math TeX Gyre
+    	DejaVu Sans
+    	DejaVu Sans Display
+    	DejaVu Sans Mono
+    	DejaVu Serif
+    	DejaVu Serif Display
+    	DengXian
+    	Droid Sans
+    	Droid Sans Arabic
+    	Droid Sans Armenian
+    	Droid Sans Devanagari
+    	Droid Sans Ethiopic
+    	Droid Sans Fallback
+    	Droid Sans Georgian
+    	Droid Sans Hebrew
+    	Droid Sans Japanese
+    	Droid Sans Tamil
+    	Droid Sans Thai
+    	Dubai
+    	Ebrima
+    	FZShuTi
+    	FZYaoTi
+    	FangSong
+    	FontAwesome
+    	Franklin Gothic Medium
+    	FreeMono
+    	Freestyle Script
+    	French Script MT
+    	Gabriola
+    	Gadugi
+    	Garamond
+    	Georgia
+    	Giddyup Std
+    	HarmonyOS Sans SC
+    	Hobo Std
+    	Impact
+    	Ink Free
+    	Javanese Text
+    	Jomolhari
+    	Juice ITC
+    	KaiTi
+    	Khmer OS
+    	Khmer OS Content
+    	Khmer OS System
+    	Kingsoft UE
+    	Kozuka Gothic Pr6N
+    	Kozuka Gothic Pro
+    	Kozuka Mincho Pr6N
+    	Kozuka Mincho Pro
+    	Kristen ITC
+    	Leelawadee UI
+    	Letter Gothic Std
+    	LiSu
+    	Liberation Mono
+    	Liberation Sans
+    	Lithos Pro
+    	Lohit Assamese
+    	Lohit Bengali
+    	Lohit Devanagari
+    	Lohit Gujarati
+    	Lohit Gurmukhi
+    	Lohit Kannada
+    	Lohit Odia
+    	Lohit Tamil
+    	Lohit Telugu
+    	Lucida Console
+    	Lucida Handwriting
+    	Lucida Sans Unicode
+    	MS Gothic
+    	MS Reference Sans Serif
+    	MS Reference Specialty
+    	MT Extra
+    	MV Boli
+    	Malgun Gothic
+    	Meera
+    	Mesquite Std
+    	Microsoft Himalaya
+    	Microsoft JhengHei
+    	Microsoft New Tai Lue
+    	Microsoft PhagsPa
+    	Microsoft Sans Serif
+    	Microsoft Tai Le
+    	Microsoft YaHei
+    	Microsoft Yi Baiti
+    	MingLiU-ExtB
+    	Minion Pro
+    	Mistral
+    	Mongolian Baiti
+    	Monotype Corsiva
+    	Montserrat
+    	Montserrat Alternates
+    	Myanmar Text
+    	Myriad Arabic
+    	Myriad Hebrew
+    	Myriad Pro
+    	Nimbus Mono PS
+    	Nimbus Roman
+    	Nimbus Sans
+    	Nimbus Sans Narrow
+    	Nirmala UI
+    	Noto Sans CJK JP
+    	Noto Sans Lisu
+    	Noto Sans Mandaic
+    	Noto Sans Meetei Mayek
+    	Noto Sans SC
+    	Noto Sans Sinhala
+    	Noto Sans Tagalog
+    	Noto Sans Tai Tham
+    	Noto Sans Tai Viet
+    	Noto Serif CJK JP
+    	Noto Serif SC
+    	Nueva Std
+    	Nuosu SIL
+    	OCR A Std
+    	Orator Std
+    	P052
+    	PT Sans
+    	PT Sans Narrow
+    	Padauk
+    	PakType Naskh Basic
+    	Palatino Linotype
+    	Papyrus
+    	Poplar Std
+    	Prestige Elite Std
+    	Pristina
+    	Rosewood Std
+    	STCaiyun
+    	STFangsong
+    	STHupo
+    	STIX
+    	STIXGeneral
+    	STIXNonUnicode
+    	STIXSizeFiveSym
+    	STIXSizeFourSym
+    	STIXSizeOneSym
+    	STIXSizeThreeSym
+    	STIXSizeTwoSym
+    	STKaiti
+    	STLiti
+    	STSong
+    	STXihei
+    	STXingkai
+    	STXinwei
+    	STZhongsong
+    	Sans Serif Collection
+    	Segoe Fluent Icons
+    	Segoe MDL2 Assets
+    	Segoe Print
+    	Segoe Script
+    	Segoe UI
+    	Segoe UI Emoji
+    	Segoe UI Historic
+    	Segoe UI Symbol
+    	Segoe UI Variable
+    	SimHei
+    	SimSun
+    	SimSun-ExtB
+    	SimSun-ExtG
+    	Sitka
+    	Stencil Std
+    	Sylfaen
+    	Symbol
+    	Tahoma
+    	Tekton Pro
+    	Tempus Sans ITC
+    	Times New Roman
+    	Trajan Pro
+    	Trebuchet MS
+    	URW Bookman
+    	URW Gothic
+    	Verdana
+    	Waree
+    	Webdings
+    	Wingdings
+    	Wingdings 2
+    	Wingdings 3
+    	YouYuan
+    	Yu Gothic
+    	Z003
+    	ZWAdobeF
+    	cmb10
+    	cmex10
+    	cmmi10
+    	cmr10
+    	cmss10
+    	cmsy10
+    	cmtt10
+
+
+
+```python
+mpl_fonts
+```
+
+
+
+
+    {'Abyssinica SIL',
+     'Adobe Arabic',
+     'Adobe Caslon Pro',
+     'Adobe Devanagari',
+     'Adobe Fan Heiti Std',
+     'Adobe Fangsong Std',
+     'Adobe Garamond Pro',
+     'Adobe Gothic Std',
+     'Adobe Hebrew',
+     'Adobe Heiti Std',
+     'Adobe Kaiti Std',
+     'Adobe Ming Std',
+     'Adobe Myungjo Std',
+     'Adobe Naskh',
+     'Adobe Song Std',
+     'Arial',
+     'Bahnschrift',
+     'Birch Std',
+     'Blackoak Std',
+     'Book Antiqua',
+     'Bookman Old Style',
+     'Bookshelf Symbol 7',
+     'Bradley Hand ITC',
+     'Brush Script Std',
+     'C059',
+     'Calibri',
+     'Cambria',
+     'Candara',
+     'Cantarell',
+     'Century',
+     'Century Gothic',
+     'Chaparral Pro',
+     'Charlemagne Std',
+     'Comic Sans MS',
+     'Consolas',
+     'Constantia',
+     'Cooper Std',
+     'Corbel',
+     'Courier New',
+     'D050000L',
+     'DejaVu Math TeX Gyre',
+     'DejaVu Sans',
+     'DejaVu Sans Display',
+     'DejaVu Sans Mono',
+     'DejaVu Serif',
+     'DejaVu Serif Display',
+     'DengXian',
+     'Droid Sans',
+     'Droid Sans Arabic',
+     'Droid Sans Armenian',
+     'Droid Sans Devanagari',
+     'Droid Sans Ethiopic',
+     'Droid Sans Fallback',
+     'Droid Sans Georgian',
+     'Droid Sans Hebrew',
+     'Droid Sans Japanese',
+     'Droid Sans Tamil',
+     'Droid Sans Thai',
+     'Dubai',
+     'Ebrima',
+     'FZShuTi',
+     'FZYaoTi',
+     'FangSong',
+     'FontAwesome',
+     'Franklin Gothic Medium',
+     'FreeMono',
+     'Freestyle Script',
+     'French Script MT',
+     'Gabriola',
+     'Gadugi',
+     'Garamond',
+     'Georgia',
+     'Giddyup Std',
+     'HarmonyOS Sans SC',
+     'Hobo Std',
+     'Impact',
+     'Ink Free',
+     'Javanese Text',
+     'Jomolhari',
+     'Juice ITC',
+     'KaiTi',
+     'Khmer OS',
+     'Khmer OS Content',
+     'Khmer OS System',
+     'Kingsoft UE',
+     'Kozuka Gothic Pr6N',
+     'Kozuka Gothic Pro',
+     'Kozuka Mincho Pr6N',
+     'Kozuka Mincho Pro',
+     'Kristen ITC',
+     'Leelawadee UI',
+     'Letter Gothic Std',
+     'LiSu',
+     'Liberation Mono',
+     'Liberation Sans',
+     'Lithos Pro',
+     'Lohit Assamese',
+     'Lohit Bengali',
+     'Lohit Devanagari',
+     'Lohit Gujarati',
+     'Lohit Gurmukhi',
+     'Lohit Kannada',
+     'Lohit Odia',
+     'Lohit Tamil',
+     'Lohit Telugu',
+     'Lucida Console',
+     'Lucida Handwriting',
+     'Lucida Sans Unicode',
+     'MS Gothic',
+     'MS Reference Sans Serif',
+     'MS Reference Specialty',
+     'MT Extra',
+     'MV Boli',
+     'Malgun Gothic',
+     'Meera',
+     'Mesquite Std',
+     'Microsoft Himalaya',
+     'Microsoft JhengHei',
+     'Microsoft New Tai Lue',
+     'Microsoft PhagsPa',
+     'Microsoft Sans Serif',
+     'Microsoft Tai Le',
+     'Microsoft YaHei',
+     'Microsoft Yi Baiti',
+     'MingLiU-ExtB',
+     'Minion Pro',
+     'Mistral',
+     'Mongolian Baiti',
+     'Monotype Corsiva',
+     'Montserrat',
+     'Montserrat Alternates',
+     'Myanmar Text',
+     'Myriad Arabic',
+     'Myriad Hebrew',
+     'Myriad Pro',
+     'Nimbus Mono PS',
+     'Nimbus Roman',
+     'Nimbus Sans',
+     'Nimbus Sans Narrow',
+     'Nirmala UI',
+     'Noto Sans CJK JP',
+     'Noto Sans Lisu',
+     'Noto Sans Mandaic',
+     'Noto Sans Meetei Mayek',
+     'Noto Sans SC',
+     'Noto Sans Sinhala',
+     'Noto Sans Tagalog',
+     'Noto Sans Tai Tham',
+     'Noto Sans Tai Viet',
+     'Noto Serif CJK JP',
+     'Noto Serif SC',
+     'Nueva Std',
+     'Nuosu SIL',
+     'OCR A Std',
+     'Orator Std',
+     'P052',
+     'PT Sans',
+     'PT Sans Narrow',
+     'Padauk',
+     'PakType Naskh Basic',
+     'Palatino Linotype',
+     'Papyrus',
+     'Poplar Std',
+     'Prestige Elite Std',
+     'Pristina',
+     'Rosewood Std',
+     'STCaiyun',
+     'STFangsong',
+     'STHupo',
+     'STIX',
+     'STIXGeneral',
+     'STIXNonUnicode',
+     'STIXSizeFiveSym',
+     'STIXSizeFourSym',
+     'STIXSizeOneSym',
+     'STIXSizeThreeSym',
+     'STIXSizeTwoSym',
+     'STKaiti',
+     'STLiti',
+     'STSong',
+     'STXihei',
+     'STXingkai',
+     'STXinwei',
+     'STZhongsong',
+     'Sans Serif Collection',
+     'Segoe Fluent Icons',
+     'Segoe MDL2 Assets',
+     'Segoe Print',
+     'Segoe Script',
+     'Segoe UI',
+     'Segoe UI Emoji',
+     'Segoe UI Historic',
+     'Segoe UI Symbol',
+     'Segoe UI Variable',
+     'SimHei',
+     'SimSun',
+     'SimSun-ExtB',
+     'SimSun-ExtG',
+     'Sitka',
+     'Stencil Std',
+     'Sylfaen',
+     'Symbol',
+     'Tahoma',
+     'Tekton Pro',
+     'Tempus Sans ITC',
+     'Times New Roman',
+     'Trajan Pro',
+     'Trebuchet MS',
+     'URW Bookman',
+     'URW Gothic',
+     'Verdana',
+     'Waree',
+     'Webdings',
+     'Wingdings',
+     'Wingdings 2',
+     'Wingdings 3',
+     'YouYuan',
+     'Yu Gothic',
+     'Z003',
+     'ZWAdobeF',
+     'cmb10',
+     'cmex10',
+     'cmmi10',
+     'cmr10',
+     'cmss10',
+     'cmsy10',
+     'cmtt10'}
+
+
+
+## 21.2. <a id='toc21_2_'></a>[显示中文](#toc0_)
+
+
+```python
+import matplotlib.pyplot as plt
+
+
+def set_plt_default():
+    plt.rcdefaults()                    # 重置成默认的参数
+
+
+def set_plt_func(font_name: str= 'Times new roman', font_size: int= 12, **kwargs):
+    plt.rc('font', family=font_name)  # 设置字体
+    plt.rc('axes', titlesize=font_size)  # Axes标题字体大小
+    plt.rc('axes', labelsize=font_size)  # Axes标签字体大小
+    plt.rc('xtick', labelsize=font_size)  # x轴刻度字体大小
+    plt.rc('ytick', labelsize=font_size)  # y轴刻度字体大小
+    plt.rc('legend', fontsize=font_size)  # 图例字体大小
+    plt.rc('figure', titlesize=font_size)  # Figure标题字体大小
+
+
+def set_plt_dict(**kswargs):
+    # 设置字体栈（优先级从高到低）
+    plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['font.sans-serif'] = [
+        'Times New Roman',   # 英文优先使用
+        'SimSun',            # 中文宋体
+        # 'SimHei',            # 备用中文字体黑体
+        # 'Noto Sans CJK SC'   # 最后回退
+    ]
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+    plt.rcParams['pdf.fonttype'] = 42           # ai可编辑的字体格式
+    plt.rcParams['figure.figsize'] = (3, 3)     # figsize
+    plt.rcParams['savefig.format'] = "svg"      # svg格式
+    plt.rcParams['savefig.transparent'] = True  # 背景是否透明
+```
+
+
+```python
+import matplotlib.pyplot as plt
+
+
+set_plt_dict()
+
+plt.figure()
+plt.plot(range(0,10))
+plt.xlabel('xlabel')
+plt.ylabel('ylabel')
+plt.title('SCI papers')
+
+plt.tight_layout()
+```
+
+
+    
+![png](learn_PyTorch_files/learn_PyTorch_1112_0.png)
+    
+
+
+# 22. <a id='toc22_'></a>[argparse](#toc0_)
+
+接受命令参数并传递进行程序中。
 
 
 ```python
@@ -24483,23 +25264,23 @@ import argparse
 
 # 创建ArgumentParser对象
 parser = argparse.ArgumentParser(
-    prog="argparse demo in PyTorch",
-    description="demo for argparse which is used to parse command-line arguments",
-    usage="python argparse_demo.py [options]",
-    epilog="End of ArgumentParser demo",
-    add_help=True   # 是否显示帮助信息
+    prog= "argparse demo in PyTorch",
+    description= "demo for argparse which is used to parse command-line arguments",
+    usage= "python argparse_demo.py [options]",
+    epilog= "End of ArgumentParser demo",
+    add_help= True   # 是否显示帮助信息
 )
 
 # 添加参数
 parser.add_argument(
     '-b',                                               # 短选项   
     '--batch_size',                                      # 长选项
-    type=int,                                           # 参数类型
-    default=32,                                          # 默认值
-    required=True,                                    # 是否必须
-    choices=[4, 8, 16, 32, 64, 128, 256, 512],       # 可选值
-    help='batch size for training or inference',          # 帮助信息
-    action='store'                                      # 存储方式
+    type= int,                                           # 参数类型
+    default= 32,                                          # 默认值
+    required= True,                                    # 是否必须
+    choices= [4, 8, 16, 32, 64, 128, 256, 512],       # 可选值
+    help= 'batch size for training or inference',          # 帮助信息
+    action= 'store'                                      # 存储方式
 )
 
 # 解析参数
@@ -24508,28 +25289,33 @@ args = parser.parse_args()
 args
 ```
 
-# 24. <a id='toc24_'></a>[ml_collections](#toc0_)
+# 23. <a id='toc23_'></a>[ml_collections](#toc0_)
+
+配置参数字典。
+
 官方教程1：[https://github.com/google/ml_collections](https://github.com/google/ml_collections)  
+
 官方教程2：[https://ml-collections.readthedocs.io/en/latest/](https://ml-collections.readthedocs.io/en/latest/)
 
+## 23.1. <a id='toc23_1_'></a>[概述](#toc0_)
 
-- 安装和概念
-    ```python
-    # Install
-    pip install ml-collections 
+安装和演示
 
-    # Module structure
-    mlc.ConfigDict()                # 可读写
-    mlc.FrozenConfigDict()          # 只读，不可改
-    mlc.FieldReference()            # 变量声明 (占位符)
-    mlc.config_dict()
-    ```
+```python
+# Install
+pip install ml-collections 
+
+# Module structure
+mlc.ConfigDict()                # 可读写
+mlc.FrozenConfigDict()          # 只读，不可改
+mlc.FieldReference()            # 变量声明 (占位符)
+mlc.config_dict()
+```
+
+## 23.2. <a id='toc23_2_'></a>[详细使用](#toc0_)
 
 
 ```python
-'''
-演示ml_collections的使用
-'''
 import ml_collections as mlc
 
 
@@ -24636,9 +25422,11 @@ c
 
 
 
-# 25. <a id='toc25_'></a>[functools](#toc0_)
+# 24. <a id='toc24_'></a>[functools](#toc0_)
 
-## 25.1. <a id='toc25_1_'></a>[partial](#toc0_)
+## 24.1. <a id='toc24_1_'></a>[partial](#toc0_)
+
+将函数的部分参数进行锁定。
 
 
 ```python
@@ -24660,15 +25448,23 @@ a_add(b= 2), a_add(b= 3), a_add(b= 5)
 
 
 
-# 26. <a id='toc26_'></a>[copy](#toc0_)
+# 25. <a id='toc25_'></a>[copy](#toc0_)
 直接赋值：其实就是对象的引用（别名）。
 
 浅拷贝(copy)：拷贝父对象，不会拷贝对象的内部的子对象。
 
 深拷贝(deepcopy)： copy 模块的 deepcopy 方法，完全拷贝了父对象及其子对象。
 
-## 26.1. <a id='toc26_1_'></a>[列表类型的拷贝](#toc0_)
-列表**浅拷贝**即可
+总结：
+
+|对象|拷贝类型|
+|-|-|
+|列表|copy|
+|字典|deepcopy|
+
+## 25.1. <a id='toc25_1_'></a>[列表类型的拷贝](#toc0_)
+
+列表 **浅拷贝**即可
 
 
 ```python
@@ -24703,8 +25499,9 @@ a, b
 
 
 
-## 26.2. <a id='toc26_2_'></a>[字典类型的拷贝](#toc0_)
-字典必须**深拷贝**
+## 25.2. <a id='toc25_2_'></a>[字典类型的拷贝](#toc0_)
+
+字典必须 **深拷贝**
 
 
 ```python
@@ -24745,7 +25542,7 @@ a_dict, b_dict, c_dict
 
 
 
-# 27. <a id='toc27_'></a>[tqdm](#toc0_)
+# 26. <a id='toc26_'></a>[tqdm](#toc0_)
 
 
 ```python
@@ -24774,7 +25571,7 @@ for i in tqdm(range(1000)):
       0%|          | 0/1000 [00:00<?, ?it/s]
 
 
-## 27.1. <a id='toc27_1_'></a>[基础循环封装](#toc0_)
+## 26.1. <a id='toc26_1_'></a>[基础循环封装](#toc0_)
 
 - 直接封装可迭代对象（如列表、range），自动显示进度。
 
@@ -24791,7 +25588,7 @@ for i in tqdm(range(100), desc="训练进度"):
     训练进度: 100%|██████████| 100/100 [00:10<00:00,  9.94it/s]
 
 
-## 27.2. <a id='toc27_2_'></a>[手动控制进度](#toc0_)
+## 26.2. <a id='toc26_2_'></a>[手动控制进度](#toc0_)
 
 - 适用于无法直接迭代的场景（如分批次处理文件）
 
@@ -24824,7 +25621,7 @@ with tqdm(range(100), desc= 'Simple demo', unit= "epoch") as pbar:
     Simple demo: 100%|██████████| 100/100 [00:10<00:00,  9.93epoch/s, show1=99, show2=99, show3=99]
 
 
-## 27.3. <a id='toc27_3_'></a>[多进度条嵌套](#toc0_)
+## 26.3. <a id='toc26_3_'></a>[多进度条嵌套](#toc0_)
 
 - leave=False 确保内层进度条完成后自动消失
 
@@ -24843,9 +25640,9 @@ for i in outer:
     外层循环: 100%|██████████| 3/3 [00:07<00:00,  2.56s/it]
 
 
-## 27.4. <a id='toc27_4_'></a>[进阶功能与优化](#toc0_)
+## 26.4. <a id='toc26_4_'></a>[进阶功能与优化](#toc0_)
 
-### 27.4.1. <a id='toc27_4_1_'></a>[动态调整参数](#toc0_)
+### 26.4.1. <a id='toc26_4_1_'></a>[动态调整参数](#toc0_)
 
 
 ```python
@@ -24859,7 +25656,7 @@ for i in bar:
      阶段 4: 100%|[31m███████████████████████████████████████████████████[0m| 50/50 [00:00<00:00, 19732.33it/s][0m
 
 
-### 27.4.2. <a id='toc27_4_2_'></a>[与Pandas结合](#toc0_)
+### 26.4.2. <a id='toc26_4_2_'></a>[与Pandas结合](#toc0_)
 
 
 ```python
@@ -24876,7 +25673,7 @@ df['processed'] = df['data'].progress_apply(lambda x: x**2)  # 显示apply进度
     100%|██████████| 1000/1000 [00:00<00:00, 676064.47it/s]
 
 
-### 27.4.3. <a id='toc27_4_3_'></a>[Jupyter Notebook适配](#toc0_)
+### 26.4.3. <a id='toc26_4_3_'></a>[Jupyter Notebook适配](#toc0_)
 
 
 ```python
@@ -24893,7 +25690,7 @@ for i in tqdm(range(100), desc="Notebook进度", disable= False):
     Notebook进度:   0%|          | 0/100 [00:00<?, ?it/s]
 
 
-### 27.4.4. <a id='toc27_4_4_'></a>[多线程/多进程支持](#toc0_)
+### 26.4.4. <a id='toc26_4_4_'></a>[多线程/多进程支持](#toc0_)
 
 - 使用tqdm包裹map结果以显示并行任务进度
 
@@ -24917,7 +25714,7 @@ with ThreadPoolExecutor() as pool:
     100%|██████████| 1000/1000 [00:00<00:00, 461267.35it/s]
 
 
-### 27.4.5. <a id='toc27_4_5_'></a>[自定义进度条格式](#toc0_)
+### 26.4.5. <a id='toc26_4_5_'></a>[自定义进度条格式](#toc0_)
 
 
 ```python
@@ -24934,11 +25731,11 @@ tqdm(range(100), bar_format= bar_format)
 
 
 
-# 28. <a id='toc28_'></a>[callback](#toc0_)
+# 27. <a id='toc27_'></a>[callback](#toc0_)
 
-回调（callback）：简单来说就是用函数标签：
+回调（callback）：简单来说就是用函数标签。
 
-## 28.1. <a id='toc28_1_'></a>[基于getattr实现](#toc0_)
+## 27.1. <a id='toc27_1_'></a>[基于getattr实现](#toc0_)
 
 利用getattr `显示` 获取类的 `方法` 和 `属性。`
 
@@ -24973,6 +25770,7 @@ test = Test()
 
 print(getattr(test, "x"))   # 获取属性
 print(getattr(test, "xx", "No exist!"))   # 获取属性失败，返回"No exist!"
+
 
 # 同样，可以用于获取方法
 method = getattr(test,"on_train_begin", "No exist!")
@@ -25054,11 +25852,30 @@ trainer.train()
     on_train_begin ...
 
 
-# 29. <a id='toc29_'></a>[typing](#toc0_)
+# 28. <a id='toc28_'></a>[typing](#toc0_)
 
 typing 库是 Python 3.5+ 引入的类型注解支持工具，它允许开发者通过类型提示（Type Hints）来标注变量、函数参数和返回值的预期类型，从而提高代码的可读性、可维护性，并配合静态类型检查工具（如 mypy）进行类型验证。
 
-## 29.1. <a id='toc29_1_'></a>[基础类型注释](#toc0_)
+## 28.1. <a id='toc28_1_'></a>[基础类型注释](#toc0_)
+
+### 28.1.1. <a id='toc28_1_1_'></a>[变量注解](#toc0_)
+
+
+```python
+from typing import Any, Union
+
+
+# 基本类型
+name: str = "Alice"
+age: int = 30
+is_active: bool = True
+
+# 特殊类型
+data: Any = None  # 任意类型
+maybe_int: Union[int, None] = 42  # 可选类型(Python 3.10+可用 int | None)
+```
+
+### 28.1.2. <a id='toc28_1_2_'></a>[函数注解](#toc0_)
 
 
 ```python
@@ -25077,11 +25894,35 @@ greet("Alice", 30)
 
 
 
-## 29.2. <a id='toc29_2_'></a>[复杂类型组合](#toc0_)
+
+```python
+help(greet)
+```
+
+    Help on function greet in module __main__:
+    
+    greet(name: str, age: int) -> str
+    
+
+
+## 28.2. <a id='toc28_2_'></a>[容器类型注解](#toc0_)
 
 Union: 表示“或”（如， Union[int, str]），等价于[int | str]。
 
 Optional: 等价于 Union[T, None]，可能为None。
+
+### 28.2.1. <a id='toc28_2_1_'></a>[标准容器](#toc0_)
+
+
+```python
+from typing import List, Dict, Tuple, Set
+
+
+names: List[str] = ["Alice", "Bob"]  # list[str] (Python 3.9+)
+scores: Dict[str, float] = {"math": 90.5}  # dict[str, float]
+coords: Tuple[int, int, float] = (10, 20, 5.5)  # 固定长度元组
+unique_ids: Set[int] = {1, 2, 3}  # set[int]
+```
 
 
 ```python
@@ -25109,35 +25950,77 @@ process_data([1, 2, 3], {'max': 10})    # 2.0
 
 
 
-## 29.3. <a id='toc29_3_'></a>[函数类型注解](#toc0_)
+### 28.2.2. <a id='toc28_2_2_'></a>[嵌套容器](#toc0_)
 
 
 ```python
-from typing import Callable
+from typing import DefaultDict
 
 
-def apply_operation(
-        func: Callable[ [int, int], float ],    # 接受两个int参数，返回float的函数
-        a: int, 
-        b: int,
-) -> float:
-    return func(a, b)
+# 嵌套字典示例
+graph: Dict[str, List[Tuple[str, float]]] = {
+    "A": [("B", 1.2), ("C", 3.4)]
+}
 
-
-# 合法的函数
-result = apply_operation(lambda x, y: x / y, 10, 2)
-
-result
+# 默认字典
+counts: DefaultDict[str, int] = defaultdict(int)
 ```
 
+## 28.3. <a id='toc28_3_'></a>[高级类型](#toc0_)
+
+### 28.3.1. <a id='toc28_3_1_'></a>[泛型与类型变量](#toc0_)
 
 
+```python
+from typing import TypeVar, Generic, Sequence
 
-    5.0
+
+T = TypeVar('T')  # 泛型类型变量
+
+class Stack(Generic[T]):
+    def __init__(self) -> None:
+        self.items: List[T] = []
+    
+    def push(self, item: T) -> None:
+        self.items.append(item)
+
+# 使用泛型类
+int_stack: Stack[int] = Stack()
+```
+
+### 28.3.2. <a id='toc28_3_2_'></a>[回调函数类型](#toc0_)
 
 
+```python
+from typing import Callable, Optional
 
-# 30. <a id='toc30_'></a>[collections](#toc0_)
+
+# 接受两个int参数，返回bool的函数
+Predicate = Callable[[int, int], bool]
+
+def filter_numbers(
+    nums: Sequence[int],
+    predicate: Predicate,
+    limit: Optional[int] = None
+) -> List[int]:
+    return [n for n in nums if predicate(n, limit or 0)]
+```
+
+## 28.4. <a id='toc28_4_'></a>[结构化类型](#toc0_)
+
+### 28.4.1. <a id='toc28_4_1_'></a>[类型别名](#toc0_)
+
+
+```python
+from typing import TypeAlias
+
+
+# Python 3.10+
+JsonValue: TypeAlias = Union[str, int, float, bool, None, 'JsonDict', List['JsonValue']]
+JsonDict: TypeAlias = Dict[str, JsonValue]
+```
+
+# 29. <a id='toc29_'></a>[collections](#toc0_)
 
 该库提供8种增强型容器数据类型，针对基础数据结构的性能缺陷和功能缺失进行优化：
 
@@ -25147,7 +26030,7 @@ result
 - 提供专业的数据统计工具（Counter）
 - 实现复杂数据结构组合（ChainMap/UserDict）
 
-## 30.1. <a id='toc30_1_'></a>[namedtuple（具名元组）](#toc0_)
+## 29.1. <a id='toc29_1_'></a>[namedtuple（具名元组）](#toc0_)
 
 应用场景：CSV数据解析、数据库记录处理、科学计算坐标存储。
 
@@ -25169,6 +26052,7 @@ print(Vector3D())
 
 ```python
 v = Vector3D(1.2, 2.2) # 默认z = 0
+
 print(v)
 print(v._asdict())
 print(v._replace(z= 5.6))
@@ -25179,7 +26063,7 @@ print(v._replace(z= 5.6))
     demo_namedtuple(x=1.2, y=2.2, z=5.6)
 
 
-## 30.2. <a id='toc30_2_'></a>[deque（双端队列）](#toc0_)
+## 29.2. <a id='toc29_2_'></a>[deque（双端队列）](#toc0_)
 
 
 ```python
@@ -25200,7 +26084,7 @@ d.rotate(1)         # 循环右移：deque([3, 0, 2], maxlen=3)
     deque([2, 3, 4], maxlen=3)
 
 
-## 30.3. <a id='toc30_3_'></a>[ defaultdict（默认字典）](#toc0_)
+## 29.3. <a id='toc29_3_'></a>[ defaultdict（默认字典）](#toc0_)
 
 
 ```python
@@ -25210,6 +26094,7 @@ from collections import defaultdict
 
 library = defaultdict(list)  # 每个分类默认用列表装书 
 print(library)
+
 library['科幻'].append('三体')  # 自动创建'科幻'书架 
 print(library)
 ```
@@ -25218,7 +26103,7 @@ print(library)
     defaultdict(<class 'list'>, {'科幻': ['三体']})
 
 
-## 30.4. <a id='toc30_4_'></a>[ OrderedDict（有序字典）](#toc0_)
+## 29.4. <a id='toc29_4_'></a>[ OrderedDict（有序字典）](#toc0_)
 
 
 ```python
@@ -25239,7 +26124,7 @@ class LRUCache:
         self.capacity  = capacity 
 ```
 
-## 30.5. <a id='toc30_5_'></a>[Counter（计数器）](#toc0_)
+## 29.5. <a id='toc29_5_'></a>[Counter（计数器）](#toc0_)
 
 
 ```python
@@ -25263,7 +26148,441 @@ print(sales & inventory)  # 交集：apple:16 → 取较小值
     Counter({'apple': 16, 'orange': 10})
 
 
-# 31. <a id='toc31_'></a>[打包pip安装包](#toc0_)
+# 30. <a id='toc30_'></a>[multiprocessing](#toc0_)
+
+|method|feature|way|方式|
+|-|-|-|-|
+|map(func, iterable)| 同一个函数多次调用，顺序一致|`单函数`批量任务|阻塞|
+|map_async(func, iterable)| 同一个函数多次调用，顺序一致|`单函数`批量任务|异步|
+|starmap(func, iter)|同一个函数多次调用，多参数展开|`多参数`批量任务|阻塞|
+|starmap_async(func, iter)|同一个函数多次调用，多参数展开|`多参数`批量任务|异步|
+|apply(func, args)|异步提交任意函数和参数|不同函数/参数混合任务|阻塞|
+|apply_async(func, args)|异步提交任意函数和参数|不同函数/参数混合任务|异步|
+
+|执行|with语句|直接调用|
+|-|-|-|
+|进入|with Pool(processes) as pool:|pool = Pool(processes)|
+|退出|自动pool.close()和pool.join()|手动pool.close()和pool.join()|
+|保险|1. 当_async()提交的任务返回的是一个 AsyncResult 对象，代表“将来会有结果的任务”，但不会阻塞主进程；pool.join() 只是等待任务队列为空，但并不会自动强制所有 AsyncResult 完成或处理异常；2. 如果主进程提前退出（即没有执行 get() 或 wait()），那么有些子进程任务可能还在运行中，就会被销毁（尤其在非 UNIX 平台，如 Windows）；3. 而 with 语句退出后，会清理资源，但不会知道你提交的_async() 中是否还有未完成的任务。||
+
+两种写法演示：
+
+
+```python
+from multiprocessing import Pool, cpu_count 
+import time 
+
+
+def func_demo(x):
+    time.sleep(1)
+    return x*x
+
+def on_success(success):
+    print("success: ", success)
+
+
+def on_error(error):
+    print("error: ", error)
+
+
+# 1. 定义任务列表
+# [
+#   (函数, (参数1, 参数2, ...)), 
+#   (函数, (参数1, 参数2, ...)), 
+#   (函数, (参数1, 参数2, ...)), 
+# ]
+tasks = [(func_demo, (i,)) for i in range(10)]
+
+
+# 2. 使用with自动回收资源, pool.close() pool.join()
+with Pool(processes= cpu_count()) as pool:
+    print("主程序开始 ...")
+    results = []
+    for func, params in tasks:
+        result = pool.apply_async(func, params, callback= on_success, error_callback= on_error)
+        results.append(result)
+
+    print("中间程序 ...")
+
+    # 3. 执行AsyncResult的.get()或.wait()。
+    # 否则随着with结束，子程序也会被销毁的。
+    for r in results:
+        print(r.get())
+    print("主程序结束")
+```
+
+    主程序开始 ...
+    中间程序 ...
+    success:  0
+    success:  1
+    success:  4
+    success:  9
+    success:  16
+    success:  25
+    success:  36
+    success:  64
+    success:  49
+    success:  81
+    0
+    1
+    4
+    9
+    16
+    25
+    36
+    49
+    64
+    81
+    主程序结束
+
+
+
+```python
+# 2. 手动pool
+pool = Pool(processes= cpu_count())
+print("主程序开始 ...")
+results = []
+for func, params in tasks:
+    result = pool.apply_async(func, params, callback= on_success, error_callback= on_error)
+    results.append(result)
+# 3. 手动close和join
+pool.close()
+pool.join()
+
+print("中间程序 ...")
+
+# 查看结果
+for r in results:
+    print(r.get())
+print("主程序结束")
+```
+
+    主程序开始 ...
+    success:  0
+    success:  1
+    success:  4
+    success:  9
+    success:  16
+    success:  25
+    success:  36
+    success:  49
+    success:  64
+    success:  81
+    中间程序 ...
+    0
+    1
+    4
+    9
+    16
+    25
+    36
+    49
+    64
+    81
+    主程序结束
+
+
+## 30.1. <a id='toc30_1_'></a>[map and map_async](#toc0_)
+
+
+```python
+# import multiprocessing
+from multiprocessing import Pool, cpu_count 
+
+
+def square(x):
+    return x * x
+
+
+if __name__ == '__main__':
+    # 获取CPU核心数
+    num_cores = cpu_count()
+    print(f"Number of CPU cores: {num_cores}")
+
+    # 创建进程池
+    with Pool(processes= num_cores) as pool:
+        results = pool.map(square, range(10)) # 并行映射任务, the same function, put all params into one parameter list.
+    
+    print(results)
+```
+
+    Number of CPU cores: 64
+
+
+    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+
+
+## 30.2. <a id='toc30_2_'></a>[starmap and starmap_async](#toc0_)
+
+| 方法     | 参数传递方式         | 适用场景                     | 示例调用                                  |
+|----------|----------------------|------------------------------|-------------------------------------------|
+| `map`    | 单参数（`func(arg)`） | 函数只需一个参数               | `pool.map(func, [1, 2, 3])`               |
+| `starmap`| 多参数（`func(*args)`）| 函数需要多个参数（如 `x, y`） | `pool.starmap(func, [(1, 2), (3, 4)])`    |
+
+### 30.2.1. <a id='toc30_2_1_'></a>[starmap（同步阻塞）](#toc0_)
+
+- starmap 是 map 的增强版，适用于函数需要多个参数的情况。
+
+- 特点:
+  - 同步执行：主进程会阻塞，直到所有任务完成。
+  - 直接返回结果：任务完成后，starmap 直接返回结果列表。
+  - 简单但不够灵活：适合需要立即获取结果的场景。
+
+
+```python
+from multiprocessing import Pool
+
+
+def power(x, y):
+    return x ** y
+
+
+if __name__ == '__main__':
+    # 参数列表：每个元素是一个元组 (x, y)
+    params = [(2, 3), (3, 2), (4, 2)]
+
+    with Pool(2) as pool:
+        results = pool.starmap(power, params)
+        print(results)  # 输出: [8, 9, 16]
+```
+
+    [8, 9, 16]
+
+
+- 说明：
+  - starmap 会遍历 params，并将每个元组解包为 power(*args)。
+  - 同步阻塞：主进程会等待所有任务完成。
+
+- 适用场景:
+  - 需要简单并行计算，且主进程可以等待所有任务完成。
+  - 不需要在任务运行时执行其他操作。
+
+### 30.2.2. <a id='toc30_2_2_'></a>[starmap_async（异步非阻塞）](#toc0_)
+
+- starmap_async 是非阻塞的，返回一个 AsyncResult 对象，可以通过 get() 获取结果。
+
+- 特点:
+  - 异步执行：主进程不会被阻塞，可以继续执行其他代码。
+  - 返回 AsyncResult 对象：通过 .get() 获取结果（会阻塞，但可以控制时机）。
+  - 支持回调：任务完成后自动触发回调函数（如日志记录、结果聚合）。
+  - 更灵活：适合需要并行计算 + 主进程交互的场景。
+
+
+```python
+from multiprocessing import Pool
+import time
+
+
+def task(x, y):
+    time.sleep(1)
+    return x * y
+
+def callback(results):
+    print("所有任务完成，结果:", results)
+
+
+if __name__ == '__main__':
+    params = [(1, 2), (3, 4), (5, 6)]
+    with Pool(2) as pool:
+        async_result = pool.starmap_async(task, params, callback=callback)
+        print("主进程继续执行...")  # 不会阻塞
+        # 可以在这里做其他事情
+        async_result.wait()  # 等待任务完成（非必须）
+        print("最终结果:", async_result.get())  # 输出: [2, 12, 30]
+```
+
+    主进程继续执行...
+    所有任务完成，结果: [2, 12, 30]
+    最终结果: [2, 12, 30]
+
+
+| 特性             | `starmap`                          | `starmap_async`                                      |
+|------------------|------------------------------------|------------------------------------------------------|
+| **阻塞行为**     | 同步阻塞，主进程等待所有任务完成   | 异步非阻塞，主进程可继续执行其他操作                 |
+| **返回值**       | 直接返回结果列表                   | 返回 `AsyncResult` 对象，需调用 `.get()` 获取结果    |
+| **回调支持**     | 不支持                             | 支持 `callback` 和 `error_callback`                  |
+| **灵活性**       | 低                                 | 高（可控制结果获取时机、超时等）                     |
+| **典型场景**     | 简单批处理任务                     | 交互式程序、需要回调的任务链                         |
+
+- 如何选择？
+  - 用 starmap：需要简单并行计算，且主进程可以等待所有任务完成（如脚本批处理）。
+  - 用 starmap_async：需要异步控制、回调、或主进程与任务并行执行（如 GUI、服务端程序）。
+
+## 30.3. <a id='toc30_3_'></a>[apply and apply_aysnc](#toc0_)
+
+
+```python
+from multiprocessing import Pool
+import time
+
+
+def func_demo(x):
+    time.sleep(1)
+    return x * x
+
+
+# Prepare the taks list constant of tuple containing func_demo and its paramters.
+# (func_demo, (arg1, arg2, ...))
+tasks = [(func_demo, (i,)) for i in range(10)]
+
+print(tasks)
+```
+
+    [(<function func_demo at 0x7f3c4d2079c0>, (0,)), (<function func_demo at 0x7f3c4d2079c0>, (1,)), (<function func_demo at 0x7f3c4d2079c0>, (2,)), (<function func_demo at 0x7f3c4d2079c0>, (3,)), (<function func_demo at 0x7f3c4d2079c0>, (4,)), (<function func_demo at 0x7f3c4d2079c0>, (5,)), (<function func_demo at 0x7f3c4d2079c0>, (6,)), (<function func_demo at 0x7f3c4d2079c0>, (7,)), (<function func_demo at 0x7f3c4d2079c0>, (8,)), (<function func_demo at 0x7f3c4d2079c0>, (9,))]
+
+
+### 30.3.1. <a id='toc30_3_1_'></a>[apply](#toc0_)
+
+同步阻塞：调用apply会阻塞主进程，直到任务执行完成并返回结果。
+
+用法：类似普通函数调用，直接返回结果。
+
+适用场景：需要按顺序执行任务且每次只处理一个任务的简单场景（但通常效率较低，不推荐常用）。
+
+
+```python
+# apply
+with Pool(3) as pool:
+    for func, param in tasks:
+        result = pool.apply(func_demo, param)  # 阻塞，直到任务完成
+        print(result)  # 输出: 25
+```
+
+    0
+    1
+    4
+    9
+    16
+    25
+    36
+    49
+    64
+    81
+
+
+### 30.3.2. <a id='toc30_3_2_'></a>[apply_async](#toc0_)
+
+异步非阻塞：调用后立即返回一个AsyncResult对象，主进程可以继续执行其他操作。
+
+需要手动获取结果：通过get()方法获取结果（会阻塞直到任务完成）。
+
+适用场景：并行处理多个任务，提高效率；适合需要异步执行的场景。
+
+Pool.apply_async() 是异步非阻塞方式，可以提交任意函数 + 参数组合。
+
+
+```python
+# 阻塞，直到任务完成
+with Pool(3) as pool:
+    for func, param in tasks:
+        result = pool.apply_async(func_demo, param)  # 阻塞，直到任务完成
+        print(result.get()) # 通过get()方法获取结果（会阻塞直到任务完成）。
+```
+
+    0
+    1
+    4
+    9
+    16
+    25
+    36
+    49
+    64
+    81
+
+
+
+```python
+# 异步非阻塞,调用后立即返回一个AsyncResult对象，主进程可以继续执行其他操作
+results = []
+with Pool(3) as pool:
+    for func, param in tasks:
+        result = pool.apply_async(func_demo, param)  # 阻塞，直到任务完成
+        results.append(result)
+
+    # must be in the with content.
+    for result in results:
+        try:
+            print(result.get())
+        except Exception as e:
+            print("发生异常:", e)
+```
+
+    0
+    1
+    4
+    9
+    16
+    25
+    36
+    49
+    64
+    81
+
+
+
+```python
+def on_success(result):
+    print("success: ", result)
+
+
+def on_error(result):
+    print("error: ", result)
+
+
+# 异步非阻塞,调用后立即返回一个AsyncResult对象，主进程可以继续执行其他操作
+results = []
+with Pool(3) as pool:
+    for func, param in tasks:
+        result = pool.apply_async(func_demo, param, callback=on_success, error_callback=on_error)  # 阻塞，直到任务完成
+        results.append(result)
+        print("Insert a test, this step don't block above.")
+
+    for r in results:
+        print(r.get())
+
+    
+```
+
+    Insert a test, this step don't block above.
+    Insert a test, this step don't block above.
+    Insert a test, this step don't block above.
+    Insert a test, this step don't block above.
+    Insert a test, this step don't block above.
+    Insert a test, this step don't block above.
+    Insert a test, this step don't block above.
+    Insert a test, this step don't block above.
+    Insert a test, this step don't block above.
+    Insert a test, this step don't block above.
+    success:  0
+    0
+    success:  4
+    success:  1
+    1
+    4
+    success:  9
+    9
+    success:  16
+    success:  25
+    16
+    25
+    success:  36
+    36
+    success:  64
+    success:  49
+    49
+    64
+    success:  81
+    81
+
+
+总结
+- 确保主进程等待子进程完成（pool.close() + pool.join()）。
+- 检查 func_demo 是否正确返回或抛出异常。
+- apply_async 参数要用 args=(param,)（必须是元组）。
+- 确保 error_callback 能捕获所有异常。
+
+# 31. <a id='toc31_'></a>[pip打包](#toc0_)
 
 ```python
 my_package/                  # 项目根目录
@@ -25292,15 +26611,16 @@ A simple tool for Deep Learning.
 from setuptools import setup, find_packages
 
 
+# 打包
 setup(
-    name="bmp",        # 包名（PyPI唯一标识）
-    version="0.1.0",         # 版本号（遵循语义化版本）
-    author="Yu Zhao",
-    author_email="zhao_sy@126.com",
-    description="A simple tools for Deep Learning",
-    long_description=open("README.md").read(),
-    long_description_content_type="text/markdown",
-    packages=find_packages(), # 自动发现所有包
+    name= "bmp",                                        # 包名（PyPI唯一标识）
+    version= "0.1.0",                                   # 版本号（遵循语义化版本）
+    author= "Yu Zhao",
+    author_email= "zhao_sy@126.com",
+    description= "A simple tools for Deep Learning",
+    long_description= open("README.md").read(),
+    long_description_content_type= "text/markdown",
+    packages= find_packages(),                          # 自动发现所有包
 )
 ```
 
@@ -25359,9 +26679,22 @@ dist/
 
 上传到 PyPI：```twine upload dist/*```
 
+`twine upload -u __token__ -p pypi-your-api-token dist/*`
+
+
+```python
+# twine upload -u __token__ -p pypi-your-api-token dist/*
+```
+
 ## 31.6. <a id='toc31_6_'></a>[维护与更新](#toc0_)
 
 ### 31.6.1. <a id='toc31_6_1_'></a>[依赖更新](#toc0_)
+
+使用`pip install -e .`安装，只需要修改源码即可。
+
+使用`pip install .`安装后需要如下方式进行升级：
+
+- pip install -U .  # 更新本地安装
 
 
 ```python
@@ -25381,27 +26714,25 @@ dist/
 ```bash
 %%bash
 # ipynb to html
-jupyter nbconvert \
-    --to html learn_PyTorch.ipynb \
-    --output-dir=./Format/learn_PyTorch \
-    # --NbConvertApp.log_level=ERROR
+# --NbConvertApp.log_level=ERROR
+jupyter nbconvert --to html --output-dir ./Format/learn_PyTorch learn_PyTorch.ipynb 
 
 cp -rf Pytorch_Pictures ./Format/learn_PyTorch
 # browse translate html to pdf
 ```
 
     [NbConvertApp] Converting notebook learn_PyTorch.ipynb to html
-    [NbConvertApp] WARNING | Alternative text is missing on 47 image(s).
-    [NbConvertApp] Writing 5893488 bytes to Format/learn_PyTorch/learn_PyTorch.html
+    [NbConvertApp] WARNING | Alternative text is missing on 49 image(s).
+    [NbConvertApp] Writing 6248150 bytes to Format/learn_PyTorch/learn_PyTorch.html
 
 
 
 ```python
 # ipynb to markdown
-!jupyter nbconvert --to markdown learn_PyTorch.ipynb --output-dir=./Format/learn_PyTorch
+!jupyter nbconvert --to markdown --output-dir ./Format/learn_PyTorch learn_PyTorch.ipynb
 ```
 
     [NbConvertApp] Converting notebook learn_PyTorch.ipynb to markdown
     [NbConvertApp] Support files will be in learn_PyTorch_files/
-    [NbConvertApp] Writing 1120976 bytes to Format/learn_PyTorch/learn_PyTorch.md
+    [NbConvertApp] Writing 1148252 bytes to Format/learn_PyTorch/learn_PyTorch.md
 
