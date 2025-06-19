@@ -9,7 +9,7 @@ const papers = [
   },
   {
     title: "Kiwifruit resistance to gray mold is enhanced by yeast-induced modulation of the endophytic microbiome",
-    authors: "Qinhong Liao, Yu Zhao, Zhenshuo Wang, Longfeng Yu, Qiqian Su, Jiaoqian Li, Anran Yuan, Junkui Wang, Dawei Tian, Chenglin Lin, Xiaoya Huang, Wenhua Li, Zhiqiang Sun, Qi Wang, Jia Liu",
+    authors: "Qinhong Liao†, Yu Zhao†, Zhenshuo Wang, Longfeng Yu, Qiqian Su, Jiaoqian Li, Anran Yuan, Junkui Wang, Dawei Tian, Chenglin Lin, Xiaoya Huang, Wenhua Li, Zhiqiang Sun, Qi Wang, Jia Liu",
     year: 2024,
     topic: ["Plant Microecology"],
     img: "https://ars.els-cdn.com/content/image/1-s2.0-S004896972403256X-ga1.jpg",

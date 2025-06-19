@@ -6,10 +6,19 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from IPython import display
 from tqdm import tqdm 
+import time
 
 
-# Function for setting the seed
 def set_seed(seed: int = 42)-> None:
+    '''
+    Function for setting the seed.
+    Args:
+        seed: int, default is 42.
+
+    Demo:
+    >>>set_seed(seed= 123)
+    '''
+
     # Set the seed for Python's built-in random module
     random.seed(seed)
 
@@ -18,20 +27,52 @@ def set_seed(seed: int = 42)-> None:
     
     # Set the seed for PyTorch
     torch.manual_seed(seed)
-    if torch.cuda.is_available():  # GPU operation have separate seed
+
+    # GPU operation have separate seed
+    if torch.cuda.is_available():  
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
+
     # Additionally, some operations on a GPU are implemented stochastic for efficiency
     # We want to ensure that all operations are deterministic on GPU (if used) for reproducibility
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
     print(f"Set seed {seed} for reproducibility.")
-
     return None
 
 
+def try_gpu(i:int=0):
+    '''Try get gpu.
+    >>>try_gpu(i=0)
+    '''
+    if torch.cuda.is_available():
+        return torch.device(f"cuda:{i}")
+    return torch.device('cpu')
+
+
+def try_all_gpus():
+    '''Try all GPUs.
+    >>>try_all_gpus()
+    '''
+    devices = [torch.device(f"cuda:{i}") for i in range(torch.cuda.device_count())]
+    return devices if devices else [torch.device('cpu')]
+
+
 class MetricTracker:
+    '''
+    Document metrics of training process.
+
+    Demo:
+    >>>metric_tracker = MetricTracker()
+    >>>metric_tracker.add_metric(name='acc', metric_fn=metric_fn)
+    >>>metric_tracker.set_stage(stage='train')
+    >>>metric_tracker.update()
+    >>>metric_tracker.step_metrics()
+    >>>metric_tracker.epoch_metrics()
+    >>>metric_tracker.get_history()
+    '''
+
     def __init__(self):
         '''
         # 示例输出结构
@@ -112,13 +153,19 @@ class MetricTracker:
 
 
 class Visualization:
-    '''接受MetricTracker计算的_history，自动绘图。'''
+    '''
+    接受MetricTracker计算的_history，自动绘图。
+
+    Demo:
+    >>>visualization = Visualization()
+    >>>visualization.refresh_plot(history= history)
+    '''
 
     def refresh_plot(self, history: defaultdict[list]):
         '''再jupyter中持续刷新展示图片'''
-        plt.close()                                 # close figure （推荐）
+        plt.close()                                  # close figure （推荐）
         fig = self._show(history)
-        display.display(fig)                        # 在jupyter中展示 （推荐）
+        display.display(fig)                         # 在jupyter中展示 （推荐）
         display.clear_output(wait= True)             # 等待 （必须） 
 
     def _show(self, history: defaultdict[list]):
@@ -149,7 +196,19 @@ class Visualization:
     
 
 class Timer:
-    """Record multiple running times."""
+    """
+    Record multiple running times.
+    
+    Demo:
+    >>>timer = Timer()
+    >>>timer.start()
+    >>>timer.stop()
+    >>>timer.sum()
+    >>>timer.avg()
+    >>>timer.cumsum()
+    >>>timer.to_date(seconds= timer.sum())
+    """
+
     def __init__(self):
         self.times = []
         self.start()
@@ -163,21 +222,33 @@ class Timer:
         self.times.append(time.time() - self.tik)
         return self.times[-1]
 
-    def avg(self):
+    def avg(self) -> float:
         """Return the average time."""
         return sum(self.times) / len(self.times)
 
-    def sum(self):
+    def sum(self) -> float:
         """Return the sum of time."""
         return sum(self.times)
 
-    def cumsum(self):
+    def cumsum(self) -> list:
         """Return the accumulated time."""
         return np.array(self.times).cumsum().tolist()
     
+    def to_date(self, seconds) -> None:
+        '''Translate seconds to date format.'''
+        days = seconds // (24 * 3600)
+        hours = (seconds % (24 * 3600)) // 3600
+        minutes = (seconds % 3600) // 60
+        remaining_seconds = seconds % 60
+        print('='*20, '\n', f"Total：\n {days} d \n {hours} h \n {minutes} m \n {remaining_seconds} s")
+        return None
+        
+    
 
 class Callback:
-    '''callback template'''
+    '''
+    callback template
+    '''
 
     def on_train_begin(self, **kwargs):
         pass
@@ -199,17 +270,30 @@ class Callback:
 
 
 class DemoCallback(Callback):
+    '''
+    Call function.
+    '''
     def on_train_begin(self, **kwargs):
+        '''Runing on train stage begin.'''
         print("Runing on_train_begin ...")
 
 
-class ParameterSize:
-    def count_parameters(self, model):
+class GetModelSize:
+    '''
+    Calculate the parameter numbers and sizes of model.
+
+    Demo:
+    >>>get_model_size = GetModelSize()
+    >>>get_model_size.parameter_numbers(model= model)
+    >>>get_model_size.parameter_sizes(model= model)
+    '''
+
+    def parameter_numbers(self, model):
         return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    def get_parameter_size(self, model, dtype=torch.float32):
+    def parameter_sizes(self, model, dtype=torch.float32):
         bytes_per_param = torch.tensor([], dtype=dtype).element_size()
-        total_params = self.count_parameters(model)
+        total_params = self.parameter_numbers(model)
         total_size = total_params * bytes_per_param
         print(f'{total_params/1000000} M parameters')
         print(f'{total_size/(1024*1024):.2f} MB')
@@ -217,6 +301,14 @@ class ParameterSize:
 
 
 class Trainer:
+    '''
+    Trainer.
+    
+    Demo:
+    >>>trainer = Trainer()
+    >>>
+    '''
+
     def __init__(
             self, 
             device = "auto",
@@ -276,8 +368,10 @@ class Trainer:
                 method = getattr(callback, method_name, f"{method_name} is not exist!")
                 return method(**kwargs)
         
-    def train(self, epochs: int, **kwargs):
-        '''Main loop.'''
+    def train(self, epochs: int=2, **kwargs):
+        '''Main loop.
+        >>>train(epochs= 30)
+        '''
         self._call_callbacks(method_name= "on_train_begin", **kwargs)
 
         with tqdm(range(epochs), desc= "Training epoch", unit= "epoch", disable= self._disable_visualization()) as pbar:

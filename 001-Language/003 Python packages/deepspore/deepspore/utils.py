@@ -9,6 +9,7 @@ def run_cmd(cmd: str) -> str:
         cmd: str.
     return：
         The state of the command.
+    >>>run_cmd(cmd='ls -alh')
     '''
     try:
         subprocess.run(cmd, shell=True, check=True)
@@ -17,16 +18,18 @@ def run_cmd(cmd: str) -> str:
         return f"Failed: {cmd} (Error: {e})"
 
 
-def num_thread():
+def num_thread() -> int:
+    '''Return the thread numbers.'''
     from multiprocessing import cpu_count 
     return cpu_count()
 
 
-def on_error(error):
+def on_error(error: str) -> None:
+    '''Print the error informations.'''
     print(error)
 
 
-def parallel(tasks: list, num_threads:int= cpu_count()) -> None:
+def parallel(tasks, num_threads= cpu_count()):
     '''Paralles with Multiprocessing module of Python
     Args:
         tasks: list of tuples, each tuple contains a function and its parameters
