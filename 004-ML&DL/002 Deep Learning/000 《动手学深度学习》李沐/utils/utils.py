@@ -4,8 +4,19 @@
 import json
 
 
-def extract_save_blocks(ipynb_path:str, output_py_path:str):
-    with open(ipynb_path, 'r', encoding='utf-8') as f:
+def ipynb2(ipynb_file:str, label:str, output_file:str) -> None:
+    '''
+    Collect code blocks started with label, such as "#@save" in ipynb format file to one file named with outputfile.
+    Args:
+        ipynb_file: str
+        label: str, such as %%bash, #@save and etc.
+        output_file: str
+    
+    # Demo
+    >>> extract_save_blocks(ipynb_file= 'learn_PyTorch.ipynb', label= '#@save', output_file= 'utils/utils.py')
+    '''
+    
+    with open(ipynb_file, 'r', encoding='utf-8') as f:
         notebook = json.load(f)
 
     saved_code_blocks = []
@@ -13,17 +24,49 @@ def extract_save_blocks(ipynb_path:str, output_py_path:str):
     for cell in notebook.get('cells', []):
         if cell.get('cell_type') == 'code':
             source_lines = cell.get('source', [])
-            if source_lines and source_lines[0].lstrip().startswith('#@save'):
+            if source_lines and source_lines[0].lstrip().startswith(label):
                 code_block = ''.join(source_lines)
                 saved_code_blocks.append(code_block)
 
     if saved_code_blocks:
-        with open(output_py_path, 'w', encoding='utf-8') as f_out:
+        with open(output_file, 'w', encoding='utf-8') as f_out:
             f_out.write("# This file is generated from saved notebook code blocks\n\n")
-            f_out.write("\n\n".join(saved_code_blocks))
-        print(f"Saved {len(saved_code_blocks)} block(s) to {output_py_path}")
+            f_out.write("\n\n\n".join(saved_code_blocks))
+        print(f"Saved {len(saved_code_blocks)} block(s) to {output_file}")
     else:
-        print("No #@save blocks found.")
+        print(f"No {label} blocks found.")
+
+
+#@save
+import random 
+import numpy as np 
+import torch
+
+
+# Function for setting the seed
+def set_seed(seed: int = 42)-> None:
+    # Set the seed for Python's built-in random module
+    random.seed(seed)
+
+    # Set the seed for NumPy
+    np.random.seed(seed)
+    
+    # Set the seed for PyTorch
+    torch.manual_seed(seed)
+
+    # GPU operation have separate seed
+    if torch.cuda.is_available():  
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+    # Additionally, some operations on a GPU are implemented stochastic for efficiency
+    # We want to ensure that all operations are deterministic on GPU (if used) for reproducibility
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+    print(f"Set seed {seed} for reproducibility.")
+    return None
+
 
 #@save
 import torch
@@ -106,8 +149,8 @@ class MetricTracker:
 
     def get_history(self):
         """获取所有历史记录（用于可视化）"""
-        return self._history
-    
+        return self._history    
+
 
 #@save
 import matplotlib.pyplot as plt 
@@ -131,6 +174,7 @@ def set_plt_rcParams(**kswargs):
     plt.rcParams['figure.figsize'] = (3, 3)     # figsize
     plt.rcParams['savefig.format'] = "svg"      # svg格式
     plt.rcParams['savefig.transparent'] = True  # 背景是否透明
+
 
 #@save
 # %config InlineBackend.figure_format = 'svg'
@@ -175,6 +219,7 @@ class Visualization:
             metrics.add(metrics_name)
         return experiments, metrics
 
+
 #@save
 import time 
 
@@ -206,6 +251,59 @@ class Timer:
         """Return the accumulated time."""
         return np.array(self.times).cumsum().tolist()
 
+
+#@save
+import time
+
+
+class Timer:
+    """
+    Record multiple running times.
+    
+    Demo:
+    >>>timer = Timer()
+    >>>timer.start()
+    >>>timer.stop()
+    >>>timer.sum()
+    >>>timer.avg()
+    >>>timer.cumsum()
+    """
+
+    def __init__(self):
+        self.times = []
+        self.start()
+
+    def start(self):
+        """Start the timer."""
+        self.tik = time.time()
+
+    def stop(self):
+        """Stop the timer and record the time in a list."""
+        self.times.append(time.time() - self.tik)
+        return self.times[-1]
+
+    def avg(self) -> float:
+        """Return the average time."""
+        return sum(self.times) / len(self.times)
+
+    def sum(self) -> float:
+        """Return the sum of time."""
+        return sum(self.times)
+
+    def cumsum(self) -> list:
+        """Return the accumulated time."""
+        return np.array(self.times).cumsum().tolist()
+    
+    def to_date(self, seconds) -> None:
+        days = seconds // (24 * 3600)
+        hours = (seconds % (24 * 3600)) // 3600
+        minutes = (seconds % 3600) // 60
+        remaining_seconds = seconds % 60
+        print('='*20, '\n', f"Total：\n {days} d \n {hours} h \n {minutes} m \n {remaining_seconds} s")
+        return None
+        
+
+
 #@save
 from abc import ABC 
 
@@ -230,6 +328,7 @@ class Callback(ABC):
     
     def on_step_end(self, **kwargs):
         pass
+
 
 #@save
 import torch 
@@ -379,6 +478,7 @@ class Trainer:
         self.model.load_state_dict(state_dict= checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
+
 #@save
 import torch 
 from torch import nn
@@ -401,23 +501,32 @@ class Model(nn.Module):
         x = self.decoder(x) # 解码
         return x
 
+
 #@save 
 import torch 
 
 
-class ParameterSize:
-    def count_parameters(self, model: torch.nn.Module):
+class GetModelSize:
+    '''
+    Calculate the parameter numbers and sizes of model.
+
+    Demo:
+    >>>get_model_size = GetModelSize()
+    >>>get_model_size.parameter_numbers(model= model)
+    >>>get_model_size.parameter_sizes(model= model)
+    '''
+
+    def parameter_numbers(self, model):
         return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    def get_parameter_size(self, model: torch.nn.Module, dtype= torch.float32):
+    def parameter_sizes(self, model, dtype=torch.float32):
         bytes_per_param = torch.tensor([], dtype=dtype).element_size()
-        total_params = self.count_parameters(model)
+        total_params = self.parameter_numbers(model)
         total_size = total_params * bytes_per_param
-        parameter_number_M = total_params/1000000
-        parameter_size_MB = total_size/(1024*1024)
-        print(f'{parameter_number_M:.2f} M parameters')
-        print(f'{parameter_size_MB:.2f} MB')
-        return parameter_number_M, parameter_size_MB
+        print(f'{total_params/1000000} M parameters')
+        print(f'{total_size/(1024*1024):.2f} MB')
+        # return total_params, total_size
+
 
 #@save
 class Decoder(nn.Module):
@@ -431,70 +540,3 @@ class Decoder(nn.Module):
 
     def forward(self, X, state):
         raise NotImplementedError
-
-#@save
-class AddNorm(nn.Module):
-    """残差连接后进行层规范化"""
-    def __init__(self, normalized_shape, dropout, **kwargs):
-        super(AddNorm, self).__init__(**kwargs)
-        self.dropout = nn.Dropout(dropout)
-        self.ln = nn.LayerNorm(normalized_shape)
-
-    def forward(self, X, Y):
-        return self.ln(self.dropout(Y) + X)
-
-
-# 测试
-batch_size, seq_len, embed_size = 2, 3, 4
-
-# 实例化对象
-add_norm = AddNorm(normalized_shape=embed_size, dropout=0.5)
-add_norm.eval()
-
-# 测试
-X = torch.ones(size=(batch_size, seq_len, embed_size))
-
-add_norm(X=X, Y=X).shape
-
-#@save
-class TransformerEncoder(nn.Module):
-    """Transformer编码器"""
-    def __init__(self, vocab_size, key_size, query_size, value_size, num_hiddens, norm_shape, ffn_num_input, ffn_num_hiddens, num_heads, num_layers, dropout, use_bias=False, **kwargs):
-        super(TransformerEncoder, self).__init__(**kwargs)
-        self.num_hiddens = num_hiddens
-        self.embedding = nn.Embedding(vocab_size, num_hiddens)
-        self.pos_encoding = PositionalEncoding(num_hiddens, dropout)
-        self.blks = nn.Sequential()
-        for i in range(num_layers):
-            self.blks.add_module("block"+str(i), EncoderBlock(key_size, query_size, value_size, num_hiddens, norm_shape, ffn_num_input, ffn_num_hiddens, num_heads, dropout, use_bias))
-
-    def forward(self, X, *args):
-        # 因为位置编码值在-1和1之间，
-        # 因此嵌入值乘以嵌入维度的平方根进行缩放，
-        # 然后再与位置编码相加。
-        # X = self.pos_encoding(self.embedding(X) * math.sqrt(self.num_hiddens))
-        X = self.pos_encoding(self.embedding(X) * torch.sqrt(torch.tensor(self.num_hiddens)))
-        self.attention_weights = [None] * len(self.blks)
-        for i, blk in enumerate(self.blks):
-            X = blk(X)
-            # self.attention_weights[i] = blk.attention.attention.attention_weights_numpy
-        return X
-
-
-# 测试
-encoder = TransformerEncoder(
-    vocab_size=200, 
-    key_size=24, 
-    query_size=24, 
-    value_size=24, 
-    num_hiddens=24, 
-    norm_shape=[100, 24], 
-    ffn_num_input=24, 
-    ffn_num_hiddens=48, 
-    num_heads=8, 
-    num_layers=2, 
-    dropout=0.5
-)
-encoder.eval()
-
-encoder(torch.ones((2, 100), dtype=torch.long)).shape
